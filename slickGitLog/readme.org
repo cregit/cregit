@@ -1,0 +1,76 @@
+* Introduction
+
+This program scans a git repository and extracts metadata of the commits into a sqlite3 database
+
+
+* How to run
+
+java -jar gitLogToDB.jar <dbfile> <pathToGitrepo>
+
+
+* Schema
+
+- Main commits table
+
+#+BEGIN_SRC sql
+CREATE TABLE commits (
+    cid character(40),
+    author character varying(200),
+    autdate TEXT,
+    committer character varying(200),
+    comdate TEXT,
+    summary varchar,
+    ismerge boolean,
+    PRIMARY KEY(cid));
+#+END_SRC
+
+- Parents of commits
+
+#+BEGIN_SRC sql
+CREATE TABLE parents (
+    cid character(40),
+    idx integer,
+    parent character(40),
+
+    PRIMARY KEY(cid,idx),
+    FOREIGN KEY(cid) REFERENCES commits(cid),
+    FOREIGN KEY(parent) REFERENCES commits(cid)
+);
+#+END_SRC
+
+- Footers (such as Sign-Off-By)
+
+#+BEGIN_SRC sql
+CREATE TABLE footers (
+    cid character(40),
+    idx integer,
+    key TEXT,
+    value TEXT,
+
+    PRIMARY KEY(cid,idx),
+    FOREIGN KEY(cid) REFERENCES commits(cid),
+    FOREIGN KEY(parent) REFERENCES commits(cid)
+);
+#+END_SRC
+
+- Full log. it is stored in a different table due than commits
+
+#+BEGIN_SRC sql
+CREATE TABLE logs (
+    cid character(40),
+    log TEXT,
+
+    PRIMARY KEY(cid),
+    FOREIGN KEY(cid) REFERENCES commits(cid)
+);
+#+END_SRC
+
+* License
+
+This software is licensed under the GPL+3.0
+
+- Its dependencies:
+  - jgit: BSD3 license
+  - slick: MIT
+  - sqlite-jdbc: Apache-2.0
+  - HikariCP: Apache-2.0

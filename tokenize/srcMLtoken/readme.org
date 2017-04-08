@@ -32,4 +32,7 @@ make
 The code is mostly derived from the examples of Xerces, hence it is under the
 Apache-2.0
 
+- its dependencies
+  - xerces: Apache-2.0 
+
 

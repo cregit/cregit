@@ -1,0 +1,35 @@
+* Introduction
+
+srcMLtoken transcodes the output of srcML (www.srcml.org) to a tokenized view that can be used by cregit.
+
+* Requirements
+
+- srcml must be installed and in the PATH (www.srcml.org)
+
+* How to use
+
+The input of srml2token is the output of srcml. srml2token takes no parameters, and it reads its input from stdin and writes to stdout.
+
+#+BEGIN_SRC sh
+srcml -l C --position <filename> | srcml2token
+#+END_SRC
+
+* How to build
+
+- It requires xerces to be installed
+- simply run make 
+
+#+BEGIN_SRC sh
+make
+#+END_SRC
+
+* TODO
+
+- create a cmake configuration file for it
+
+* License
+
+The code is mostly derived from the examples of Xerces, hence it is under the
+Apache-2.0
+
+

@@ -74,3 +74,9 @@ This software is licensed under the GPL+3.0
   - slick: MIT
   - sqlite-jdbc: Apache-2.0
   - HikariCP: Apache-2.0
+
+* TODO
+
+- many of the footers returned by jgit are invalid. there is need for a whitelist of 
+  key values.
+

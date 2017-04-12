@@ -74,9 +74,7 @@ my $contents;
 
 die "Sha dir [$shaDir] does not exist" if not -d $shaDir;
 
-while (<>) {
-    $contents .= $_;
-}
+my $contents = join( "", <> );
 
 my $sha1 = sha1_hex($contents);
 
@@ -102,7 +100,11 @@ if (not defined($mapLang{$fileExt})) {
 }
 
 if (-f $filename) {
-    print `cat $filename`;
+    open(IN, $filename) || die "unable to open memoized file [$filename]";
+    my $contents = join( "", <IN> );
+    print $contents;
+    close(IN);
+    
 } else {
 
   my ($fh, $file) = mkstemp( "tmpfile-in-XXXXX" );

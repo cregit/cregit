@@ -20,12 +20,14 @@ Options:
    --srcml2token=<path to srcml2token>
    --srcml=<path to srcml>
    --language=<C/C++/Java>
+   --ctags=-<path to ctags-exuberant>
 ";
 
 
 
 my $srcml   = "srcml";
 my $srcml2token = "srcml2token";
+my $ctags = "ctags-exuberant";
 my $language = "C";
 my $verbose;
 GetOptions ("srcml=s" => \$srcml, 
@@ -53,7 +55,7 @@ if ($output ne "") {
     select OUT;
 }
 
-Read_Declarations($filename);
+Read_Declarations($filename, $language);
 
 #Declarations_Test();
 
@@ -158,8 +160,8 @@ sub Get_Declaration
 
 sub Read_Declarations
 {
-    my ($filename) = @_;
-    my $CTAGS = "ctags-exuberant --language-force=c -x -u";
+    my ($filename, $language) = @_;
+    my $CTAGS = "$ctags --language-force=$language -x -u";
 
     open(ctags, "$CTAGS '$filename'|") or die "Unable to execute ctags on file [$filename]";
 

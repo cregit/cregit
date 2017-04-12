@@ -33,6 +33,7 @@
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/sax2/SAX2XMLReader.hpp>
 
+#define CREGIT_VERSION "0.0.1"
 
 // ---------------------------------------------------------------------------
 //  This is a simple class that lets us do easy (though not terribly efficient)

@@ -135,7 +135,11 @@ void srcml2tokenHandlers::startElement(const XMLCh* const //uri
             auto revision = get_attribute_value(attrs, "revision");
             auto language = get_attribute_value(attrs, "language");
             if (revision != "" && language != "") {
-                std::cout << "-:-" << "\t" << "begin_unit|" << revision << ";" << language << std::endl;
+                std::cout << "-:-" << "\t" << "begin_unit|" <<
+                    "revision:" << revision << ";" <<
+                    "language:" << language << ";" <<
+                    "cregit-version:" << CREGIT_VERSION <<
+                    std::endl;
             } else {
                 std::cout << "-:-" << "\t" << "begin_" << tagLocal << std::endl;
             }

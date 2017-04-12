@@ -32,6 +32,16 @@
 #include <xercesc/sax/SAXException.hpp>
 
 
+std::string get_attribute_value(const Attributes& attrs, std::string name) {
+    XMLCh* revName= XMLString::transcode(name.c_str());
+    char* st = XMLString::transcode(attrs.getValue(revName));
+    std::string result = "";
+    if (st != NULL)
+        result = st;
+    return result;
+}
+
+
 std::string mytrim(const std::string& str,
                  const std::string& whitespace = " \t\n")
 {
@@ -100,16 +110,15 @@ std::string srcml2tokenHandlers::getPosition()
 }
 
 
-
 // ---------------------------------------------------------------------------
 //  srcml2tokenHandlers: Implementation of the SAX DocumentHandler interface
 // ---------------------------------------------------------------------------
 void srcml2tokenHandlers::startElement(const XMLCh* const //uri
                                      , const XMLCh* const localname
                                      , const XMLCh* const qname
-                                   , const Attributes& attrs)
+                                       , const Attributes& attrs)
 {
-    char *tagLocal = XMLString::transcode(localname);
+    std::string tagLocal = XMLString::transcode(localname);
 //    char *tagName = XMLString::transcode(qname);
     std::string tmp = position(attrs);
     if (tmp != "")  {
@@ -118,14 +127,29 @@ void srcml2tokenHandlers::startElement(const XMLCh* const //uri
     if (depth <= 1)  {
         setPosition(currentPos);
         //std::cout << "-" << "\t" << tagName << " " << depth << std::endl;
-        std::cout << "-:-" << "\t" << "begin_" << tagLocal << std::endl;
+
+        if (tagLocal == "unit") {
+
+//<unit xmlns="http://www.srcML.org/srcML/src" xmlns:cpp="http://www.srcML.org/srcML/cpp" xmlns:pos="http://www.srcML.org/srcML/position" revision="0.9.5" language="C" filename="test-exec/count.cpp" pos:tabs="8"><cpp:include pos:line="1" pos:column="1">#<cpp:directive pos:line="1" pos:column="2">include<pos:position pos:line="1" pos:column="9"/></cpp:directive> <cpp:file pos:line="1" pos:column="10">&lt;iostream&gt;<pos:position pos:line="1" pos:column="23"/></cpp:file></cpp:include>
+
+            auto revision = get_attribute_value(attrs, "revision");
+            auto language = get_attribute_value(attrs, "language");
+            if (revision != "" && language != "") {
+                std::cout << "-:-" << "\t" << "begin_unit|" << revision << ";" << language << std::endl;
+            } else {
+                std::cout << "-:-" << "\t" << "begin_" << tagLocal << std::endl;
+            }
+        } else {
+            std::cout << "-:-" << "\t" << "begin_" << tagLocal << std::endl;
+        }
     }
 
     if (currentContent.length() > 0 ) {
         std::cout << getPosition() << "\t" << currentContent << std::endl;
         currentContent = "";
     }
-
+    
+    
     mystack.push(tagLocal);
     toOutputStack.push(0);
 

@@ -16,7 +16,6 @@
 use strict;
 use File::Basename;
 
-
 my %declarations;
 my %listDeclarations;
 
@@ -92,8 +91,9 @@ sub Tokenize
     open(parser, "$srcml -l $language --position '$filename' | $srcml2token |") or die "Unable to execute ctags on file [$filename]";
 
     my $lastLine = -1;
+
     while (<parser>) {
-#        print STDERR;
+        #        print STDERR;
         chomp;
         my $line =$_;
         die "unable to parse srcml line [$line]" unless $line =~ /^([0-9]+|-):([0-9]+|-)\s+(.+)$/;
@@ -109,7 +109,6 @@ sub Tokenize
             }
         } 
         $lastLine = $line;
-
         print "$token\n";
         if ($token =~ /^end_/) {
             printf "\n";

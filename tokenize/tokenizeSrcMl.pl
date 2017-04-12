@@ -7,19 +7,36 @@ use File::Basename;
 my %declarations;
 my %listDeclarations;
 
-use Getopt::Long;
-  my $srcml   = "srcml";
-  my $srcml2token = "srcml2token";
-  my $verbose;
-  GetOptions ("srcml=s" => \$srcml, 
-              "srcml2token=s"   => \$srcml2token,
-              "verbose"  => \$verbose)   # flag
-  or die("Usage $0 [options] <sourcefilename> <outputfile>*
+my %languages = ("C" => 1,
+                 "C++" => 1,
+                 "Java" => 1);
 
+use Getopt::Long;
+
+my $usage = "
+Usage $0 [options] <sourcefilename> <outputfile>*
+        
 Options:
    --srcml2token=<path to srcml2token>
    --srcml=<path to srcml>
-\n");
+   --language=<C/C++/Java>
+";
+
+
+
+my $srcml   = "srcml";
+my $srcml2token = "srcml2token";
+my $language = "C";
+my $verbose;
+GetOptions ("srcml=s" => \$srcml, 
+            "srcml2token=s"   => \$srcml2token,
+            "language=s"      => \$language,
+            "verbose"  => \$verbose)   # flag
+  or die($usage);
+
+if (not defined($languages{$language})) {
+    die($usage);
+}
 
 
 my $basedir = dirname($0);
@@ -28,7 +45,7 @@ $basedir = "." if ($basedir eq "");
 my $filename = shift;
 my $output = shift;
 
-die "$0 <filename> <outputfile*>" if $filename eq "";
+die $usage if $filename eq "";
 
 print STDERR "Tokenizing $filename\n";
 if ($output ne "") {
@@ -57,7 +74,7 @@ sub Tokenize
     my $PARSER = "tokenizeSrcML";
     my ($filename) = @_;
     #    open(parser, "srcml --src-encoding utf8 -l C --position '$filename' | srcml2token |") or die "Unable to execute ctags on file [$filename]";
-    open(parser, "$srcml -l C --position '$filename' | $srcml2token |") or die "Unable to execute ctags on file [$filename]";
+    open(parser, "$srcml -l $language --position '$filename' | $srcml2token |") or die "Unable to execute ctags on file [$filename]";
 
     my $lastLine = -1;
     while (<parser>) {

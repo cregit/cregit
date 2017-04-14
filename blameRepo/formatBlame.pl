@@ -11,9 +11,11 @@ use Pod::Usage;
 my $blameExtension = ".blame";
 my $help = 0;
 my $man = 0;
+my $verbose = 0;
 
-GetOptions ("blame-extension=s" => \$blameExtension, 
+GetOptions ("blameExtension=s" => \$blameExtension, 
             "help"     => \$help,      # string
+            "verbose"  => \$verbose,
             "man"      => \$man)   # flag
         or die("Error in command line arguments\n");
 
@@ -33,9 +35,13 @@ my $dest = shift @ARGV;
 
 my ($fh, $temp) = mkstemp( "tmpfile-XXXXX" );
 
-Usage("Error [$file] should be a file in repository [$repo] \n\n usage $0 <repo> <filename> <destinationDir>") unless -f "$repo/$file";
+Usage("Error [$file] should be a file in repository [$repo] [$repo/$file]\n\n usage $0 <repo> <filename> <destinationDir>") unless -f "$repo/$file";
 Usage( "Error [$repo] should be a git repo\n\nUsage $0 <repo> <filename> <destinationDir>") unless -d "$repo/.git";
 Usage( "Error [$dest] should be a directory\n\nUsage $0 <repo> <filename> <destinationDir>") unless -d $dest and $dest ne "";
+
+if ($verbose) {
+    print STDERR "$0 processing repo [$repo] file [$file] [$dest]\n";
+}
 
 open(IN, "git -C '$repo' blame  --line-porcelain '$file'|" ) or "unable to execute git ";
 
@@ -46,6 +52,10 @@ while (my $l = Read_Record()) {
 close IN;
 close $fh;
 copy_file($temp, $dest, $file . $blameExtension);
+if ($verbose) {
+    print STDERR "...completed\n";
+}
+
 
 sub Read_Record {
     my $f ;
@@ -104,6 +114,7 @@ __END__
 formatBlame.pl - extract the blame information for a file
 
 =head1 SYNOPSIS
+
 formatBlame.pl [options] <repository> <file> <outputDirectory>
 
      Options:

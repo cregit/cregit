@@ -19,7 +19,7 @@
 # where each token is colorized according to who is the author of the
 # commit that last inserted the token
 #
-# it takes many different parameters:
+# it takes many different parameters (see Usage for how to use)
 #
 #   database of authors: information about unified authors so people with
 #                        different emails have the same identifier

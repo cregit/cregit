@@ -46,8 +46,14 @@ use File::Basename;
 use Set::Scalar;
 use Getopt::Long;
 use Pod::Usage;
+use IO::Handle;
+use File::Basename;
+
+my $commandPath = dirname(__FILE__);
 
 my %memoCidMeta;
+
+my $cregitVersion = "1.0-RC2";
 
 #my $dbName = shift @ARGV;
 #my $authorsDB = shift @ARGV;
@@ -61,28 +67,33 @@ my %memoCidMeta;
 #my $dbName = '/home/linux/linux-token-bfg-4_10.db';
 #my $authorsDB = '/home/dmg/git.projects/l.analysis/new-authors/unified-authors.db';
 
-my $headerFileName;
-my $footerFileName;
+my $headerFileName = $commandPath . "/header.html";
+my $footerFileName = $commandPath . "/footer.html";
 my $help = 0;
 my $man = 0;
 my $verbose = 0;
+my $cregitRepoURL = "https://github.com/REPO_URL/commit/";
 
 GetOptions ("header=s" => \$headerFileName,
-            "footer=s" => \$footerFileName, 
+            "footer=s" => \$footerFileName,
             "help"     => \$help,      # string
             "verbose"  => \$verbose,
             "man"      => \$man)   # flag
         or die("Error in command line arguments\n");
 
-if (scalar(@ARGV) != 5) {
+if (scalar(@ARGV) != 7) {
     Usage();
 }
 
-my $authorsDB = shift @ARGV;
 my $dbName =  shift @ARGV;
+my $authorsDB = shift @ARGV;
 my $source = shift @ARGV;;
 my $token = shift @ARGV;;
+my $outputFile = shift @ARGV;
 my $title = shift @ARGV;
+$cregitRepoURL = shift @ARGV;
+
+open (STDOUT, '>', $outputFile) or die "Unable to write to output file $outputFile";
 
 
 #my $fileBlameURL= 'https://github.com/torvalds/linux/blame/master/';
@@ -390,8 +401,10 @@ sub Output_Token {
         $fun = 'windowpopPreHist';
     } elsif ($repo eq "b") {
         $fun = 'windowpopBitkeeper';
-    } else {
+    } elsif ($repo eq "l") {
         $fun = 'windowpopLinux';
+    } else {
+        $fun = 'windowpop';
     }
 
     print("<a class=\"cregit\" target='_blank' onclick=\"return $fun('$originalcid')\">");
@@ -778,7 +791,8 @@ sub Read_Inc_File {
 
     $lines =~ s/_CREGIT_FILENAME_/$filename/g;
     $lines =~ s/_CREGIT_DIRNAME_/$dir/g;
-
+    $lines =~ s/_CREGIT_VERSION_/$cregitVersion/g;
+    $lines =~ s/_CREGIT_REPO_URL_/$cregitRepoURL/g;
     return $lines;
 }
 
@@ -886,7 +900,7 @@ prettyPrint-author.pl - generate the pretty-printed files
 
 =head1 SYNOPSIS
 
-prettyPrint-author.pl [options] <authorsDB> <tokenizedDB> <originalSourceCode> <tokenizedBlame> <titleOfHTMLfile> 
+prettyPrint-author.pl [options] <cregitDB> <authorsDB>  <originalSourceCode> <tokenizedBlame> <outputFile> <titleOfHTMLfile> 
 
      Options:
        --header=s           File to use as header

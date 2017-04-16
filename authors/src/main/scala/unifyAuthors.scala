@@ -19,9 +19,127 @@ import java.text.Normalizer
 import info.folone.scala.poi._
 import impure._
 
+import slick.driver.SQLiteDriver.api._
+import java.io.File
+import java.util.Calendar 
+
 
 object  unifyAuthors {
 
+  /*
+
+CREATE TABLE authors(
+    recordid int, 
+    author text, 
+    personid text, 
+    email text, 
+    name text, 
+    lcemail text, 
+    userid text, 
+    domain tex, 
+    autcount int,
+    comcount int,
+    dateadded text, 
+    checked text, 
+    explanation text);
+   */
+
+
+  class Authors(tag:Tag) extends Table[(Int,
+      String, String, String, String, String, String, String,
+      Int, Int,
+      String, Boolean, String)](tag, "authors") {
+    def recordid = column[Int]("recordid", O.PrimaryKey)
+
+    def personid = column[String]("personid",  O.SqlType("TEXT"))
+    def author  = column[String]("author", O.SqlType("TEXT"))
+    def email = column[String]("email",  O.SqlType("TEXT"))
+    def name = column[String]("name",  O.SqlType("TEXT"))
+    def lcemail = column[String]("lcemail",  O.SqlType("TEXT"))
+    def userid = column[String]("userid",  O.SqlType("TEXT"))
+    def domain = column[String]("domain",  O.SqlType("TEXT"))
+
+    def autcount = column[Int]("autcount")
+    def comcount = column[Int]("comcount")
+    def dateadded = column[String]("dateadded",  O.SqlType("TEXT"))
+    def checked = column[Boolean]("checked", O.SqlType("BOOLEAN"))
+    def explanation = column[String]("explanation",  O.Nullable, O.SqlType("TEXT"))
+
+    def * = (recordid, personid, author, email, name,
+      lcemail, userid, domain, autcount, comcount,
+      dateadded, checked, explanation)
+  }
+
+  def write_database(
+    dbPath:String,
+    records: Map[String, List[Person]],
+/*
+    keyStats: Map[String, Person_key],
+    allCounts: Map[Person, Int],
+ */
+    authorCounts: Map[Person, Int],
+    commCounts: Map[Person, Int]) = {
+
+    val authors = TableQuery[Authors]
+
+    val dbURL = "jdbc:sqlite:" + dbPath
+    val db = Database.forURL(dbURL, driver = "org.sqlite.JDBC") //forConfig("sqlite")
+
+    val schema = authors.schema
+
+    println("Recreating schema...")
+
+    try {
+      Await.result(db.run(DBIO.seq(
+        schema.drop
+      )), Duration.Inf)
+    }
+    catch {
+      case _: Throwable => println(Console.RED +  "Unable to drop table " + Console.RESET )
+    }
+
+    val now = Calendar.getInstance().getTime()
+
+    val today = (new SimpleDateFormat("yyyy-mm-dd hh:mm:ss")).format(now)
+
+
+    def personRecordToTuple(idx : Int, key:String, p:Person) = {
+      (idx, key, p.name + " <" + p.email + ">", p.email, p.name,
+        p.lcEmail, p.lcUserId, p.lcDomain,
+        authorCounts.getOrElse(p,0),
+        commCounts.getOrElse(p,0),
+//        "lcemail", "userid", "domain", 0, 0,
+        today, false, null)
+    }
+
+    val newAuthors = records.toSeq.sortBy{_._1}.
+      foldLeft((Seq[(Int, String, String, String, String,
+                     String, String, String, 
+                     Int, Int, String, Boolean, String)](), 0)){ case((acc, offset), (key,person)) =>
+      val newRows = person.zipWithIndex.map{case (p,i) =>
+        personRecordToTuple(i+offset, key, p)
+      }
+      (acc ++ newRows, offset + newRows.size)
+    }._1
+
+    try {
+      Await.result(db.run(DBIO.seq(
+        schema.create
+      )), Duration.Inf)
+    }
+    catch {
+      case _: Throwable => println(Console.RED +  "Unable to create table " + Console.RESET )
+    }
+
+    val insert = DBIO.seq(
+        authors ++= newAuthors
+    )
+    Await.result(db.run(insert), Duration.Inf)
+
+    println("Finished creating table authors...")
+
+    db.close
+  }
 
   def strip_accents(s:String) :String = {
     val s2 = Normalizer.normalize(s, Normalizer.Form.NFD);
@@ -322,9 +440,9 @@ object  unifyAuthors {
 
     write_sheet(sheetfile, mapByKey, keys, everybody, autMap, commitMap)
 
-    println("Replacing tables  in database... $dbName" )
+    println("Replacing tables  in database... ${dbName}" )
 
-   // write_database($dbName, mapByKey, keys, everybody, autMap, commitMap)
+    write_database(dbName, mapByKey, autMap, commitMap)
 
 /*
     System.exit(0)

@@ -11,14 +11,29 @@
 #+PROPERTY: header-args:R               :results output  :colnames yes
 #+OPTIONS: ^:nil
 
+* Preliminaries
+
+- Code is written in scala, C++ and perl. 
+- For scala code, use bst to build and run programs. It is the easiest
+- This code has only being tested under Linux, but it should run in under MacOS
+
 * Prerequisites
 
-srml
+| srml       | http://www.srcml.org/           | Make sure srml is in the path       |
+| bfg-cregit | https://github.com/dmgerman/bfg | fork of bfg with my patches applied |
 
+** Other
+
+- Perl programs might require many modules. They need to be documented here
+- scala code has many requirements, but they are handled by sbt
+
+* How to build
+
+- use sbt to compile and run the code. it is the easiest way
 
 * How to use
 
- a. Create the view repository. 
+a. Create the view repository. 
 
 To tokenize the files we require to create some environment variables to communicate with the tokenizing script
 
@@ -38,42 +53,47 @@ export BFG_TOKENIZE_CMD=/home/dmg/git.dmg/cregit-scala/tokenize/tokenizeSrcMl.pl
 java -jar bfg-cregit.jar '--blob-exec:/home/dmg/git.dmg/cregit-scala/tokenizeByBlobId/tokenBySha.pl=.[ch]$' --no-blob-protection /path/repo
 #+END_SRC
 
-  b. Create the history database for the original repo
+b. Create the history database for the original repo
 
 #+BEGIN_SRC sh
 run /tmp/xournal-original.db /home/dmg/git.hacking.mine/xournal 
 #+END_SRC
 
-  c. Create the history database for the cregit repo
+c. Create the history database for the cregit repo
 
 #+BEGIN_SRC sh
 run /tmp/xournal-cregit.db /tmp/xournal
 #+END_SRC
 
-4. Create the authors database
+d. Create the authors database
 
 #+BEGIN_SRC 
 java -jar authors.jar /home/dmg/git.hacking.mine/xournal /tmp/xournal.xls /tmp/xournal-authors.db
 #+END_SRC
 
-5. Create blame of cregit files
+e. Create blame of cregit files
 
 #+BEGIN_SRC sh
 perl blameRepoFiles.pl --verbose --formatBlame=./formatBlame.pl /tmp/xournal /tmp/blame '\.[ch]$
 #+END_SRC
 
-6. create the table with the map from newcommits to commits
+f. create the table with the map from newcommits to commits
 
 #+BEGIN_SRC sh
 java -jar remapCommits.jar /tmp/xournal-cregit.db /tmp/xournal
 #+END_SRC
 
-6. Create html version of the files
+g. Create html version of the files
 
+Example:
+
+#+BEGIN_SRC sh
 perl prettyPrint-author.pl /tmp/xournal-authors.db /tmp/xournal-cregit.db ~/git.hacking.mine/xournal/src/xo-file.c /tmp/blame/src/xo-file.c.blame "ABC"  > /tmp/rip.html
+#+END_SRC
 
 
 
+* License
 
-
+The license is GPL-3.0+
 

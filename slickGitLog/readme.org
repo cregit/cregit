@@ -69,11 +69,12 @@ CREATE TABLE logs (
 
 This software is licensed under the GPL+3.0
 
-- Its dependencies:
-  - jgit: BSD3 license
-  - slick: MIT
-  - sqlite-jdbc: Apache-2.0
-  - HikariCP: Apache-2.0
+| jgit        | https://eclipse.org/jgit/           | BSD3   |
+| poi scala   | https://github.com/folone/poi.scala | Apache-2.0   |
+| apache poi  | https://poi.apache.org/             | Apache-2.0   |
+| slick       | http://slick.lightbend.com/         | MIT          |
+| sqlite-jdbc |                                     | Apache-2.0   |
+| HikariCP    |                                     | Apache-2.0   |
 
 * TODO
 

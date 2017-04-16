@@ -1,0 +1,85 @@
+#+STARTUP: showall
+#+STARTUP: lognotestate
+#+TAGS:
+#+SEQ_TODO: TODO STARTED DONE DEFERRED CANCELLED | WAITING DELEGATED APPT
+#+DRAWERS: HIDDEN STATE
+#+TITLE: Unifier of identities of committers and authors of a github repo
+#+CATEGORY: 
+#+PROPERTY: header-args:sql             :engine postgresql  :exports both :cmdline csc370
+#+PROPERTY: header-args:sqlite          :db /path/to/db  :colnames yes
+#+PROPERTY: header-args:C++             :results output :flags -std=c++14 -Wall --pedantic -Werror
+#+PROPERTY: header-args:R               :results output  :colnames yes
+#+OPTIONS: ^:nil
+
+This program extracts all the committers and authors of commits of a git repo and unifies their identities.
+
+The output of this program are both a spreedsheet and a table (in a sql database).
+
+* How to run
+
+java authors.jar <repodir> <spreadsheet-file>  <sqlite-file>
+
+- *Warning*: it will overwrite both files
+
+
+* SQLite
+
+** Schema
+
+The table is called authors and has the following schema:
+
+#+BEGIN_SRC sql
+CREATE TABLE authors(
+    recordid int PRIMARY KEY, 
+    author text, 
+    personid text, 
+    email text, 
+    name text, 
+    lcemail text, 
+    userid text, 
+    domain tex, 
+    autcount int,
+    comcount int,
+    dateadded text, 
+    checked text, 
+    notes text);
+#+END_SRC
+
+Explanation of the fields.
+
+| name      | explanation                                   | notes                            |
+|-----------+-----------------------------------------------+----------------------------------|
+| recordid  | An integer, unique across all records         |                                  |
+| author    | full email as used in git                     | it should be renamed             |
+| personid  | unique identifier of this record              | this id is unique per individual |
+| email     | email parl of the full email                  |                                  |
+| name      | name part of the full email                   |                                  |
+| lcemail   | lowercase version of the email                | useful for reviewing of records  |
+| userid    | lowercase user part of the email              |                                  |
+| domain    | lowercase domain part of the email            |                                  |
+| autcount  | number of commits this record authored        |                                  |
+| comcount  | number of commits this record committed       |                                  |
+| dateadded | date in which the record was added to the db  |                                  |
+| checked   | true if this record has been manually checked |                                  |
+| notes     |                                               |                                  |
+
+
+* License
+
+- GPL-3+
+
+* Dependencies
+
+| jgit        | https://eclipse.org/jgit/           | BSD3 |
+| poi scala   | https://github.com/folone/poi.scala | Apache-2.0   |
+| apache poi  | https://poi.apache.org/             | Apache-2.0   |
+| slick       | http://slick.lightbend.com/         | MIT          |
+| sqlite-jdbc |                                     | Apache-2.0   |
+| HikariCP    |                                     | Apache-2.0   |
+
+
+* TODO
+
+- It does not take into consideration the .mailmap file
+- Support incrementally adding authors to the database
+- do not overwrite existing files

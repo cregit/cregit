@@ -1,3 +1,21 @@
+/*
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+*/
+
+
 import scala.collection.immutable.ListMap
 import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +59,7 @@ CREATE TABLE authors(
     comcount int,
     dateadded text, 
     checked text, 
-    explanation text);
+    notes text);
    */
 
 
@@ -63,11 +81,11 @@ CREATE TABLE authors(
     def comcount = column[Int]("comcount")
     def dateadded = column[String]("dateadded",  O.SqlType("TEXT"))
     def checked = column[Boolean]("checked", O.SqlType("BOOLEAN"))
-    def explanation = column[String]("explanation",  O.Nullable, O.SqlType("TEXT"))
+    def notes = column[String]("notes",  O.Nullable, O.SqlType("TEXT"))
 
     def * = (recordid, personid, author, email, name,
       lcemail, userid, domain, autcount, comcount,
-      dateadded, checked, explanation)
+      dateadded, checked, notes)
   }
 
   def write_database(

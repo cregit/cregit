@@ -48,6 +48,9 @@ use Getopt::Long;
 use Pod::Usage;
 use IO::Handle;
 use File::Basename;
+use File::Temp qw/ tempfile tempdir mkstemp/;
+use File::Path qw(make_path remove_tree);
+use File::Copy;
 
 my $commandPath = dirname(__FILE__);
 
@@ -93,7 +96,9 @@ my $outputFile = shift @ARGV;
 my $title = shift @ARGV;
 $cregitRepoURL = shift @ARGV;
 
-open (STDOUT, '>', $outputFile) or die "Unable to write to output file $outputFile";
+my ($fh, $temp) = mkstemp( "tmpfile-XXXXX" );
+
+select($fh);
 
 # file has been created, we can handle interrupts now
 $SIG{INT}  = \&signal_handler;
@@ -385,6 +390,15 @@ while (<TOKEN>) {
 
 Print_File_Stats();
 Print_Footer();
+
+select(STDOUT);
+close $fh;
+
+
+copy_file($temp, $outputFile);
+if ($verbose) {
+    print STDERR "...completed\n";
+}
 
 exit 0;
 
@@ -903,6 +917,25 @@ sub signal_handler{
         unlink($outputFile);
     }
 }
+
+sub copy_file
+{
+    my ($from, $toName) = @_;
+    
+    my $toDir = dirname($toName);
+
+#    printf ("copy [$from] to [$to] [$toDir][$toName]\n");
+
+    die "from file does not exist in copy_file [$from]" if not -f $from;
+
+    if (not -d $toDir) {
+        printf("Creating directory [$toDir]\n");
+	make_path($toDir) or "die unable to create directory $toDir";
+    } 
+    move($from, $toName) or
+            (unlink($toName),  "unable to move [$from] to [$toName]");
+}
+
 
 __END__
 

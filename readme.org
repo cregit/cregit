@@ -15,7 +15,7 @@
 
 - Code is written in scala, C++ and perl. 
 - For scala code, use bst to build and run programs. It is the easiest
-- This code has only being tested under Linux, but it should run in under MacOS
+- This code has only being tested under Linux, but it should run under MacOS
 
 * Prerequisites
 
@@ -88,8 +88,9 @@ g. Create html version of the files
 Example:
 
 #+BEGIN_SRC sh
-perl prettyPrint-author.pl /tmp/xournal-authors.db /tmp/xournal-cregit.db ~/git.hacking.mine/xournal/src/xo-file.c /tmp/blame/src/xo-file.c.blame "ABC"  > /tmp/rip.html
+perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-authors.db ~/git.hacking.mine/xournal-next /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
 #+END_SRC
+
 
 
 

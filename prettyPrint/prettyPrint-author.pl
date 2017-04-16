@@ -95,6 +95,11 @@ $cregitRepoURL = shift @ARGV;
 
 open (STDOUT, '>', $outputFile) or die "Unable to write to output file $outputFile";
 
+# file has been created, we can handle interrupts now
+$SIG{INT}  = \&signal_handler;
+$SIG{TERM} = \&signal_handler;
+
+
 
 #my $fileBlameURL= 'https://github.com/torvalds/linux/blame/master/';
 #my $commitURL = 'https://github.com/torvalds/linux/commit/';
@@ -891,6 +896,13 @@ sub Extract_Name_From_DECL {
     return pop @fields;
 }
 
+sub signal_handler{
+    print STDERR "Program interrupted. Deleting [$outputFile]\n";
+    close (STDOUT);
+    if (-f $outputFile) {
+        unlink($outputFile);
+    }
+}
 
 __END__
 

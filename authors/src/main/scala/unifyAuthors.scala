@@ -78,7 +78,7 @@ CREATE TABLE authors(
     allCounts: Map[Person, Int],
  */
     authorCounts: Map[Person, Int],
-    commCounts: Map[Person, Int]) = {
+    commCounts: Map[Person, Int]):Unit = {
 
     val authors = TableQuery[Authors]
 
@@ -95,7 +95,11 @@ CREATE TABLE authors(
       )), Duration.Inf)
     }
     catch {
-      case _: Throwable => println(Console.RED +  "Unable to drop table " + Console.RESET )
+      case _: Throwable => {
+        println(Console.RED +  "Unable to drop table " + Console.RESET )
+        return
+      }
+        
     }
 
     val now = Calendar.getInstance().getTime()
@@ -128,7 +132,10 @@ CREATE TABLE authors(
       )), Duration.Inf)
     }
     catch {
-      case _: Throwable => println(Console.RED +  "Unable to create table " + Console.RESET )
+      case _: Throwable => {
+        println(Console.RED +  "Unable to create table " + Console.RESET )
+        return;
+      }
     }
 
     val insert = DBIO.seq(

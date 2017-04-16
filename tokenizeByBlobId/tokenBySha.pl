@@ -89,6 +89,8 @@ my $filename = $shaDir . '/' . substr($sha1, 0,2) . '/' . substr($sha1, 2,2) . '
 my $blob = $ENV{BFG_BLOB};
 my $blobFN = $ENV{BFG_FILENAME};
 
+die "BFG_FILENAME environment variable not set " if $blobFN eq "";
+
 my $fileExt;
 
 if ($blobFN =~ /\.([^.]+)/) {
@@ -115,7 +117,7 @@ if (-f $filename) {
 
   my $langOp = "--language=" . $mapLang{$fileExt};
 
-  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute tokenSrcML (verify variable BFG_TOKENIZE_CMD)";
+  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute tokenSrcML (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
 
   while (<PROC>) {
       print $_;

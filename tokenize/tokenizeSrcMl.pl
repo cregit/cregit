@@ -45,6 +45,7 @@ my $verbose;
 GetOptions ("srcml=s" => \$srcml, 
             "srcml2token=s"   => \$srcml2token,
             "language=s"      => \$language,
+            "ctags=s"         => \$ctags,
             "verbose"  => \$verbose)   # flag
   or die($usage);
 

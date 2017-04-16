@@ -160,14 +160,17 @@ object gitLogToDB extends ProgramInfo {
           (cid, p._2, p._1.getName)
         }.toSeq
 
+      val aut = l.getAuthorIdent()
+      val com = l.getCommitterIdent()
+
       (
         // first is the commit tuple
         // second is the log tuple
         // third is a sequence of parents tuple
         // fourth is a sequence of footers tuple
         (cid,
-          l.getAuthorIdent().getName, aWhen,
-          l.getCommitterIdent().getName, cWhen,
+          aut.getName + " <" + aut.getEmailAddress+ ">", aWhen,
+          com.getName + " <" + com.getEmailAddress + ">", cWhen,
           l.getShortMessage,  l.getParentCount > 1
         ),
         (cid, l.getFullMessage()

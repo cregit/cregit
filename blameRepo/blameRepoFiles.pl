@@ -26,11 +26,13 @@ my $help = 0;
 my $man = 0;
 my $blameExtension = ".blame";
 my $overwrite = 0;
+my $verbose = 0;
 
 GetOptions ("formatblame=s" => \$blameCommand,
             "help"     => \$help,      # string
             "blameExtension=s" => \$blameExtension,
-            "overwrite"         => \$overwrite,  
+            "overwrite"         => \$overwrite,
+            "verbose"           => \$verbose,
             "blameCommand=s"   => \$blameCommand,
             "man"      => \$man)   # flag
         or die("Error in command line arguments\n");
@@ -40,7 +42,7 @@ if ($man) {
     exit(1);
 }
 
-if (scalar(@ARGV) < 2) {
+if (scalar(@ARGV) != 3) {
     pod2usage(-verbose=>1);
     exit(1);
 }
@@ -66,9 +68,14 @@ while (<FILES>) {
         next unless /$fileRegExpr/;
     }
 
+            
     
     my $name = $_;
     
+    if ($verbose) {
+        print("matched file: [$name]\n");
+    }
+
     my $originalFile = $repoDir . "/" . $name;
     my $outputFile = $outputDir . "/" . $name . $blameExtension;
 

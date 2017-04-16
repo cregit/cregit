@@ -115,9 +115,7 @@ CREATE TABLE authors(
     catch {
       case _: Throwable => {
         println(Console.RED +  "Unable to drop table " + Console.RESET )
-        return
       }
-        
     }
 
     val now = Calendar.getInstance().getTime()
@@ -465,7 +463,7 @@ CREATE TABLE authors(
 
     write_sheet(sheetfile, mapByKey, keys, everybody, autMap, commitMap)
 
-    println("Replacing tables  in database... ${dbName}" )
+    println("Replacing tables  in database... $dbName" )
 
     write_database(dbName, mapByKey, autMap, commitMap)
 

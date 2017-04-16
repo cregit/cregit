@@ -276,7 +276,13 @@ while (<TOKEN>) {
 
     if ($first and /^begin_unit/) {
         # we process the blame file
+        
         $isBlame = 0;
+        $first = 0;
+    }
+
+    if ($first and /begin_unit/) {
+        $token = s/\|.*$//;
         $first = 0;
     }
 
@@ -658,10 +664,10 @@ sub Get_Cid_Meta {
         $ret = $memoCidMeta{$cid};
         return @$ret;
     } else {
-        my @meta = Simple_Query($dbh, "select personid, autdate, summary,originalcid, repo  from commits natural join authors natural left join commitmap where cid = ?;", $cid);
+        my @meta = Simple_Query($dbh, "select personid, autdate, summary,originalcid, repo  from commits natural left join authors natural left join commitmap where cid = ?;", $cid);
 
         if (scalar(@meta) != 5 ) {
-            die "commit not found [$cid]";
+            die "metadata for commit not found [$cid]";
         }
 
         # we need to clean up the summary because it might have HTML characters

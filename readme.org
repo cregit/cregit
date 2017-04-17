@@ -97,5 +97,12 @@ perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-authors
 
 * License
 
-The license is GPL-3.0+
+The license of Cregit is GPL-3.0+
 
+* TODO
+
+- create temporary files in proper location
+- output identities authors to the authors database
+- use preferred name in html files
+- create a driver program for processing an entire repository
+- customize programs to read a JSON file with configuration?

@@ -78,7 +78,7 @@ java -jar authors.jar /home/dmg/git.hacking.mine/xournal /tmp/xournal.xls /tmp/x
 e. Create blame of cregit files
 
 #+BEGIN_SRC sh
-perl blameRepoFiles.pl --verbose --formatBlame=./formatBlame.pl /tmp/xournal /tmp/blame '\.[ch]$
+perl blameRepoFiles.pl --verbose --formatBlame=./formatBlame.pl /tmp/xournal /tmp/blame '\.[ch]$a
 #+END_SRC
 
 f. create the table with the map from newcommits to commits

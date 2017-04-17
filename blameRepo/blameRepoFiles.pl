@@ -20,8 +20,11 @@ use strict;
 use File::Copy;
 use Pod::Usage;
 use Getopt::Long;
+use File::Basename;
 
-my $blameCommand = 'formatBlame.pl';
+my $commandPath = dirname(__FILE__);
+
+my $blameCommand = $commandPath . '/formatBlame.pl';
 my $help = 0;
 my $man = 0;
 my $blameExtension = ".blame";
@@ -73,7 +76,7 @@ while (<FILES>) {
     my $name = $_;
     
     if ($verbose) {
-        print("matched file: [$name]\n");
+        print STDERR ("matched file: [$name]\n");
     }
 
     my $originalFile = $repoDir . "/" . $name;
@@ -88,7 +91,7 @@ while (<FILES>) {
         next;
     }
     $count++;
-    print("$count: $name\n");
+    print STDERR ("$count: $name\n");
 
 
     my $errorCode = execute_command($blameCommand, "--blameExtension=$blameExtension", $repoDir, $name, $outputDir);
@@ -114,6 +117,10 @@ sub execute_command {
     my (@command) = @_;
     # make sure we have more than one element in the array
     #    otherwise system will use the shell to do the execution
+    if ($verbose) {
+        print STDERR join(' ',@command), "\n";
+    }
+
     die "command (@command) seems to be missing parameters" unless (scalar(@command) > 1);
 
     my $status = system(@command);

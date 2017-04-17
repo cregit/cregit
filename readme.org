@@ -45,7 +45,11 @@ Example:
 - use the tokenizeByBlobId/tokenBySha.pl to do the tokenization
 - tokenBySha.pl will execute 
 
+#+BEGIN_SRC sh
 ./tokenizeSrcMl.pl --srcml2token=<path to srcml2token> --srcml=<path to srcml> --ctags=<path to ctags-exuberant>
+#+END_SRC
+
+Run it as:
 
 #+BEGIN_SRC sh
 export BFG_MEMO_DIR=/tmp/memo
@@ -90,9 +94,6 @@ Example:
 #+BEGIN_SRC sh
 perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-authors.db ~/git.hacking.mine/xournal-next /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
 #+END_SRC
-
-
-
 
 * License
 

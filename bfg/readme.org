@@ -4,7 +4,7 @@
 
 - It is based on code by Paul Draper (see https://github.com/rtyley/bfg-repo-cleaner/pull/83) 
 
-* How use
+* How to use
 
 - fork bfg: https://github.com/rtyley/bfg-repo-cleaner
 

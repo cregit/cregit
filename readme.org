@@ -19,8 +19,13 @@
 
 * Prerequisites
 
-| srml       | http://www.srcml.org/           | Make sure srml is in the path       |
-| bfg-cregit | https://github.com/dmgerman/bfg | fork of bfg with my patches applied |
+| srml | http://www.srcml.org/                      | Make sure srml is in the path     |
+| bfg  | https://github.com/rtyley/bfg-repo-cleaner | It needs to be patched. see below |
+|      |                                            |                                   |
+
+** bfg
+
+- you must fork bfg and apply the patch found in the directory [[./bfg/readme.org][bfg]].
 
 ** Other
 

@@ -11,32 +11,39 @@
 #+PROPERTY: header-args:R               :results output  :colnames yes
 #+OPTIONS: ^:nil
 
+[[./logos/cregit.png]]
+
 * Preliminaries
 
 - Code is written in scala, C++ and perl. 
-- For scala code, use bst to build and run programs. It is the easiest
+- For scala code, use sbt to build and run programs. It is the easiest
 - This code has only being tested under Linux, but it should run under MacOS
 
 * Prerequisites
 
 | srml | http://www.srcml.org/                      | Make sure srml is in the path     |
 | bfg  | https://github.com/rtyley/bfg-repo-cleaner | It needs to be patched. see below |
-|      |                                            |                                   |
 
 ** bfg
 
-- you must fork bfg and apply the patch found in the directory [[./bfg/readme.org][bfg]].
+1. you must fork bfg
+2. apply the patch found in the directory [[./bfg/readme.org][bfg]].
+3. build
 
-** Other
+** Dependencies:
 
-- Perl programs might require many modules. They need to be documented here
-- scala code has many requirements, but they are handled by sbt
+For each module, its dependencies are documented in their corresponding readme.org file.
 
 * How to build
 
-- use sbt to compile and run the code. it is the easiest way
+- use sbt to compile the scala code
+- use make to compile the C++ code
+- perl scripts can be run without compilation
 
 * How to use
+
+This is the workflow to process a git repository with cregit, and to generate the HTML views of its contributions.
+
 
 a. Create the view repository. 
 

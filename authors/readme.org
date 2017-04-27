@@ -21,7 +21,6 @@ java authors.jar <repodir> <spreadsheet-file>  <sqlite-file>
 
 - *Warning*: it will overwrite both files
 
-
 * SQLite
 
 ** Schema
@@ -80,6 +79,12 @@ Explanation of the fields.
 
 * TODO
 
-- It does not take into consideration the .mailmap file
-- Support incrementally adding authors to the database
-- do not overwrite existing files
+The following are issues that need to be addressed.
+
+- It need to take into consideration the .mailmap file
+
+- It needs to Support incrementally adding authors to the database. The idea behind is that once names have been vetted,
+  those names will not be matched again.
+  
+- Ask if the files should be overwritten
+

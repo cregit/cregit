@@ -1,14 +1,5 @@
 #+STARTUP: showall
-#+STARTUP: lognotestate
-#+TAGS:
-#+DRAWERS: HIDDEN STATE
-#+TITLE: 
-#+CATEGORY: 
-#+PROPERTY: header-args:sql             :engine postgresql  :exports both :cmdline csc370
-#+PROPERTY: header-args:sqlite          :db /path/to/db  :colnames yes
-#+PROPERTY: header-args:C++             :results output :flags -std=c++14 -Wall --pedantic -Werror
-#+PROPERTY: header-args:R               :results output  :colnames yes
-#+OPTIONS: ^:nil
+#+TITLE: readme
 
 [[./logos/cregit.png]]
 

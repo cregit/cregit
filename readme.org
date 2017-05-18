@@ -1,4 +1,5 @@
 #+STARTUP: showall
+#+SEQ_TODO: STARTED DONE DEFERRED CANCELLED | WAITING DELEGATED APPT
 #+TITLE: readme
 
 [[./logos/cregit.png]]

@@ -15,9 +15,11 @@ java -jar gitLogToDB.jar <dbfile> <pathToGitrepo>
 #+BEGIN_SRC sql
 CREATE TABLE commits (
     cid character(40),
-    author character varying(200),
+    autname TEXT,
+    autemail TEXT,
     autdate TEXT,
-    committer character varying(200),
+    comname TEXT,
+    comemail TEXT,
     comdate TEXT,
     summary varchar,
     ismerge boolean,

@@ -111,15 +111,17 @@ class Logs(tag:Tag) extends Table[(String, String)](tag, "logs") {
   def * = (cid, log)
 }
 
-class Commits(tag:Tag) extends Table[(String, String, String, String, String, String, Boolean)](tag, "commits") {
+class Commits(tag:Tag) extends Table[(String, String, String, String, String, String, String, String, Boolean)](tag, "commits") {
   def cid = column[String]("cid", O.PrimaryKey, O.SqlType("CHAR(40)"))
-  def author  = column[String]("author", O.SqlType("TEXT"))
+  def autname  = column[String]("autname", O.SqlType("TEXT"))
+  def autemail  = column[String]("autemail", O.SqlType("TEXT"))
   def autdate  = column[String]("autdate", O.SqlType("TEXT"))
-  def committer  = column[String]("committer", O.SqlType("TEXT"))
+  def comname  = column[String]("comname", O.SqlType("TEXT"))
+  def comemail  = column[String]("comemail", O.SqlType("TEXT"))
   def comdate  = column[String]("comdate", O.SqlType("TEXT"))
   def summary = column[String]("summary", O.SqlType("TEXT"))
   def ismerge = column[Boolean]("ismerge", O.SqlType("BOOLEAN"))
-  def * = (cid, author, autdate, committer, comdate, summary, ismerge)
+  def * = (cid, autname, autemail, autdate, comname, comemail, comdate, summary, ismerge)
 }
 
 class Footers(tag:Tag) extends Table[(String, Int, String, String)](tag, "footers") {
@@ -163,14 +165,19 @@ object gitLogToDB extends ProgramInfo {
       val aut = l.getAuthorIdent()
       val com = l.getCommitterIdent()
 
+      def remove_trailing_space(st:String) = st.replaceAll(" $", "")
+
       (
         // first is the commit tuple
         // second is the log tuple
         // third is a sequence of parents tuple
         // fourth is a sequence of footers tuple
+
         (cid,
-          aut.getName + " <" + aut.getEmailAddress+ ">", aWhen,
-          com.getName + " <" + com.getEmailAddress + ">", cWhen,
+          remove_trailing_space(aut.getName), aut.getEmailAddress,
+          aWhen,
+          remove_trailing_space(com.getName), com.getEmailAddress,
+          cWhen,
           l.getShortMessage,  l.getParentCount > 1
         ),
         (cid, l.getFullMessage()

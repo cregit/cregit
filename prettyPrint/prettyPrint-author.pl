@@ -505,6 +505,11 @@ sub Skip_Literal {
 
         my $c = Read_Src_Char();
 
+        if (length($c) == 0) {
+            print STDERR "literal [$original][$c] is empty\n";
+            die;
+        }
+
         if (Is_Whitespace($c) and Is_Not_Whitespace($cT)) {
             while (defined($c) and Is_Whitespace($c)) {
                 $text .= $c;
@@ -558,6 +563,7 @@ sub Consume {
 
 sub Is_Whitespace {
     my ($ch) = @_;
+
     die "In whitespace [$ch]. it should be one char" unless length($ch) == 1;
     return $ch =~ /^\s+$/;
 }
@@ -610,8 +616,11 @@ sub Skip_Comment {
                     ($cT, $comment)= Consume($comment);
                     $cTo = ord($cT);
                 }
-            } 
-            die "Token [$cT] Text [$ch][$cTo][$cho]" unless $cT == $ch;
+            }
+            if ($cT != $ch) {
+                print STDERR "not matching\n";
+                die "Token [$cT] Text [$ch]  [$cTo][$cho]";
+            }
         }
        
     }
@@ -662,12 +671,15 @@ sub Skip_Token {
     
     sub Read_Src_Char {
         my $ch ;
+
+
         if (not defined($lastChar)) {
             read(SRC, $ch, 1);
         } else {
             $ch = $lastChar;
             undef $lastChar;
         }
+
         return $ch;
     }
 
@@ -696,7 +708,9 @@ sub Get_Cid_Meta {
         $ret = $memoCidMeta{$cid};
         return @$ret;
     } else {
-        my @meta = Simple_Query($dbh, "select personid, autdate, summary,originalcid, repo  from commits natural left join authors natural left join commitmap where cid = ?;", $cid);
+#        print STDERR "$cid\n";
+        my @meta = Simple_Query($dbh, "
+select personid, autdate, summary,originalcid, repo  from commits left join authors on (autname = name and autemail = email) natural left join commitmap where cid = ?;", $cid);
 
         if (scalar(@meta) != 5 ) {
             die "metadata for commit not found [$cid]";
@@ -945,7 +959,7 @@ prettyPrint-author.pl - generate the pretty-printed files
 
 =head1 SYNOPSIS
 
-prettyPrint-author.pl [options] <cregitDB> <authorsDB>  <originalSourceCode> <tokenizedBlame> <outputFile> <titleOfHTMLfile> 
+prettyPrint-author.pl [options] <cregitDB> <authorsDB>  <originalSourceCode> <tokenizedBlame> <outputFile> <titleOfHTMLfile>  <cregitRepoURL<>
 
      Options:
        --header=s           File to use as header

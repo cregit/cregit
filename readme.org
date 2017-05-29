@@ -35,6 +35,8 @@ For each module, its dependencies are documented in their corresponding readme.o
 
 This is the workflow to process a git repository with cregit, and to generate the HTML views of its contributions.
 
+- It assumes that the cregit-repository will be created in /tmp/xournal
+- The original repository is located at /home/dmg/git.hacking.mine/xournal
 
 a. Create the view repository. 
 
@@ -63,13 +65,13 @@ java -jar bfg-cregit.jar '--blob-exec:/home/dmg/git.dmg/cregit-scala/tokenizeByB
 b. Create the history database for the original repo
 
 #+BEGIN_SRC sh
-run /tmp/xournal-original.db /home/dmg/git.hacking.mine/xournal 
+java -jar slickGitLog.jar /tmp/xournal-original.db /home/dmg/git.hacking.mine/xournal 
 #+END_SRC
 
 c. Create the history database for the cregit repo
 
 #+BEGIN_SRC sh
-run /tmp/xournal-cregit.db /tmp/xournal
+java -jar slickGitLog.jar /tmp/xournal-cregit.db /tmp/xournal
 #+END_SRC
 
 d. Create the authors database
@@ -81,7 +83,7 @@ java -jar authors.jar /home/dmg/git.hacking.mine/xournal /tmp/xournal.xls /tmp/x
 e. Create blame of cregit files
 
 #+BEGIN_SRC sh
-perl blameRepoFiles.pl --verbose --formatBlame=./formatBlame.pl /tmp/xournal /tmp/blame '\.[ch]$a
+perl blameRepoFiles.pl --verbose --formatBlame=./formatBlame.pl /tmp/xournal /tmp/blame '\.[ch]$'
 #+END_SRC
 
 f. create the table with the map from newcommits to commits

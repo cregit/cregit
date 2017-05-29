@@ -50,6 +50,9 @@ my %mapLang = (
                "java" => 'Java',
                "cpp" => 'C++',
                "c++" => 'C++',
+               "go"  => 'Go',
+               "md" => "Markdown",
+               "yaml" => "Yaml",
               );
 
 
@@ -117,7 +120,7 @@ if (-f $filename) {
 
   my $langOp = "--language=" . $mapLang{$fileExt};
 
-  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute tokenSrcML (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
+  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
 
   while (<PROC>) {
       print $_;

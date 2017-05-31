@@ -74,10 +74,10 @@ c. Create the history database for the cregit repo
 java -jar slickGitLog.jar /tmp/xournal-cregit.db /tmp/xournal
 #+END_SRC
 
-d. Create the authors database
+d. Create the persons database
 
 #+BEGIN_SRC 
-java -jar authors.jar /home/dmg/git.hacking.mine/xournal /tmp/xournal.xls /tmp/xournal-authors.db
+java -jar persons.jar /home/dmg/git.hacking.mine/xournal /tmp/xournal.xls /tmp/xournal-persons.db
 #+END_SRC
 
 e. Create blame of cregit files
@@ -97,7 +97,7 @@ g. Create html version of the files
 Example:
 
 #+BEGIN_SRC sh
-perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-authors.db ~/git.hacking.mine/xournal-next /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
+perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-persons.db ~/git.hacking.mine/xournal-next /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
 #+END_SRC
 
 * License
@@ -106,8 +106,7 @@ The license of Cregit is GPL-3.0+
 
 * TODO
 
-- create temporary files in proper location
-- output identities authors to the authors database
+- create temporary files in TMP proper location
 - use preferred name in html files
 - create a driver program for processing an entire repository
 - customize programs to read a JSON file with configuration?

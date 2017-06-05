@@ -97,7 +97,7 @@ g. Create html version of the files
 Example:
 
 #+BEGIN_SRC sh
-perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-persons.db ~/git.hacking.mine/xournal-next /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
+perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-persons.db ~/git.hacking.mine/xournal /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
 #+END_SRC
 
 * License

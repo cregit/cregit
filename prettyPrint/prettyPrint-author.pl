@@ -138,19 +138,19 @@ my $currentColor =1;
 
 my @palette = (
                "hsl(017, 097%, 044%)",
-               "hsl(000, 000%, 000%)",
+               "hsl(169, 049%, 031%)",
                "hsl(208, 068%, 052%)",
                "hsl(316, 056%, 025%)",
                "hsl(104, 044%, 045%)",
                "hsl(329, 089%, 037%)",
                "hsl(247, 087%, 031%)",
                "hsl(182, 082%, 033%)",
+               "hsl(000, 000%, 000%)",
                "hsl(312, 092%, 028%)",
                "hsl(034, 094%, 053%)",
                "hsl(156, 096%, 032%)",
                "hsl(351, 031%, 051%)",
                "hsl(338, 078%, 051%)",
-               "hsl(169, 049%, 031%)",
                "hsl(273, 073%, 050%)",
                "hsl(021, 061%, 036%)",
                "hsl(173, 093%, 047%)",
@@ -416,6 +416,7 @@ sub Print_Footer{
 sub Output_Token {
     my ($text, $originalcid, $repo) = @_;
     my $fun;
+    # these are hardcoded for linux :)
     if ($repo eq "p") {
         $fun = 'windowpopPreHist';
     } elsif ($repo eq "b") {
@@ -447,12 +448,12 @@ sub Print_Func_Stats {
         my $ccount = Function_Count_Commits($k);
         my $prop = sprintf("%.2f\%", 100.0 * $toks/$tot );
         my $cprop = sprintf("%.2f\%", 100.0 * $ccount/$totCommits);
-        print "<tr><td>" , Span_Color_Tag(Get_Author_Color($k), $k), $k,"</span>", "</td><td>$k</td><td align=\"right\">$toks</td><td align=\"right\">$prop</td><td align=\"right\">$ccount</td><td align=\"right\">$cprop</td>";
+        print "<tr><td>" , Span_Color_Tag(Get_Author_Color($k), $k), $k,"</span>", "</td><td align=\"right\">$toks</td><td align=\"right\">$prop</td><td align=\"right\">$ccount</td><td align=\"right\">$cprop</td>";
 #        print "<tr><td>$k</td>";
         print "</tr>\n";
 
     }
-    print "<tr><td></td><td>Total</td><td  align=\"right\">$tot</td><td align=\"right\">100.00%</td><td align=\"right\">$totCommits</td><td align=\"right\">100.00%</td></tr>";
+    print "<tr><td>Total</td><td  align=\"right\">$tot</td><td align=\"right\">100.00%</td><td align=\"right\">$totCommits</td><td align=\"right\">100.00%</td></tr>";
 
     print "</table>\n";
 }
@@ -477,11 +478,11 @@ sub  Print_File_Stats {
         my $ccount = Count_Commits($k);
         my $cprop = sprintf("%.2f\%", 100.0 * $ccount/$totCommits);
 
-        print "<tr><td>" , Span_Color_Tag(Get_Author_Color($k), $k), $k,"</span>", "</td><td>$k</td><td align=\"right\">$toks</td><td align=\"right\">$prop</td><td align=\"right\">$ccount</td><td align=\"right\">$cprop</td>";
+        print "<tr><td>" , Span_Color_Tag(Get_Author_Color($k), $k), $k,"</span>", "</td><td align=\"right\">$toks</td><td align=\"right\">$prop</td><td align=\"right\">$ccount</td><td align=\"right\">$cprop</td>";
 #        print "<tr><td>$k</td>";
         print "</tr>\n";
     }
-    print "<tr><td></td><td>Total</td><td align=\"right\">$tot</td><td align=\"right\">100.00%</td><td align=\"right\">$totCommits</td><td align=\"right\">100.00%</td></tr>";
+    print "<tr><td>Total</td><td align=\"right\">$tot</td><td align=\"right\">100.00%</td><td align=\"right\">$totCommits</td><td align=\"right\">100.00%</td></tr>";
     print "</table>\n";
 }
 
@@ -710,7 +711,11 @@ sub Get_Cid_Meta {
     } else {
 #        print STDERR "$cid\n";
         my @meta = Simple_Query($dbh, "
-select personid, autdate, summary,originalcid, repo  from commits left join authors on (autname = name and autemail = email) natural left join commitmap where cid = ?;", $cid);
+select coalesce(personname, personid, 'Unknown'), autdate, summary,originalcid, repo  
+from commits  natural left join commitmap 
+   left join emails on (autname = emailname and autemail = emailaddr)
+   natural left join persons
+where cid = ?;", $cid);
 
         if (scalar(@meta) != 5 ) {
             die "metadata for commit not found [$cid]";
@@ -914,7 +919,7 @@ sub Print_Stats_Header {
     my ($title) = @_;
     print "<h4>$title</h4>";
     print '<table>';
-    print "<tr><td></td><td>Person</td><td>Tokens</td><td>Prop</td><td>Commits</td><td>CommitProp</td>";
+    print "<tr><td>Person</td><td>Tokens</td><td>Prop</td><td>Commits</td><td>CommitProp</td>";
 }
          
 

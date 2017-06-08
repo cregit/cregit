@@ -33,19 +33,24 @@ Options:
    --srcml=<path to srcml>
    --language=<C/C++/Java>
    --ctags=-<path to ctags-exuberant>
+   --position
 ";
 
-
+my $basedir = dirname($0);
+$basedir = "." if ($basedir eq "");
 
 my $srcml   = "srcml";
-my $srcml2token = "srcml2token";
+my $srcml2token = "$basedir/srcMLtoken/srcml2token";
 my $ctags = "ctags-exuberant";
 my $language = "C";
 my $verbose;
+my $position = 0;
+
 GetOptions ("srcml=s" => \$srcml, 
             "srcml2token=s"   => \$srcml2token,
             "language=s"      => \$language,
             "ctags=s"         => \$ctags,
+            "position"        => \$position,
             "verbose"  => \$verbose)   # flag
   or die($usage);
 
@@ -54,8 +59,6 @@ if (not defined($languages{$language})) {
 }
 
 
-my $basedir = dirname($0);
-$basedir = "." if ($basedir eq "");
 
 my $filename = shift;
 my $output = shift;
@@ -105,11 +108,17 @@ sub Tokenize
             my @d = Declarations_In_Line($line);
             foreach my $dec (@d) {
                 my %thisDec = Get_Declaration($line, $dec);
+                if ($position) {
+                    print "$line:-|";
+                }
                 print "DECL|";
                 print "$thisDec{type}|$thisDec{name}\n";
             }
         } 
         $lastLine = $line;
+        if ($position) {
+            print "$line:$col|"
+        }
         print "$token\n";
         if ($token =~ /^end_/) {
             printf "\n";

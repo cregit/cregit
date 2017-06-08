@@ -31,12 +31,6 @@
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/sax/SAXException.hpp>
 
-#include <map>
-#include <vector>
-
-std::vector<int> lineMarkers {0};
-std::vector<int> lineNumbers {1};
-
 
 std::string get_attribute_value(const Attributes& attrs, std::string name) {
     XMLCh* revName= XMLString::transcode(name.c_str());
@@ -46,6 +40,7 @@ std::string get_attribute_value(const Attributes& attrs, std::string name) {
         result = st;
     return result;
 }
+
 
 std::string mytrim(const std::string& str,
                  const std::string& whitespace = " \t\n")
@@ -62,72 +57,6 @@ std::string mytrim(const std::string& str,
     return str.substr(strBegin, strRange);
 }
 
-std::string mytrimBegin(const std::string& str,
-                 const std::string& whitespace = " \t\n")
-{
-    std::size_t strBegin = str.find_first_not_of(whitespace);
-//    std::cout << "---[" << str << "]" << strBegin << std::endl;
-
-    if (strBegin == std::string::npos)
-        return ""; // no content
-
-
-    return str.substr(strBegin);
-}
-
-std::pair<int,int> findRow(int position) {
-    //it is most likely we will use the last ones
-    // rather than any so search from the end
-    int i = lineMarkers.size()-1;
-    while (i >= 0 && lineMarkers[i]> position) {
-        i--;
-    }
-    assert(i >=0 && i < lineMarkers.size());
-    
-    return {lineMarkers[i], lineNumbers[i]} ;
-}
-
-
-std::string srcml2tokenHandlers::newGetPosition() {
-//    std::cout << "position [" << currentContentOriginal  << "]";
-
-    auto st = mytrimBegin(currentContentOriginal);
-
-    int whitespace = currentContentOriginal.size() - st.size();
-    int beginning = all_size - st.size();
-
-    auto prevRow = findRow(beginning);
-
-    //std::cout <<"prev row " << prevRow.first << ":" << prevRow.second  << std::endl;
-    
-/*
-    return std::to_string(all_size - st.size()) + ":" +
-        std::to_string(row) + ":" + std::to_string(col-1);
-*/
-    auto col = beginning + 1 -  prevRow.first;
-    return std::to_string(prevRow.second) + ":" + std::to_string(col);
-}
-
-void srcml2tokenHandlers::advance(std::string st) {
-    int i=1;
-
-    for(auto c:st) {
-        if (c == '\n') {
-            row++;
-            auto offset = all_size + i;
-            lineMarkers.push_back(offset);
-            lineNumbers.push_back(row);
-            col = 1;
-        } else {
-            col++;
-        }
-        i++;
-    }
-    all_size += st.size();
-}
-
-
-
 // ---------------------------------------------------------------------------
 //  srcml2tokenHandlers: Constructors and Destructor
 // ---------------------------------------------------------------------------
@@ -141,6 +70,44 @@ srcml2tokenHandlers::~srcml2tokenHandlers()
 {
 }
 
+void srcml2tokenHandlers::setPosition(const std::string newPos)
+{
+    pos = newPos;
+    //std::cout << "setting position " << newPos << std::endl;
+}
+
+void srcml2tokenHandlers::setPosition(const Attributes& attrs)
+{
+    pos = position(attrs);
+}
+
+std::string srcml2tokenHandlers::position(const Attributes& attrs)
+{
+    std::string p = "";
+    XMLCh* lineName= XMLString::transcode("pos:line");
+    char* line = XMLString::transcode(attrs.getValue(lineName));
+    XMLCh* colName= XMLString::transcode("pos:column");
+    char* col = XMLString::transcode(attrs.getValue(colName));
+
+
+    if (line != NULL && col != NULL) {
+//        std::cout << "---"<< line << ":" << col << "---" << std::endl;
+        p = line;
+        p = p + ":" + col;
+        free(line);
+        free(col);
+    }
+//    std::cout << "calling position " << p << std::endl;
+
+    return p;
+}
+
+
+
+std::string srcml2tokenHandlers::getPosition()
+{
+    return pos;
+}
 
 
 // ---------------------------------------------------------------------------
@@ -153,14 +120,12 @@ void srcml2tokenHandlers::startElement(const XMLCh* const //uri
 {
     std::string tagLocal = XMLString::transcode(localname);
 //    char *tagName = XMLString::transcode(qname);
-//    std::string savePos = position(attrs);
-    std::string savePos = newGetPosition();
-    if (savePos != "")  {
-        currentPos = savePos;
-    }    
-
+    std::string tmp = position(attrs);
+    if (tmp != "")  {
+        currentPos = tmp;
+    }
     if (depth <= 1)  {
-
+        setPosition(currentPos);
         //std::cout << "-" << "\t" << tagName << " " << depth << std::endl;
 
         if (tagLocal == "unit") {
@@ -184,15 +149,14 @@ void srcml2tokenHandlers::startElement(const XMLCh* const //uri
     }
 
     if (currentContent.length() > 0 ) {
-        // we output the content of the previous tag here...
-        std::cout << newGetPosition() << "\t" << currentContent << std::endl;
+        std::cout << getPosition() << "\t" << currentContent << std::endl;
         currentContent = "";
-        currentContentOriginal = "";
     }
     
     
     mystack.push(tagLocal);
     toOutputStack.push(0);
+
     depth++;
 
 //    XMLString::release(line);
@@ -208,10 +172,8 @@ void srcml2tokenHandlers::endElement (const XMLCh *const /*uri*/,
 
     // No escapes are legal here
     if (currentContent.length() > 0 ) {
-        std::cout << newGetPosition() << "\t" << currentContent << std::endl;
-
+        std::cout << getPosition() << "\t" << currentContent << std::endl;
         currentContent = "";
-        currentContentOriginal = "";
     } 
 
     std::string parent = mystack.top();
@@ -229,18 +191,15 @@ void srcml2tokenHandlers::endElement (const XMLCh *const /*uri*/,
 void srcml2tokenHandlers::characters(  const   XMLCh* const    chars 
 								    , const XMLSize_t length)
 {
-    std::string original = XMLString::transcode(chars);
-    std::string st = mytrim(original);
+    std::string st = mytrim(XMLString::transcode(chars));
     std::string node = mystack.top();
 
-//    std::cout << "ORIGInAL [" << original <<"]" << std::endl;
-    advance(original);
-    currentContentOriginal+= original;
     
     if (st.length() > 0) {
         std::replace( st.begin(), st.end(), '\n', ' ');
 
         if (currentContent.length() == 0) {
+            setPosition(currentPos);
             currentContent = mystack.top() + "|";
         }
         currentContent = currentContent + st;

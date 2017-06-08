@@ -54,10 +54,11 @@ public:
     void fatalError(const SAXParseException& exc);
     void resetErrors();
     std::string getPosition();
+    std::string newGetPosition();
     void setPosition(const std::string newPos);
     void setPosition(const Attributes& attrs);
     std::string position(const Attributes& attrs);
-
+    void advance(std::string st);
 
 private:
     // -----------------------------------------------------------------------
@@ -76,8 +77,12 @@ private:
     // -----------------------------------------------------------------------
     bool            fSawErrors;
     int depth;
+    int col {1};
+    int row {1};
+    int all_size {0};
     std::string pos;
     std::string currentContent;
+    std::string currentContentOriginal;
     std::string currentPos;
     std::stack<std::string> mystack;
     std::stack<int> toOutputStack;

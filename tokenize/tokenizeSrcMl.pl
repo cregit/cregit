@@ -23,6 +23,15 @@ my %languages = ("C" => 1,
                  "C++" => 1,
                  "Java" => 1);
 
+my %extensions = (".c" => "C",
+                  ".h" => "C",
+                  ".java" => "Java",
+                  ".cpp" => "C++",
+                  ".hpp" => "C++",
+                 );
+
+
+
 use Getopt::Long;
 
 my $usage = "
@@ -42,7 +51,7 @@ $basedir = "." if ($basedir eq "");
 my $srcml   = "srcml";
 my $srcml2token = "$basedir/srcMLtoken/srcml2token";
 my $ctags = "ctags-exuberant";
-my $language = "C";
+my $language = "";
 my $verbose;
 my $position = 0;
 
@@ -54,22 +63,28 @@ GetOptions ("srcml=s" => \$srcml,
             "verbose"  => \$verbose)   # flag
   or die($usage);
 
-if (not defined($languages{$language})) {
-    die($usage);
-}
-
-
 
 my $filename = shift;
 my $output = shift;
 
-die $usage if $filename eq "";
 
 print STDERR "Tokenizing $filename\n";
 if ($output ne "") {
     open(OUT, ">$output") or die "Unable to create output file\n";
     select OUT;
 }
+
+# find language
+
+if ($language eq "") {
+    # autodetect
+    Usage("File has no extension. You must provide one [$filename]") unless $filename =~ /(\.[a-z]+)$/i;
+    my $ext = lc($1);
+    $language = $extensions{$ext};
+    Usage("Unknown extension [$ext] in file [$filename]. You must provide one ") unless defined $language and $language ne "";
+}
+
+Usage("filename not specified") if $filename eq "";
 
 Read_Declarations($filename, $language);
 
@@ -121,6 +136,9 @@ sub Tokenize
         }
         print "$token\n";
         if ($token =~ /^end_/) {
+            if ($position) {
+                print "-:-|"
+            }
             printf "\n";
         }
 
@@ -193,7 +211,7 @@ sub Read_Declarations
         my $line;
         chomp;
         $decl{original} = $_;
-        die "unable to parse output" unless /^([^ ]+)\s+([^ ]+)\s+([0-9]+)\s+(.+)$/;
+        die "unable to parse output [$_]" unless /^([^ ]+)\s+([a-zA-Z][a-zA-Z ]*[a-zA-Z])\s+([0-9]+)\s+(.+)$/;
         ($decl{name}, $decl{type}, $decl{line}, $rest) = ($1, $2, $3, $4);
         $line = $decl{line};
         # skip the filename
@@ -212,3 +230,10 @@ sub Read_Declarations
     close ctags;
 }
 
+
+sub Usage {
+
+    print STDERR @_;
+    die $usage;
+
+}

@@ -287,17 +287,24 @@ my %total;
 my %totalCommitsPerFunc;
 my %totalCommits;
 my $funNameBy;
+
+my $row = 0;
+my $col = 0;
+my $prevRow = 0;
+Init_Location();
+
+my $line = 0;
 while (<TOKEN>) {
     my $token;
     my $file;
     my $cid;
     chomp;
-    
+
     $token = $_;
 
     if ($first and /^begin_unit/) {
         # we process the blame file
-        
+
         $isBlame = 0;
         $first = 0;
     }
@@ -319,7 +326,16 @@ while (<TOKEN>) {
         $token = substr($_, length($temp)+1);
         $token =~ s/^\s*//;
 
-    
+        if ($token !~ /^DECL/) {
+            $line++;
+            print "<a name=\"L${line}\"></a>";
+            ($row, $col) = Location();
+            if ($row != $prevRow) {
+                print "<a name=\"R${row}\"></a>";
+                $prevRow = $row;
+            }
+        }
+
     } else {
         die "This is not a blame file";
     }
@@ -342,6 +358,7 @@ while (<TOKEN>) {
         next;
     }
 #    print STDERR "Cid :$cid\n";
+
     my ($person,$autdate,$sum, $originalcid, $repo) = Get_Cid_Meta($cid);
     print Get_Author_Color_From_Cid($dbh,$cid);
     
@@ -669,6 +686,15 @@ sub Skip_Token {
 
 { 
     my $lastchar;
+    my $row = 1;
+    my $col = 1;
+    my $prevCol = 0;
+
+    sub Init_Location {
+        $row = 1;
+        $col = 1;
+        $prevCol = 0;
+    }
     
     sub Read_Src_Char {
         my $ch ;
@@ -680,12 +706,28 @@ sub Skip_Token {
             $ch = $lastChar;
             undef $lastChar;
         }
+        if ($ch eq "\n") {
+            $row ++;
+            $prevCol = $col;
+            $col = 1;
+        } else {
+            $col++;
+        }
 
         return $ch;
     }
 
     sub Un_Read_Char {
         ($lastChar) = @_;
+
+        if ($lastChar eq "\n") {
+            $row --;
+            $col = $prevCol;
+        } else {
+            $col--;
+        }
+
+        
     }
 
     sub Skip_Whitespace {
@@ -700,6 +742,11 @@ sub Skip_Token {
             Un_Read_Char($ch);
         }
     }
+
+    sub Location {
+        return ($row, $col);
+    }
+
 }
 
 sub Get_Cid_Meta {

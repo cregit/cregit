@@ -90,7 +90,7 @@ object  unifyPersons {
 
   class Persons(tag:Tag) extends Table[(String,String)](tag, "persons") {
     def personid = column[String]("personid", O.SqlType("TEXT"), O.PrimaryKey)
-    def personname = column[String]("personid", O.SqlType("TEXT"))
+    def personname = column[String]("personname", O.Nullable, O.SqlType("TEXT"))
     def * = (personid, personname)
   }
 
@@ -165,6 +165,13 @@ object  unifyPersons {
       emails ++= newEmails
     )
     Await.result(db.run(insert), Duration.Inf)
+
+    def insertPersons: DBIO[Unit] = DBIO.seq(
+  // Insert some suppliers
+      sqlu"insert into persons(personid) select distinct personid from emails;"
+    )
+
+    Await.result(db.run(insertPersons), Duration.Inf)
 
     println("Finished creating table emails...")
 

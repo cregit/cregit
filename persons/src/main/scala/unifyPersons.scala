@@ -167,7 +167,6 @@ object  unifyPersons {
     Await.result(db.run(insert), Duration.Inf)
 
     def insertPersons: DBIO[Unit] = DBIO.seq(
-  // Insert some suppliers
       sqlu"insert into persons(personid) select distinct personid from emails;"
     )
 

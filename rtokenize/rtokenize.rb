@@ -3,7 +3,6 @@
 require 'yaml'
 require 'json'
 require 'optparse'
-require 'pry'
 
 def panic(rcode, msg, e)
   STDERR.puts msg
@@ -360,14 +359,14 @@ while true
         in_data.gsub!(/<<.*>>/, '')
         #STDERR.puts in_data
       else
-        panic(2, "YAML Parse error", e) 
+        panic(2, "YAML Parse error", e)
       end
     elsif options.key?(:json)
       if parse_error == 0
         in_data = '[' + in_data.gsub("}\n{", "},{") + ']'
         multi_json = true
       else
-        panic(2, "JSON Parse error", e) 
+        panic(2, "JSON Parse error", e)
       end
     else
        panic(3, "Unknown language #{options.to_s}", e)

@@ -52,9 +52,6 @@ use File::Temp qw/ tempfile tempdir mkstemp/;
 use File::Path qw(make_path remove_tree);
 use File::Copy;
 
-my $logfile = "perllog.txt";
-open(LOG,">>","$logfile") || die ("Error : can't open log file");
-
 my $commandPath = dirname(__FILE__);
 
 my %memoCidMeta;
@@ -318,7 +315,6 @@ while (<TOKEN>) {
     $token =~ s/^\s*//;
     $token =~ /^(.+?)\|(.+)$/;
     my ($type, $value) = ($1,$2);
-    #print STDERR "i=$i, type=$type, value=$value, token=$token\n";
 
     if ($type eq "FILETYPE") {
         $fileType = Get_File_Type($value);
@@ -328,7 +324,6 @@ while (<TOKEN>) {
         my $line = Extract_Name_From_DECL($value);
         my $len = $line - $filePos;
         if ($len > 0) {
-	    #print STDERR "line=$line/$srcLength\n";
             push(@tokens, $line);
         }
         $filePos = $line;
@@ -340,7 +335,6 @@ $filePos = 0;
 
 my $ti = 1;
 my $tl = scalar @tokens;
-my $ftext = '';
 while (<TOKEN>) {
     my $token;
     my $file;
@@ -378,9 +372,6 @@ while (<TOKEN>) {
         die "This is not a blame file";
     }
 
-
-#    my $token = $_;
-
     if (not $token =~ /^(.+?)\|(.+)$/) {
         if ($token eq "begin_function") {
             $funNameBy = "";
@@ -394,8 +385,6 @@ while (<TOKEN>) {
         }
         next;
     }
-#    print STDERR "Cid :$cid\n";
-    # print STDERR "FileType: $fileType --> $rrr\n";
     my ($person,$autdate,$sum, $originalcid, $repo) = Get_Cid_Meta($cid);
     print Get_Author_Color_From_Cid($dbh,$cid);
     
@@ -408,22 +397,14 @@ while (<TOKEN>) {
             my $end = $tokens[$ti];
             if ($ti == $tl) {
                 $end = $srcLength;
-		# print STDERR "ET: $end\n";
             }
             $len = $end - $line;
-	    #my $token_text = substr($srcContents, $line - 1, $len);
             my $token_text = substr($srcContents, $line, $len);
-            #print STDERR "$line --> $end\n";
-            #print STDERR "$token> $token_text\n";
             if ($ti == 1 && $line > 1) {
-                # print STDERR "FT: 0-$line: " . substr($srcContents, 0, $line) . "\n";
                 Output_Token(substr($srcContents, 0, $line), $originalcid, $repo);
-		# $ftext .= substr($srcContents, 0, $line);
             }
             $ti ++;
-	    # print STDERR "MT: $line-$end: $token_text\n";
             Output_Token($token_text, $originalcid, $repo);
-	    # $ftext .= $token_text;
         }
         Add_Contribution($person, $cid);
         $filePos = $line;
@@ -449,12 +430,10 @@ while (<TOKEN>) {
         ; # do nothing
 
 #        $funNameBy ="Function declaration last changed by by $person [$autdate] $sum";
-        
     } elsif (($type eq "begin_function") or ($type eq "end_function") ) {
         print "<hr>";
         next;
     } else {
-        # print STDERR "Token [$token], Value [$value]\n";
         my $text = Skip_Token($value);
         #        print "<t>$text</t>";
         Output_Token($text, $originalcid, $repo);
@@ -467,11 +446,6 @@ while (<TOKEN>) {
     print "</span>";
     Skip_Whitespace();
 }
-
-# print STDERR "Sum tokens:\n";
-# print STDERR $ftext;
-# print STDERR "Source:\n";
-# print STDERR $srcContents;
 
 Print_File_Stats();
 Print_Footer();
@@ -515,7 +489,6 @@ sub Output_Token {
     print("<a class=\"cregit\" target='_blank' onclick=\"return $fun('$originalcid')\">");
     Print($text);
     print("</a>");
-    # print STDERR $text;
 }
 
 
@@ -735,38 +708,30 @@ sub Skip_Token2 {
 sub Skip_Token {
     my ($token) = @_;
     my $fpos = tell SRC;
-    #print STDERR "TOKEN>: $token\n";
     my $text = '';
     my $origToken = $token;
     $token =~ s/\s//g;
     my $l = length($token);
     my $match ;
-    #print STDERR "TOKEN<: $token\n";
     while ($l > 0) {
         my $ch = Read_Src_Char();
-	#print STDERR "CH: $ch, $l\n";
         $text .= $ch;
-	#print STDERR "TEXT: $text\n";
 
         if (Is_Not_Whitespace($ch)) {
             $l--;
             $match .= $ch;
-	    #print STDERR "MATCH($l): $match\n";
         }
     }
     $match =~ s/\n/ /g;
     if ($token eq $match) {
         return $text;
     }
-    # print STDERR "trials\n";
     seek SRC, $fpos, 0;
     my @trials = (0, -1, 1);
     for (@trials) {
         my $try = $_;
-	# print STDERR "trial $try\n";
 	my $res = Skip_Token_SkipN($try, $origToken);
 	if (not ($res eq 0)) {
-            # print STDERR "good: $res\n";
             return $res;
         }
     }
@@ -780,23 +745,17 @@ sub Skip_Token_SkipN {
     if ($foff != 0) {
         seek SRC, $foff, 1;
     }
-    # print STDERR "foff: $foff\n";
-    # print STDERR "TOKEN>: $token\n";
     my $text = '';
     $token =~ s/[\s\\n]//g;
     my $l = length($token);
     my $match ;
-    # print STDERR "TOKEN<: $token\n";
     while ($l > 0) {
         my $ch = Read_Src_Char();
-	#print STDERR "CH: $ch, $l\n";
         $text .= $ch;
-	#print STDERR "TEXT: $text\n";
 
         if (not ($ch =~ /^[\s\\n]+$/)) {
             $l--;
             $match .= $ch;
-	    #print STDERR "MATCH($l): $match\n";
 	}
     }
     $match =~ s/\n/ /g;
@@ -804,7 +763,6 @@ sub Skip_Token_SkipN {
         return $text;
     } else {
         seek SRC, $fpos, 0;
-	# print STDERR "WARNING [$text]\ntoken [$token]\nmatch [$match]\n";
 	return 0;
     }
 }
@@ -852,7 +810,6 @@ sub Get_Cid_Meta {
         $ret = $memoCidMeta{$cid};
         return @$ret;
     } else {
-        # print STDERR "$cid\n";
         my @meta = Simple_Query($dbh, "
 select coalesce(personname, personid, 'Unknown'), autdate, summary,originalcid, repo  
 from commits  natural left join commitmap 
@@ -882,7 +839,6 @@ sub Get_Author {
 sub Simple_Query {
     my ($dbh, $query, @params) = @_;
 
-    # print LOG "$query\n";
     my $meta = $dbh->prepare($query);
     
     $meta->execute(@params);

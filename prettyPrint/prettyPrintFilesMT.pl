@@ -51,7 +51,6 @@ GetOptions (
             "header=s"          => \$headerFile,
             "footer=s"          => \$footerFile,
             "help"               => \$help,      # string
-#            "githuburl=%s"       => \$githubURL,
             "overwrite"         => \$overwrite,
             "verbose"           => \$verbose,
             "man"      => \$man)   # flag

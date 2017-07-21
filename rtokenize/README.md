@@ -21,7 +21,7 @@ To check this use:
 - `./rlocalize.rb json tokenized_json.token original_json.json [0]`
 - `./rlocalize.rb yaml tokenized_yaml.token original_yaml.yaml [0]`
 
-Parameters are: 
+Parameters are:
 - type of file: json or yaml
 - tokenized file (output of `./rtokenize.rb`)
 - original file

@@ -25,7 +25,7 @@ def lookup_token(ft, tp, val, buf, bufdc, pos)
   tp = tp.downcase
   STDERR.puts [tp, val] unless val[0] == '"' || $quiet
   val = val[1..-2]
- 
+
   skip_types = []
   exact_types = []
   dc_types = []
@@ -48,8 +48,8 @@ def lookup_token(ft, tp, val, buf, bufdc, pos)
     npos = buf.index(val, pos)
     if tp == 'int' && !npos
       vals = [
-        '0' + val.to_i.to_s(010), 
-        '0x' + val.to_i.to_s(0x10), 
+        '0' + val.to_i.to_s(010),
+        '0x' + val.to_i.to_s(0x10),
         '0X' + val.to_i.to_s(0X10),
         val.to_i.to_s(10)
       ]

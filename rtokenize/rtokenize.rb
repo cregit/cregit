@@ -24,6 +24,8 @@ def sanitize_line(line)
   line.gsub(/['"\\]/, '').strip
 end
 
+$is_json = false
+
 def load_with_comments(yf)
   verbose = false
   begin
@@ -238,7 +240,7 @@ def traverse_object(repr, o, oname = nil)
   case o
   when Hash
     repr += emit_token('IDENT', oname) if oname && !is_comment
-    repr += emit_token('SYNTAX', '{')
+    repr += emit_token('SYNTAX', '{') if $is_json
     l = o.count - 1
     o.keys.each_with_index do |k, i|
       kis_comment = k && k.to_s[0..10] == '__comment__'
@@ -247,21 +249,21 @@ def traverse_object(repr, o, oname = nil)
       opi = $pi
       repr = traverse_object(repr, v, k)
       $pi = opi
-      repr += emit_token('SYNTAX', ',') if i < l
+      repr += emit_token('SYNTAX', ',') if $is_json && i < l
     end
-    repr += emit_token('SYNTAX', '}')
+    repr += emit_token('SYNTAX', '}') if $is_json
   when Array
     repr += emit_token('IDENT', oname) if oname && !is_comment
-    repr += emit_token('SYNTAX', '[')
+    repr += emit_token('SYNTAX', '[') if $is_json
     l = o.count - 1
     o.each_with_index do |r, i|
       repr += emit_token('INDEX', i)
       opi = $pi
       repr = traverse_object(repr, r)
       $pi = opi
-      repr += emit_token('SYNTAX',',') if i < l
+      repr += emit_token('SYNTAX', $is_json ? ',' : '-') if i < l
     end
-    repr += emit_token('SYNTAX',']')
+    repr += emit_token('SYNTAX',']') if $is_json
   when NilClass
     repr += emit_token('IDENT', oname) if oname && !is_comment
     repr += emit_token(is_comment ? 'COMMENT' : 'NULL', 'NULL')
@@ -328,6 +330,7 @@ parser = nil
 parser = JSON if options.key?(:json)
 parser = YAMLWithComments if options.key?(:yaml)
 panic(1, 'No parser defined', nil) unless parser
+$is_json = true if options.key?(:json)
 
 in_data = STDIN.read
 if options.key?(:yaml)

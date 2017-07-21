@@ -727,7 +727,7 @@ sub Skip_Token {
         return $text;
     }
     seek SRC, $fpos, 0;
-    my @trials = (0, -1, 1);
+    my @trials = (0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5);
     for (@trials) {
         my $try = $_;
 	my $res = Skip_Token_SkipN($try, $origToken);

@@ -52,29 +52,38 @@ my %mapLang = (
                "c++" => 'C++',
                "go"  => 'Go',
                "md" => "Markdown",
+               "sh" => "Shell",
                "yaml" => "Yaml",
+               "yml" => "Yaml",
+               "json" => "Json",
               );
 
+my $logfile = "perllog.txt";
+my $debugLog = 0;
+open(LOG,">>","$logfile") || die ("Error : can't open log file");
 
 if (not defined($ENV{BFG_MEMO_DIR}) ||  $ENV{BFG_MEMO_DIR} eq "") {
+    print LOG "BFG_MEMO_DIR\n" if $debugLog;
     die "You must define the environment variable BFG_MEMO_DIR equal to the directory where to memoize"
 }
 
 my $shaDir = $ENV{BFG_MEMO_DIR};
 
 if ($shaDir eq "") {
+    print LOG "SHA_DIR\n" if $debugLog;
     die "Directory to use to memoize not set. Use BFG_MEMO_DIR environment variable to set"
 }
 
 my $tokenizeCmd = $ENV{BFG_TOKENIZE_CMD};
 
 if ($tokenizeCmd eq "") {
+    print LOG "TOKENIZE_CMD\n" if $debugLog;
     die ("Tokenize command not defined. Use environment variable BFG_TOKENIZE_CMD");
 }
 
-
 my $contents;
 
+print LOG "SHA_DIR_NE\n" if not -d $shaDir and $debugLog;
 die "Sha dir [$shaDir] does not exist" if not -d $shaDir;
 
 my $contents = join( "", <> );
@@ -92,15 +101,17 @@ my $filename = $shaDir . '/' . substr($sha1, 0,2) . '/' . substr($sha1, 2,2) . '
 my $blob = $ENV{BFG_BLOB};
 my $blobFN = $ENV{BFG_FILENAME};
 
+print LOG "BFG_FILENAME\n" if $blobFN eq "" and $debugLog;
 die "BFG_FILENAME environment variable not set " if $blobFN eq "";
 
 my $fileExt;
 
-if ($blobFN =~ /\.([^.]+)/) {
+if ($blobFN =~ /\.([^.]+)$/) {
     $fileExt = $1;
 }
 
 if (not defined($mapLang{$fileExt})) {
+    print LOG "UNKNOWN_EXT: $fileExt\n" if $debugLog;
     die "unknown file extension [$fileExt]";
 }
 
@@ -120,7 +131,17 @@ if (-f $filename) {
 
   my $langOp = "--language=" . $mapLang{$fileExt};
 
-  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
+  my $env = "BFG_BLOB=$blob BFG_FILENAME='$blobFN' BFG_MEMO_DIR=$shaDir BFG_TOKENIZE_CMD='$tokenizeCmd'";
+  if ($debugLog) {
+      print LOG "call: $env /home/justa/dev/cregit/tokenizeByBlobId/tokenBySha.pl /home/justa/dev/kubernetes_original/$blobFN\n" if $debugLog;
+      print LOG "filenames: file=$file, outfile=$outfile, final=$filename\n" if $debugLog;
+      print LOG "start: $tokenizeCmd $langOp $file\n" if $debugLog;
+  }
+  if (!open(PROC, "$tokenizeCmd $langOp $file |")) {
+    print LOG "OPEN_PROC\n" if $debugLog;
+    die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
+  }
+  print LOG "end: $tokenizeCmd $langOp $file\n" if $debugLog;
 
   while (<PROC>) {
       print $_;
@@ -134,6 +155,7 @@ if (-f $filename) {
 
   move( $outfile, $filename) or die "The move operation to memoized directory failed: $!";
 
+  # print LOG "$tokenizeCmd $langOp $file --> $filename\n" if $debugLog;
   unlink($file)
 
 }

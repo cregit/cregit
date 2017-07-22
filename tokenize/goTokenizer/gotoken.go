@@ -18,6 +18,10 @@ import (
    "os"
 )
 
+var VERSION="1.0.0"
+var CREGIT_VERSION="0.0.1"
+
+
   
     func Scanner_Scan(src []byte) {
 
@@ -27,7 +31,7 @@ import (
   	file := fset.AddFile("", fset.Base(), len(src)) // register input "file"
   	s.Init(file, src, nil /* no error handler */, scanner.ScanComments)
 
-        fmt.Printf("-:-\tbegin_unit\n");
+        fmt.Printf("-:-\tbegin_unit|language=go;version=%s;cregit-version=%s\n", VERSION, CREGIT_VERSION);
 
   	// Repeated calls to Scan yield the token sequence found in the input.
   	for {

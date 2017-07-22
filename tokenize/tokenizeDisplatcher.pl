@@ -49,7 +49,7 @@ Options:
 
 my $go2token = "${basedir}/goTokenizer/gotoken";
 my $simpleTokenizer = "${basedir}/text/simpleTokenizer.pl";
-my $jsonYamlTokenizer = "${basedir}/json-yaml-tokenizer/tokenizeJsonYaml.rb";
+my $jsonYamlTokenizer = "${basedir}/jsonYamlTokenizer/tokenizeJsonYaml.rb";
 my $srcml   = "srcml";
 my $srcml2token = "srcml2token";
 my $ctags = "ctags-exuberant";

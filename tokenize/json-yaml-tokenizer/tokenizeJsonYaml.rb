@@ -305,7 +305,7 @@ end
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: rtokenize.rb [options]"
+  opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
   opts.on("-j", "--json", "Input is JSON") do |v|
     options[:json] = true
   end

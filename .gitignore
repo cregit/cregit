@@ -4,3 +4,4 @@ jars
 */target
 *.log
 *.swp
+tokenize/goTokenizer/gotoken

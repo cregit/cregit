@@ -1,11 +1,17 @@
 #!/usr/bin/env ruby
+# coding: utf-8
+
+# parser of JSON and YAML files by
+# Łukasz Gryglicki
+
 
 require 'yaml'
 require 'json'
 require 'optparse'
 
 VERSION = '1.0.0'
-
+# we need a better way to propagate this
+CREGIT_VERSION='0.0.1'
 
 def panic(rcode, msg, e)
   STDERR.puts msg
@@ -312,14 +318,26 @@ def traverse_object(repr, o, oname = nil)
   repr
 end
 
+############
+# the program starts here
+
+
 options = {}
+language = ''
+parser = nil
+
 OptionParser.new do |opts|
   opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
   opts.on("-j", "--json", "Input is JSON") do |v|
     options[:json] = true
+    language = 'json'
+    parser = JSON
+    $is_json = true
   end
   opts.on("-y", "--yaml", "Input is YAML") do |v|
     options[:yaml] = true
+    language = 'yaml'
+    parser = YAMLWithComments
   end
   opts.on("-n", "--numbers", "Output parsing numbers") do |v|
     options[:nums] = true
@@ -332,11 +350,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-parser = nil
-parser = JSON if options.key?(:json)
-parser = YAMLWithComments if options.key?(:yaml)
 panic(1, 'No parser defined', nil) unless parser
-$is_json = true if options.key?(:json)
 
 in_data = STDIN.read
 if options.key?(:yaml)
@@ -346,6 +360,8 @@ end
 parse_error = 0
 multi_json = false
 
+# this infinite loop is for the exception handling to
+# continue until no more errors exist... i think... (dmg)
 while true
   data = ''
   begin
@@ -392,7 +408,7 @@ if multi_json && data.length == 0
 end
 
 $opts = options
-repr = emit_token('begin_unit', VERSION, false)
+repr = emit_token('begin_unit', "revision:#{VERSION};language:#{language};cregit-version:#{CREGIT_VERSION}", false)
 
 begin
   repr += emit_token('FILETYPE', 'json', false) if options.key?(:json)

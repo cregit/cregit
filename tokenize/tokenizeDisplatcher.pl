@@ -86,6 +86,7 @@ if ($output ne "") {
 
 # if ($language eq "Markdown" or $language eq "Shell" or $language eq "Yaml" or $language eq "Json") {
 if ($language eq "Markdown" or $language eq "Shell") {
+
     open(parser, "$simpleTokenizer '$filename' |") or die "Unable to execute [$simpleTokenizer] on file [$filename]";
     print "begin_unit\n";
     while(<parser>) {
@@ -93,20 +94,21 @@ if ($language eq "Markdown" or $language eq "Shell") {
     }
     close(parser);
     print "end_unit\n";
+
 } elsif ($language eq "Yaml" or $language eq "Json") {
+
     if ($language eq "Yaml") {
-        open(parser, "$rTokenizer y < '$filename' |") or die "Unable to execute [$rTokenizer y] on file [$filename]";
+        open(parser, "$rTokenizer -y < '$filename' |") or die "Unable to execute [$rTokenizer -y] on file [$filename]";
     } elsif ($language eq "Json") {
-        open(parser, "$rTokenizer j < '$filename' |") or die "Unable to execute [$rTokenizer j] on file [$filename]";
+        open(parser, "$rTokenizer -j < '$filename' |") or die "Unable to execute [$rTokenizer -j] on file [$filename]";
     } else {
-        die "Unsupported language $language";
+        die "This should not happen";
     }
-    print "begin_unit\n";
     while(<parser>) {
         print $_;
     }
     close(parser);
-    print "end_unit\n";
+
 } else {
     if ($language eq 'C' or $language eq 'C++' or $language eq 'Java' or $language eq 'Go') {
         Read_Declarations($filename, $language);

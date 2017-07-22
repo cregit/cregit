@@ -4,6 +4,9 @@ require 'yaml'
 require 'json'
 require 'optparse'
 
+VERSION = '1.0.0'
+
+
 def panic(rcode, msg, e)
   STDERR.puts msg
   STDERR.puts(e) if e
@@ -189,12 +192,18 @@ $toi = 0
 $pi = 0
 $opts = nil
 
-def emit_token(tok, lit = nil)
-  $pi += 1
-  start = $opts.key?(:nums) ? "#{$toi}:#{$pi}\t" : ''
+def emit_token(tok, lit = nil, location=true)
+
+  if ($opts.key?(:nums)) 
+    $pi += 1
+    start = location ? "#{$toi}:#{$pi}\t" : "-:-\t"
+  else
+    start = ''
+  end
+
   if lit
     lit = lit.to_s.gsub(/\n/, ' ')
-    "#{start}#{tok}|\"#{lit}\"\n"
+    "#{start}#{tok}|#{lit}\n"
   else
     "#{start}#{tok}\n"
   end
@@ -386,17 +395,19 @@ if multi_json && data.length == 0
 end
 
 $opts = options
-repr = options.key?(:header) ? (options.key?(:nums) ? "-:-\tbegin_unit\n" : "begin_unit\n") : ''
+repr = options.key?(:header) ? (options.key?(:nums) ? "-:-\tbegin_unit#{VERSION}\n" : "begin_unit\n") : "begin_unit|#{VERSION}\n"
+
+repr += emit_token('begin_unit', VERSION, false)
+
 begin
-  repr += emit_token('FILETYPE', 'json') if options.key?(:json)
-  repr += emit_token('FILETYPE', 'yaml') if options.key?(:yaml)
-  repr += emit_token('MULTI', 'MULTI') if multi_json
+  repr += emit_token('FILETYPE', 'json', false) if options.key?(:json)
+  repr += emit_token('FILETYPE', 'yaml', false) if options.key?(:yaml)
+  repr += emit_token('MULTI', 'MULTI', false) if multi_json
   repr = traverse_object(repr, data)
 #rescue Exception => e
 #  panic(3, "Traverse error", e)
 end
-if options.key?(:header)
-  repr += options.key?(:nums) ? "-:-\tend_unit\n" : "end_unit\n"
-end
+repr += emit_token('end_unit', nil, false)
+
 
 puts repr

@@ -324,9 +324,6 @@ OptionParser.new do |opts|
   opts.on("-n", "--numbers", "Output parsing numbers") do |v|
     options[:nums] = true
   end
-  opts.on("-h", "--header", "Output begin_unit & end_unit") do
-    options[:header] = true
-  end
   opts.on("-s N", "--split N", Integer, "Split strings longer than N") do |n|
     options[:split] = n
   end
@@ -395,9 +392,7 @@ if multi_json && data.length == 0
 end
 
 $opts = options
-repr = options.key?(:header) ? (options.key?(:nums) ? "-:-\tbegin_unit#{VERSION}\n" : "begin_unit\n") : "begin_unit|#{VERSION}\n"
-
-repr += emit_token('begin_unit', VERSION, false)
+repr = emit_token('begin_unit', VERSION, false)
 
 begin
   repr += emit_token('FILETYPE', 'json', false) if options.key?(:json)

@@ -31,6 +31,9 @@ my %languages = ("C" => 1,
 
 use Getopt::Long;
 
+my $basedir = dirname($0);
+$basedir = "." if ($basedir eq "");
+
 my $usage = "
 Usage $0 [options] <sourcefilename> <outputfile>*
         
@@ -44,10 +47,9 @@ Options:
    --ctags=-<path to ctags-exuberant>
 ";
 
-
-my $go2token = "./tokenize/goTokenizer/gotoken";
-my $simpleTokenizer = "./tokenize/text/simpleTokenizer.pl";
-my $rTokenizer = 'rtokenize.sh';
+my $go2token = "${basedir}/goTokenizer/gotoken";
+my $simpleTokenizer = "${basedir}/text/simpleTokenizer.pl";
+my $jsonYamlTokenizer = "${basedir}/json-yaml-tokenizer/tokenizeJsonYaml.rb";
 my $srcml   = "srcml";
 my $srcml2token = "srcml2token";
 my $ctags = "ctags-exuberant";
@@ -60,7 +62,7 @@ GetOptions ("srcml=s" => \$srcml,
             "ctags=s" => \$ctags,
             "go2token=s" => \$go2token,
             "simpleTokenizer=s" => \$simpleTokenizer,
-            "rtokenizer=s" => \$rTokenizer,
+            "rtokenizer=s" => \$jsonYamlTokenizer,
             "verbose" => \$verbose)   # flag
   or die($usage);
 
@@ -69,8 +71,6 @@ if (not defined($languages{$language})) {
 }
 
 
-my $basedir = dirname($0);
-$basedir = "." if ($basedir eq "");
 
 my $filename = shift;
 my $output = shift;
@@ -98,9 +98,9 @@ if ($language eq "Markdown" or $language eq "Shell") {
 } elsif ($language eq "Yaml" or $language eq "Json") {
 
     if ($language eq "Yaml") {
-        open(parser, "$rTokenizer -y < '$filename' |") or die "Unable to execute [$rTokenizer -y] on file [$filename]";
+        open(parser, "$jsonYamlTokenizer -y < '$filename' |") or die "Unable to execute [$jsonYamlTokenizer -y] on file [$filename]";
     } elsif ($language eq "Json") {
-        open(parser, "$rTokenizer -j < '$filename' |") or die "Unable to execute [$rTokenizer -j] on file [$filename]";
+        open(parser, "$jsonYamlTokenizer -j < '$filename' |") or die "Unable to execute [$jsonYamlTokenizer -j] on file [$filename]";
     } else {
         die "This should not happen";
     }
@@ -109,10 +109,9 @@ if ($language eq "Markdown" or $language eq "Shell") {
     }
     close(parser);
 
-} else {
-    if ($language eq 'C' or $language eq 'C++' or $language eq 'Java' or $language eq 'Go') {
-        Read_Declarations($filename, $language);
-    }
+} elsif ($language eq 'C' or $language eq 'C++' or $language eq 'Java' or $language eq 'Go') {
+
+    Read_Declarations($filename, $language);
 
     #Declarations_Test();
 
@@ -120,6 +119,9 @@ if ($language eq "Markdown" or $language eq "Shell") {
     if ($output ne "") {
         close(OUT);
     }
+} else {
+    print STDERR "Language not supported";
+    exit(1);
 }
 
 if ($output ne "") {

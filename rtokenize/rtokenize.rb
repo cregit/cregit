@@ -236,16 +236,16 @@ def traverse_object(repr, o, oname = nil)
   $toi += 1
   $pi = 0
   is_comment = oname && oname.to_s[0..10] == '__comment__'
-  repr += emit_token('TYPE', o.class) unless is_comment
+  # repr += emit_token('TYPE', o.class) unless is_comment
   case o
   when Hash
     repr += emit_token('IDENT', oname) if oname && !is_comment
     repr += emit_token('SYNTAX', '{') if $is_json
     l = o.count - 1
     o.keys.each_with_index do |k, i|
-      kis_comment = k && k.to_s[0..10] == '__comment__'
       v = o[k]
-      repr += emit_token('KEY', k) unless kis_comment
+      # kis_comment = k && k.to_s[0..10] == '__comment__'
+      # repr += emit_token('KEY', k) unless kis_comment
       opi = $pi
       repr = traverse_object(repr, v, k)
       $pi = opi
@@ -257,7 +257,7 @@ def traverse_object(repr, o, oname = nil)
     repr += emit_token('SYNTAX', '[') if $is_json
     l = o.count - 1
     o.each_with_index do |r, i|
-      repr += emit_token('INDEX', i)
+      # repr += emit_token('INDEX', i)
       opi = $pi
       repr = traverse_object(repr, r)
       $pi = opi

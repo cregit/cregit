@@ -81,7 +81,7 @@ sub Read_Record {
             $f = "$1;";
         } elsif ($_ =~ /^(filename) (.+)$/) {
 	    if ($2 ne $file) {
-		$f .=  $2 . "[$2][$file];";
+		$f .=  $2 . ";";
 	    } else {
 		$f .= ";";
 	    }

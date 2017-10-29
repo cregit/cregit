@@ -146,7 +146,7 @@ object gitLogToDB extends ProgramInfo {
     val logsIt = logs.asScala.toIterator
     
     val mapped = logsIt.map { l =>
-      val dt = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+      val dt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       val aWhen: String = dt.format(l.getAuthorIdent().getWhen)
       val cWhen: String = dt.format(l.getCommitterIdent().getWhen)
 

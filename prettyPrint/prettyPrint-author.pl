@@ -478,7 +478,7 @@ sub  Print_File_Stats {
         my $ccount = Count_Commits($k);
         my $cprop = sprintf("%.2f\%", 100.0 * $ccount/$totCommits);
 
-        print "<tr><td>" , Span_Color_Tag(Get_Author_Color($k), $k), $k,"</span>", "</td><td align=\"right\">$toks</td><td align=\"right\">$prop</td><td align=\"right\">$ccount</td><td align=\"right\">$cprop</td>";
+        print "<tr><td><!--file stats-->" , Span_Color_Tag(Get_Author_Color($k), $k), $k,"</span>", "</td><td align=\"right\">$toks</td><td align=\"right\">$prop</td><td align=\"right\">$ccount</td><td align=\"right\">$cprop</td>";
 #        print "<tr><td>$k</td>";
         print "</tr>\n";
     }

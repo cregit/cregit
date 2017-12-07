@@ -79,7 +79,10 @@ object remapCommits extends ProgramInfo {
 
       val cid = l.getName
 
-      val lastline = l.getFullMessage().split("\n").last
+      val message = l.getFullMessage()
+
+      val lastline =
+        if (message == "\n")  {""} else {message.split("\n").last}
 
       val exp = "Former-commit-id: ([0-9a-f]{40})".r
 
@@ -88,21 +91,11 @@ object remapCommits extends ProgramInfo {
         case _ => cid
       }
 
-/*
-      val originalcid = exp.findFirstIn(lastline) match {
-        case Some(fcid) => {
-          println(s"---->$fcid[$exp]")
-          fcid
-        }
-        case None => {
-            null
-        }
-      }
- */
-      (
+      (// must return 3 elements, because that is what the database expects
         cid, originalcid, null
       )
-    }.filter(_._2 != null)
+    }
+
     mapped.sliding(commitsPerOp,commitsPerOp)
 
   }

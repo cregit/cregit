@@ -169,13 +169,15 @@ object remapCommits extends ProgramInfo {
       // commit is a seq of commit tuples
       // each element of the tuple is a record to insert to
       // its corresponding table or a sequence of records (requiring to be flatten)
-      val count = idx *commitsPerOp
-      println(s"   ${count}...")
 
       val insert = DBIO.seq(
         commitMaps ++= newcommits
       )
       Await.result(db.run(insert), Duration.Inf)
+
+      val count = idx *commitsPerOp + newcommits.size
+      println(s"   ${count}...")
+
     }
 
     println("Finished creating commitmap table")

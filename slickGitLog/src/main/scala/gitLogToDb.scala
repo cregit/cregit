@@ -280,9 +280,8 @@ object gitLogToDB extends ProgramInfo {
       // commit is a seq of commit tuples
       // each element of the tuple is a record to insert to
       // its corresponding table or a sequence of records (requiring to be flatten)
-      val idx = commitp._2 *commitsPerOp
-      println(s"   ${idx}...")
       val commit = commitp._1
+
       val insert = DBIO.seq(
         commits ++= commit.map(_._1),
         logs ++= commit.map(_._2),
@@ -290,6 +289,10 @@ object gitLogToDB extends ProgramInfo {
         footers ++= commit.map(_._4).flatten
       )
       Await.result(db.run(insert), Duration.Inf)
+
+      val idx = commitp._2 *commitsPerOp + commit.map(_._1).size
+      println(s"   ${idx}...")
+
     }
     println("Done with commits")
 

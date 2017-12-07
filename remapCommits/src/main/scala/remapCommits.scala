@@ -82,7 +82,13 @@ object remapCommits extends ProgramInfo {
       val message = l.getFullMessage()
 
       val lastline =
-        if (message == "\n")  {""} else {message.split("\n").last}
+        // split returns empty list if the string contains
+        // only separators. Weird.
+        try {
+          message.split("\n").last
+        } catch {
+          case _: Exception => ""
+        }
 
       val exp = "Former-commit-id: ([0-9a-f]{40})".r
 

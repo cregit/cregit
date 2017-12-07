@@ -174,7 +174,8 @@ sub Get_Declaration
 sub Read_Declarations
 {
     my ($filename, $language) = @_;
-    my $CTAGS = "$ctags --language-force=$language -x -u";
+
+    my $CTAGS = "$ctags --language-force=$language -x --sort=n --_xformat='%n %N @@@ %K @@@ %S'";
 
     open(ctags, "$CTAGS '$filename'|") or die "Unable to execute ctags on file [$filename]";
 
@@ -184,8 +185,13 @@ sub Read_Declarations
         my $line;
         chomp;
         $decl{original} = $_;
-        die "unable to parse output" unless /^([^ ]+)\s+([^ ]+)\s+([0-9]+)\s+(.+)$/;
-        ($decl{name}, $decl{type}, $decl{line}, $rest) = ($1, $2, $3, $4);
+        # c++ operators are a pain... we need to deal with them specifically
+        die "unable to parse output [$_]" unless /^([0-9]+) (.+) @@@ (.*) @@@ (.*)$/;
+        #($decl{name}, $decl{type}, $decl{line}, $rest) = ($1, $2, $3, $4);
+        ($decl{line}, $decl{name}, $decl{type}, $decl{sig}) = ($1, $2, $3, $4);
+        if ($decl{sig} ne "-") {
+            $decl{name} .= " " . $decl{sig}
+        }
         $line = $decl{line};
         # skip the filename
         $decl{decl} = substr($rest, length($filename)+1);

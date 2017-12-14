@@ -52,9 +52,11 @@ my %mapLang = (
                "c++" => 'C++',
                "go"  => 'Go',
                "md" => "Markdown",
+               "sh" => "Shell",
                "yaml" => "Yaml",
+               "yml" => "Yaml",
+               "json" => "Json",
               );
-
 
 if (not defined($ENV{BFG_MEMO_DIR}) ||  $ENV{BFG_MEMO_DIR} eq "") {
     die "You must define the environment variable BFG_MEMO_DIR equal to the directory where to memoize"
@@ -71,7 +73,6 @@ my $tokenizeCmd = $ENV{BFG_TOKENIZE_CMD};
 if ($tokenizeCmd eq "") {
     die ("Tokenize command not defined. Use environment variable BFG_TOKENIZE_CMD");
 }
-
 
 my $contents;
 
@@ -96,7 +97,7 @@ die "BFG_FILENAME environment variable not set " if $blobFN eq "";
 
 my $fileExt;
 
-if ($blobFN =~ /\.([^.]+)/) {
+if ($blobFN =~ /\.([^.]+)$/) {
     $fileExt = $1;
 }
 
@@ -120,7 +121,9 @@ if (-f $filename) {
 
   my $langOp = "--language=" . $mapLang{$fileExt};
 
-  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
+  if (!open(PROC, "$tokenizeCmd $langOp $file |")) {
+    die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
+  }
 
   while (<PROC>) {
       print $_;

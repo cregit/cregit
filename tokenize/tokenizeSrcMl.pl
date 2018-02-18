@@ -23,6 +23,22 @@ my %languages = ("C" => 1,
                  "C++" => 1,
                  "Java" => 1);
 
+my %extensions = (
+                  ".c" => 'C',
+                  ".c++" => 'C++',
+                  ".cc" => "C++",
+                  ".cp" => 'C++',
+                  ".cpp" => "C++",
+                  ".cxx" => 'C++',
+                  ".h" => "C",
+                  ".h++" => 'C++',
+                  ".hh" => 'C++',
+                  ".hpp" => "C++",
+                  ".java" => "Java",
+                 );
+
+
+
 use Getopt::Long;
 
 my $usage = "
@@ -32,41 +48,50 @@ Options:
    --srcml2token=<path to srcml2token>
    --srcml=<path to srcml>
    --language=<C/C++/Java>
-   --ctags=-<path to ctags-exuberant>
+   --ctags=-<path to ctags-universal>
+   --position
 ";
-
-
-
-my $srcml   = "srcml";
-my $srcml2token = "srcml2token";
-my $ctags = "ctags-exuberant";
-my $language = "C";
-my $verbose;
-GetOptions ("srcml=s" => \$srcml, 
-            "srcml2token=s"   => \$srcml2token,
-            "language=s"      => \$language,
-            "ctags=s"         => \$ctags,
-            "verbose"  => \$verbose)   # flag
-  or die($usage);
-
-if (not defined($languages{$language})) {
-    die($usage);
-}
-
 
 my $basedir = dirname($0);
 $basedir = "." if ($basedir eq "");
 
+my $srcml   = "srcml";
+my $srcml2token = "$basedir/srcMLtoken/srcml2token";
+my $ctags = "ctags-universal";
+my $language = "";
+my $verbose;
+my $position = 0;
+
+GetOptions ("srcml=s" => \$srcml, 
+            "srcml2token=s"   => \$srcml2token,
+            "language=s"      => \$language,
+            "ctags=s"         => \$ctags,
+            "position"        => \$position,
+            "verbose"  => \$verbose)   # flag
+  or die($usage);
+
+
 my $filename = shift;
 my $output = shift;
 
-die $usage if $filename eq "";
 
-print STDERR "Tokenizing $filename\n";
+print STDERR "Tokenizing $filename\n" if $verbose;
 if ($output ne "") {
     open(OUT, ">$output") or die "Unable to create output file\n";
     select OUT;
 }
+
+# find language
+
+if ($language eq "") {
+    # autodetect
+    Usage("File has no extension. You must provide one [$filename]") unless $filename =~ /(\.[a-z\+]+)$/i;
+    my $ext = lc($1);
+    $language = $extensions{$ext};
+    Usage("Unknown extension [$ext] in file [$filename]. You must provide one ") unless defined $language and $language ne "";
+}
+
+Usage("filename not specified") if $filename eq "";
 
 Read_Declarations($filename, $language);
 
@@ -105,13 +130,22 @@ sub Tokenize
             my @d = Declarations_In_Line($line);
             foreach my $dec (@d) {
                 my %thisDec = Get_Declaration($line, $dec);
+                if ($position) {
+                    print "$line:-|";
+                }
                 print "DECL|";
                 print "$thisDec{type}|$thisDec{name}\n";
             }
         } 
         $lastLine = $line;
+        if ($position) {
+            print "$line:$col|"
+        }
         print "$token\n";
         if ($token =~ /^end_/) {
+            if ($position) {
+                print "-:-|"
+            }
             printf "\n";
         }
 
@@ -185,7 +219,6 @@ sub Read_Declarations
         my $line;
         chomp;
         $decl{original} = $_;
-        # c++ operators are a pain... we need to deal with them specifically
         die "unable to parse output [$_]" unless /^([0-9]+) (.+) @@@ (.*) @@@ (.*)$/;
         #($decl{name}, $decl{type}, $decl{line}, $rest) = ($1, $2, $3, $4);
         ($decl{line}, $decl{name}, $decl{type}, $decl{sig}) = ($1, $2, $3, $4);
@@ -209,3 +242,10 @@ sub Read_Declarations
     close ctags;
 }
 
+
+sub Usage {
+
+    print STDERR @_;
+    die $usage;
+
+}

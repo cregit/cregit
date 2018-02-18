@@ -43,14 +43,18 @@ use File::Copy;
 #my $shaDir = '/tmp/token.sha/';
 
 my %mapLang = (
-               "h" => 'C',
                "c" => 'C',
-               "hpp" => 'C++',
-               "h++" => 'C++',
-               "java" => 'Java',
-               "cpp" => 'C++',
                "c++" => 'C++',
+               "cc" => 'C++',
+               "cp" => 'C++',
+               "cpp" => 'C++',
+               "cxx" => 'C++',
                "go"  => 'Go',
+               "h" => 'C',
+               "h++" => 'C++',
+               "hh" => 'C++',
+               "hpp" => 'C++',
+               "java" => 'Java',
                "md" => "Markdown",
                "yaml" => "Yaml",
               );
@@ -96,8 +100,8 @@ die "BFG_FILENAME environment variable not set " if $blobFN eq "";
 
 my $fileExt;
 
-if ($blobFN =~ /\.([^.]+)/) {
-    $fileExt = $1;
+if ($blobFN =~ /\.([^.]+)$/) {
+    $fileExt = lc($1);
 }
 
 if (not defined($mapLang{$fileExt})) {

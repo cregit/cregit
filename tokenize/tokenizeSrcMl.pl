@@ -88,7 +88,7 @@ if ($language eq "") {
     Usage("File has no extension. You must provide one [$filename]") unless $filename =~ /(\.[a-z\+]+)$/i;
     my $ext = lc($1);
     $language = $extensions{$ext};
-    Usage("Unknown extension [$ext] in file [$filename]. You must provide one ") unless defined $language and $language ne "";
+    Usage("Unknown extension [$ext] in file [$filename]. You must provide language using --language option") unless defined $language and $language ne "";
 }
 
 Usage("filename not specified") if $filename eq "";

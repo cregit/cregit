@@ -4,7 +4,7 @@ import itertools
 import sys
 
 from collections import defaultdict
-
+from optparse import OptionParser
 
 class ParseError(Exception):
     def __init__(self, message):
@@ -15,9 +15,19 @@ class ParseError(Exception):
 
 
 class Token(object):
+    line=1
+    column=1
     def __init__(self, name, value=None):
         self.type = name
         self.value = name if value is None else value
+        self.line = Token.line
+        self.column = Token.column
+
+        if value == '\n':
+            Token.column = 1
+            Token.line = Token.line + 1
+        else:
+            Token.column = Token.column + len(value)
 
     def __eq__(self, other):
         if isinstance(other, Token):
@@ -25,7 +35,12 @@ class Token(object):
         return False
 
     def __repr__(self):
-        return "<Token: %r %r>" % (self.type, self.value)
+        if self.type is self.value:
+            return "token|" + self.value        
+        else:
+            return self.type + "|" + self.value 
+#        return self.type + "|" + ("%r" % self.value)
+#        return "%r|%r" % (self.type, self.value)
 
 
 class eof(str):
@@ -86,7 +101,7 @@ class Lexer:
         self.chars = []
         self.nesting_level = 0
         self.start_quote = ['`']
-        self.end_quote = ["'"]
+        self.end_quote = ["`"]
         self.iter = None
 
     def _finish_token(self, name):
@@ -283,8 +298,16 @@ class Parser:
         self.lexer.changequote(start_quote, end_quote)
 
     def parse(self, stream=sys.stdout):
+        if options.verbose:
+            print >> sys.stderr, 'Parsing ', filename
+
         for tok in self._expand_tokens():
-            print tok
+            if tok.value != '\n' and tok.value != "\t" and tok.value != ' ':
+                if options.location:
+                    print "%d:%d\t%s" % (tok.line , tok.column, tok)
+                else:
+                    print tok
+
 #            if self.current_diversion == 0:
 #                stream.write(tok.value)
 #            elif self.current_diversion > 0:
@@ -296,5 +319,29 @@ class Parser:
 #            self.diversions[diversion] = []
 
 
+
+
 if __name__ == '__main__':
-    Parser(sys.stdin.read()).parse()
+    parser = OptionParser()
+    parser.add_option("-v", "--verbose",
+                  action="store_true", dest="verbose", default=False,
+                  help="don't print status messages to stdout")
+    parser.add_option("-l", "--location",
+                  action="store_true", dest="location", default=False,
+                  help="print location of token")
+    parser.add_option("-g", "--language", dest="language",
+                      help="print location of token")
+
+    (options, args) = parser.parse_args()
+
+    if options.language != "M4":
+       print >> sys.stderr, "We can only parse language m4"
+       exit(2)
+
+    filename = args[0]
+
+    if options.verbose:
+       print >> sys.stderr, 'Parsing ', filename
+
+    f = open(filename, "r")
+    Parser(f.read()).parse()

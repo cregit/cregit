@@ -57,6 +57,8 @@ my %mapLang = (
                "java" => 'Java',
                "md" => "Markdown",
                "yaml" => "Yaml",
+               "ac" => "M4",
+               "am" => "M4",
               );
 
 

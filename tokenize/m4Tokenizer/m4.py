@@ -301,7 +301,7 @@ class Parser:
         if options.verbose:
             print >> sys.stderr, 'Parsing ', filename
 
-        for tok in self._expand_tokens():
+        for tok in self.token_iter:
             if tok.value != '\n' and tok.value != "\t" and tok.value != ' ':
                 if options.location:
                     print "%d:%d\t%s" % (tok.line , tok.column, tok)
@@ -322,6 +322,8 @@ class Parser:
 
 
 if __name__ == '__main__':
+
+    print "begin_unit|revision:0.1;language:m4;cregit-version:0.0.1"
     parser = OptionParser()
     parser.add_option("-v", "--verbose",
                   action="store_true", dest="verbose", default=False,
@@ -345,3 +347,4 @@ if __name__ == '__main__':
 
     f = open(filename, "r")
     Parser(f.read()).parse()
+    print "end_unit"

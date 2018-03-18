@@ -18,7 +18,7 @@ class Token(object):
     line=1
     column=1
     def __init__(self, name, value=None):
-        self.type = name
+        self.type = name.lower()
         self.value = name if value is None else value
         self.line = Token.line
         self.column = Token.column

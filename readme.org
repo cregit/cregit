@@ -12,8 +12,8 @@
 
 * Prerequisites
 
-| srml | http://www.srcml.org/                      | Make sure srml is in the path     |
-| bfg  | https://github.com/rtyley/bfg-repo-cleaner | It needs to be patched. see below |
+| srcml | http://www.srcml.org/                      | Make sure srcml is in the path    |
+| bfg   | https://github.com/rtyley/bfg-repo-cleaner | It needs to be patched. see below |
 
 ** bfg
 

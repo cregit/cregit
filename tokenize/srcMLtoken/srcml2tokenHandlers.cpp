@@ -78,7 +78,8 @@ std::string mytrimBegin(const std::string& str,
 std::pair<int,int> findRow(int position) {
     //it is most likely we will use the last ones
     // rather than any so search from the end
-    int i = lineMarkers.size()-1;
+    assert(lineMarkers.size() > 0);
+    unsigned int i = lineMarkers.size()-1;
     while (i >= 0 && lineMarkers[i]> position) {
         i--;
     }
@@ -93,7 +94,7 @@ std::string srcml2tokenHandlers::newGetPosition() {
 
     auto st = mytrimBegin(currentContentOriginal);
 
-    int whitespace = currentContentOriginal.size() - st.size();
+//    int whitespace = currentContentOriginal.size() - st.size();
     int beginning = all_size - st.size();
 
     auto prevRow = findRow(beginning);

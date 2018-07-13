@@ -1,0 +1,172 @@
+.cregit-span
+{
+	color: var(--author-color);
+}
+
+.color-fade
+{
+	color: #DDDDDD;
+}
+
+.color-age
+{
+	color: hsl(var(--age-hue, 0), var(--age-sat, 0%), var(--age-lum, 100%));
+}
+
+.color-year
+{
+	color: var(--year-color, #DDDDDD);
+}
+
+.color-pretty span
+{
+	color: var(--pretty-color, #DDDDDD);
+}
+
+.color-ease
+{
+	/* Looks nice, but very slow on ~4000 line files */
+	-moz-transition:color 0.2s ease-in;
+    -o-transition:color 0.2s ease-in;
+    -webkit-transition:color 0.2s ease-in;
+}
+
+.author-label { color: var(--author-color);	}
+.author0 { --author-color: hsl(017, 097%, 044%); }
+.author1 { --author-color: hsl(169, 049%, 031%); }
+.author2 { --author-color: hsl(208, 068%, 052%); }
+.author3 { --author-color: hsl(316, 056%, 025%); }
+.author4 { --author-color: hsl(104, 044%, 045%); }
+.author5 { --author-color: hsl(329, 089%, 037%); }
+.author6 { --author-color: hsl(247, 087%, 031%); }
+.author7 { --author-color: hsl(182, 082%, 033%); }
+.author8 { --author-color: hsl(000, 000%, 000%); }
+.author9 { --author-color: hsl(312, 092%, 028%); }
+.author10 { --author-color: hsl(034, 094%, 053%); }
+.author11 { --author-color: hsl(156, 096%, 032%); }
+.author12 { --author-color: hsl(351, 031%, 051%); }
+.author13 { --author-color: hsl(338, 078%, 051%); }
+.author14 { --author-color: hsl(273, 073%, 050%); }
+.author15 { --author-color: hsl(021, 061%, 036%); }
+.author16 { --author-color: hsl(173, 093%, 047%); }
+.author17 { --author-color: hsl(091, 091%, 047%); }
+.author18 { --author-color: hsl(073, 033%, 025%); }
+.author19 { --author-color: hsl(342, 042%, 041%); }
+.author20 { --author-color: hsl(238, 098%, 052%); }
+.author21 { --author-color: hsl(190, 090%, 026%); }
+.author22 { --author-color: hsl(099, 099%, 027%); }
+.author23 { --author-color: hsl(277, 037%, 029%); }
+.author24 { --author-color: hsl(117, 077%, 029%); }
+.author25 { --author-color: hsl(234, 054%, 025%); }
+.author26 { --author-color: hsl(143, 063%, 046%); }
+.author27 { --author-color: hsl(108, 088%, 037%); }
+.author28 { --author-color: hsl(177, 057%, 035%); }
+.author29 { --author-color: hsl(095, 055%, 033%); }
+.author30 { --author-color: hsl(286, 026%, 028%); }
+.author31 { --author-color: hsl(086, 066%, 037%); }
+.author32 { --author-color: hsl(039, 039%, 026%); }
+.author33 { --author-color: hsl(325, 045%, 032%); }
+.author34 { --author-color: hsl(260, 040%, 025%); }
+.author35 { --author-color: hsl(047, 047%, 051%); }
+.author36 { --author-color: hsl(290, 070%, 040%); }
+.author37 { --author-color: hsl(121, 041%, 035%); }
+.author38 { --author-color: hsl(043, 083%, 040%); }
+.author39 { --author-color: hsl(008, 028%, 041%); }
+.author40 { --author-color: hsl(164, 024%, 031%); }
+.author41 { --author-color: hsl(147, 027%, 047%); }
+.author42 { --author-color: hsl(199, 079%, 038%); }
+.author43 { --author-color: hsl(355, 075%, 025%); }
+.author44 { --author-color: hsl(303, 023%, 047%); }
+.author45 { --author-color: hsl(186, 046%, 047%); }
+.author46 { --author-color: hsl(004, 064%, 041%); }
+.author47 { --author-color: hsl(056, 036%, 050%); }
+.author48 { --author-color: hsl(026, 086%, 039%); }
+.author49 { --author-color: hsl(212, 032%, 044%); }
+.author50 { --author-color: hsl(065, 025%, 045%); }
+.author51 { --author-color: hsl(134, 074%, 042%); }
+.author52 { --author-color: hsl(299, 059%, 039%); }
+.author53 { --author-color: hsl(160, 060%, 026%); }
+.author54 { --author-color: hsl(125, 085%, 025%); }
+.author55 { --author-color: hsl(013, 053%, 050%); }
+.author56 { --author-color: hsl(030, 050%, 040%); }
+.author57 { --author-color: hsl(195, 035%, 030%); }
+.author58 { --author-color: hsl(112, 052%, 031%); }
+.author59 { --author-color: hsl(151, 071%, 039%); }
+.author60 { --author-color: hsl(078, 058%, 049%); }
+
+.year0 { --year-color: hsl(112, 052%, 031%); }
+.year1 { --year-color: hsl(017, 097%, 044%); }
+.year2 { --year-color: hsl(199, 079%, 038%); }
+.year3 { --year-color: hsl(195, 035%, 030%); }
+.year4 { --year-color: hsl(030, 050%, 040%); }
+.year5 { --year-color: hsl(013, 053%, 050%); }
+.year6 { --year-color: hsl(125, 085%, 025%); }
+.year7 { --year-color: hsl(160, 060%, 026%); }
+.year8 { --year-color: hsl(299, 059%, 039%); }
+.year9 { --year-color: hsl(134, 074%, 042%); }
+.year10 { --year-color: hsl(065, 025%, 045%); }
+.year11 { --year-color: hsl(212, 032%, 044%); }
+.year12 { --year-color: hsl(026, 086%, 039%); }
+.year13 { --year-color: hsl(056, 036%, 050%); }
+.year14 { --year-color: hsl(004, 064%, 041%); }
+.year15 { --year-color: hsl(355, 075%, 025%); }
+.year16 { --year-color: hsl(078, 058%, 049%); }
+.year17 { --year-color: hsl(151, 071%, 039%); }
+.year18 { --year-color: hsl(303, 023%, 047%); }
+.year19 { --year-color: hsl(147, 027%, 047%); }
+.year20 { --year-color: hsl(164, 024%, 031%); }
+.year21 { --year-color: hsl(186, 046%, 047%); }
+.year22 { --year-color: hsl(043, 083%, 040%); }
+.year23 { --year-color: hsl(121, 041%, 035%); }
+.year24 { --year-color: hsl(290, 070%, 040%); }
+.year25 { --year-color: hsl(047, 047%, 051%); }
+.year26 { --year-color: hsl(260, 040%, 025%); }
+.year27 { --year-color: hsl(325, 045%, 032%); }
+.year28 { --year-color: hsl(039, 039%, 026%); }
+.year29 { --year-color: hsl(086, 066%, 037%); }
+.year30 { --year-color: hsl(286, 026%, 028%); }
+.year31 { --year-color: hsl(095, 055%, 033%); }
+.year32 { --year-color: hsl(177, 057%, 035%); }
+.year33 { --year-color: hsl(108, 088%, 037%); }
+.year34 { --year-color: hsl(143, 063%, 046%); }
+.year35 { --year-color: hsl(234, 054%, 025%); }
+.year36 { --year-color: hsl(117, 077%, 029%); }
+.year37 { --year-color: hsl(277, 037%, 029%); }
+.year38 { --year-color: hsl(099, 099%, 027%); }
+.year39 { --year-color: hsl(190, 090%, 026%); }
+.year40 { --year-color: hsl(238, 098%, 052%); }
+.year41 { --year-color: hsl(342, 042%, 041%); }
+.year42 { --year-color: hsl(073, 033%, 025%); }
+.year43 { --year-color: hsl(091, 091%, 047%); }
+.year44 { --year-color: hsl(173, 093%, 047%); }
+.year45 { --year-color: hsl(021, 061%, 036%); }
+.year46 { --year-color: hsl(273, 073%, 050%); }
+.year47 { --year-color: hsl(338, 078%, 051%); }
+.year48 { --year-color: hsl(351, 031%, 051%); }
+.year49 { --year-color: hsl(156, 096%, 032%); }
+.year50 { --year-color: hsl(034, 094%, 053%); }
+.year51 { --year-color: hsl(312, 092%, 028%); }
+.year52 { --year-color: hsl(000, 000%, 000%); }
+.year53 { --year-color: hsl(182, 082%, 033%); }
+.year54 { --year-color: hsl(247, 087%, 031%); }
+.year55 { --year-color: hsl(329, 089%, 037%); }
+.year56 { --year-color: hsl(104, 044%, 045%); }
+.year57 { --year-color: hsl(316, 056%, 025%); }
+.year58 { --year-color: hsl(208, 068%, 052%); }
+.year59 { --year-color: hsl(169, 049%, 031%); }
+.year60 { --year-color: hsl(017, 097%, 044%); }
+
+/* Google prettify classes */
+.str { --pretty-color: #800 }  /* string content */
+.kwd { --pretty-color: #008 }  /* a keyword */
+.com { --pretty-color: #080 }  /* a comment */
+.typ { --pretty-color: #606 }  /* a type name */
+.lit { --pretty-color: #066 }  /* a literal value */
+.pun { --pretty-color: #660 }  /* punctuation */
+.opn, .clo { --pretty-color: #660 } /*lisp open bracket, lisp close bracket */
+.tag { --pretty-color: #008 }  /* a markup tag name */
+.atn { --pretty-color: #606 }  /* a markup attribute name */
+.atv { --pretty-color: #080 }  /* a markup attribute value */
+.dec, .var { --pretty-color: #606 }  /* a declaration; a variable name */
+.fun { --pretty-color: red } /* a function name */
+.pln { --pretty-color: black }

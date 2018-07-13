@@ -1,0 +1,114 @@
+.navbar
+{
+	position: fixed;
+    top: 0;
+    width: 100%;
+	padding: 8px;
+	overflow: hidden;
+    background-color: #F0F0F0;
+}
+
+.commit-info
+{
+	position: fixed;
+	right: 1vh;
+	width: 21em;
+	height: 10em;
+	padding-top: 8px;
+	overflow: hidden;
+	background-color: #F0F0F0;
+	display: flex;
+	flex-direction: column;
+}
+
+.year-info
+{
+	position: fixed;
+	right: 1vh;
+	width: 5em;
+	padding: 8px;
+	overflow: hidden;
+	background-color: #F0F0F0;
+}
+
+.year-legend-item
+{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.year-legend-box
+{
+	float: left;
+	width: 1em;
+	height: 1em;
+	background-color: var(--year-color, #DDDDDD);
+	border: 1px solid black;
+	margin-right: 6px;
+}
+
+.hidden
+{
+	display: none;
+}
+
+.infotext
+{
+	margin-left: 8px;
+}
+
+.summaryBox
+{
+	max-width: 100%;
+	padding: 8px;
+	margin-bottom: 0px;
+	white-space:normal;
+	word-wrap: break-word;
+	
+	background-color: #E0E0E0;
+	flex: 100;
+}
+
+.main
+{
+	margin-top: 60px;
+}
+
+pre
+{
+	margin-top: 0px;
+	margin-bottom: 4px;
+}
+
+table > caption
+{
+	text-align: left;
+	font-weight: bold;
+}
+
+th
+{
+	text-align: left;
+	font-weight: normal;
+	padding-left: 24px;
+}
+
+td
+{
+	text-align: right;
+}
+
+th:first-child
+{
+	text-align: left;
+	font-weight: normal;
+	padding-left: 0px;
+}
+
+td:first-child
+{
+	text-align: left;
+}
+

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<TMPL_INCLUDE Name="header.tmpl">
+
+<body>
+<div class="navbar">
+  <span class="sidebar-nav-item">Cregit version <TMPL_VAR cregit_version></span>
+  <br/>
+  Highlighting
+  <select id="select-highlighting" class="select-highlighting">
+    <option>By Author</option>
+    <option>By Age</option>
+	<option>By Year</option>
+    <option>Syntax</option>
+    <option>Commit</option>
+    <option disabled>──────────</option>
+    <TMPL_LOOP Contributors><option value="<TMPL_VAR name>"><TMPL_VAR name></option>
+    </TMPL_LOOP>
+  </select>
+</div>
+<div id="commit-info" class="commit-info hidden">
+  <pre style="font-weight:bold;" class="infotext">Commit</pre>
+  <pre id="commit-hash" class="infotext"></pre>
+  <pre id="commit-author" class="infotext"></pre>
+  <pre id="commit-date" class="infotext"></pre>
+  <pre id="commit-comment" class="summaryBox"></pre>
+</div>
+
+<div id="year-info" class="year-info hidden">
+  <pre style="font-weight:bold;">Year</pre>
+</div>
+
+<div class="main">
+<h1 class="page-title">Filename: <TMPL_VAR file_name></h1>
+
+<!-- Source Content -->
+<pre id="source-content" class="prettyprint lang-c">
+<TMPL_LOOP Commit_Spans><a class="cregit-span <TMPL_VAR author_class>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR body></a></TMPL_LOOP>
+</pre>
+<hr>
+
+<!-- Contributors -->
+<pre>
+<table>
+  <caption>Overall Contributors:</caption>
+  <tr>
+    <th>Author</th>
+    <th>Tokens</th>
+    <th>Token Proportion</th>
+    <th>Commits</th>
+    <th>Commit Proportion</th>
+  </tr>
+<TMPL_LOOP Contributors>  <tr>
+    <td><span class="<TMPL_VAR class> author-label"><TMPL_VAR name></span></td>
+    <td><TMPL_VAR tokens></td>
+    <td><TMPL_VAR token_percent></td>
+    <td><TMPL_VAR commits></td>
+    <td><TMPL_VAR commit_percent></td>
+  </tr></TMPL_LOOP>
+  <tr>
+    <td>Total</td>
+    <td><TMPL_VAR total_tokens></td>
+    <td></td>
+    <td><TMPL_VAR total_commits></td>
+    <td></td>
+</table>
+</pre>
+
+<hr>
+<div class="credits">Created with Cregit <a href="http://cregit.turingmachine.org">http://cregit.turingmachine.org</a></div>
+</div>
+
+<!-- Commit Records -->
+<script>
+var commits = [
+<TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":"<TMPL_VAR epoch>", "authorId":"<TMPL_VAR ESCAPE=JS author>", "summary":"<TMPL_VAR ESCAPE=JS summary>" },
+</TMPL_LOOP>];
+
+var authors = [
+<TMPL_LOOP Contributors>{ "authorId":"<TMPL_VAR ESCAPE=JS name>", "class":"<TMPL_VAR ESCAPE=JS class>" },
+</TMPL_LOOP>];
+</script>
+</body>
+</html>

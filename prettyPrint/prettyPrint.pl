@@ -157,6 +157,7 @@ GetOptions(
 
 exit pod2usage(-verbose=>1) if ($help);
 exit pod2usage(-verbose=>2) if ($man);
+exit pod2usage(-verbose=>1, -exit=>1) if (@ARGV[0] == undef);
 exit pod2usage(-verbose=>1, -exit=>1) if (-f @ARGV[0] and scalar(@ARGV) != 5);
 exit pod2usage(-verbose=>1, -exit=>1) if (-d @ARGV[0] and scalar(@ARGV) != 6);
 exit print_one() if -f @ARGV[0];
@@ -177,18 +178,20 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
      Options:
         --help             Brief help message
         --man              Full documentation
-		--verbose          Enable verbose output
-        --template         The template file to use. Defaults to templates/page.tmpl
-        --webroot          The web_root template parameter value. Defaults to empty
-	
-	 Options: (single)
-	    --output           The output file for single file prints. Defaults to STDOUT if none specified 
-	
+        --verbose          Enable verbose output
+        --template         The template file to use.
+                           Defaults to templates/page.tmpl
+        --webroot          The web_root template parameter value.
+                           Defaults to empty
+    
+     Options: (single)
+        --output           The output file. Defaults to STDOUT.
+    
      Options: (multi)
-        --dryrun           print file names only for multi-file prints.
+        --dryrun           print file names only.
         --filter           A regex file filter for processed files.
-		--filter-lang      Filters input files by language
-		                       c      *.c|*.h
-							   cpp    *.cpp|*.h|*.hpp
+        --filter-lang      Filters input files by language
+                               c      *.c|*.h
+                               cpp    *.cpp|*.h|*.hpp
 
 =cut

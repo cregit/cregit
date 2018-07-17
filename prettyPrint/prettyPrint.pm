@@ -65,8 +65,7 @@ sub print_file {
 		$file = *STDOUT
 	}
 	
-	$template->output();
-	#print $file 
+	print $file $template->output();
 	
 	return 0;
 }

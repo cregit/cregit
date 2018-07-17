@@ -31,6 +31,7 @@ my $help = 0;
 my $verbose = 0;
 my $templateFile = undef;
 my $webRoot = "";
+my $webRootRelative = 0;
 my $outputFile = undef;
 my $dryrun = 0;
 my $filter = "";
@@ -74,7 +75,10 @@ sub print_many {
 	Usage("Tokenized line file directory does not exist [$lineDir]", 0) unless -d $lineDir;
 	Usage("Database of tokenized repository does not exists [$sourceDB]", 0) unless -f $sourceDB;
 	Usage("Database of authors does not exists [$authorsDB]", 0) unless -f $authorsDB;
-	Usage("Output root directory does not exists [$outputDir]", 0) unless -d $outputDir;
+	
+	unless(-e $outputDir or mkdir $outputDir) {
+        die "Unable to create output directory: $outputDir\n";
+    }
 	
 	PrettyPrint::setup_dbi($sourceDB, $authorsDB);
 	
@@ -95,6 +99,10 @@ sub print_many {
 		my ($fileName, $fileDir) = fileparse($outputFile);
 		my $relative = File::Spec->abs2rel($outputDir, $fileDir);
 		my $options = { "outputFile" => $outputFile };
+		
+		if ($webRootRelative) {
+			$options->{webRoot} = $relative;
+		};
 		
 		goto NOSOURCE if (! -f $originalFile);
 		goto NOBLAME if (! -f $blameFile);
@@ -149,6 +157,7 @@ GetOptions(
 	"verbose" => \$verbose,
 	"template=s" => \$templateFile,
 	"webroot=s" => \$webRoot,
+	"webroot-relative" => \$webRootRelative,
 	"output=s" => \$outputFile,
 	"dryrun" => \$dryrun,
 	"filter=s" => \$filter,
@@ -157,7 +166,7 @@ GetOptions(
 
 exit pod2usage(-verbose=>1) if ($help);
 exit pod2usage(-verbose=>2) if ($man);
-exit pod2usage(-verbose=>1, -exit=>1) if (@ARGV[0] == undef);
+exit pod2usage(-verbose=>1, -exit=>1) if (!defined(@ARGV[0]));
 exit pod2usage(-verbose=>1, -exit=>1) if (-f @ARGV[0] and scalar(@ARGV) != 5);
 exit pod2usage(-verbose=>1, -exit=>1) if (-d @ARGV[0] and scalar(@ARGV) != 6);
 exit print_one() if -f @ARGV[0];
@@ -181,13 +190,18 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
         --verbose          Enable verbose output
         --template         The template file to use.
                            Defaults to templates/page.tmpl
-        --webroot          The web_root template parameter value.
-                           Defaults to empty
     
      Options: (single)
         --output           The output file. Defaults to STDOUT.
+        --webroot          The web_root template parameter value.
+                           Defaults to empty
     
      Options: (multi)
+        --webroot          The web_root template parameter value.
+                           Defaults to empty
+        --webroot-relative Specifies that the value of webroot should
+                           be set based on the relative path of the file
+                           in relation to the output directory.
         --dryrun           print file names only.
         --filter           A regex file filter for processed files.
         --filter-lang      Filters input files by language

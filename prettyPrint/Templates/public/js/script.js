@@ -1,13 +1,23 @@
 $(document).ready(function() {
 	
+	var $window = $(window);
+	var $document = $(document);
+	var $minimap = $('#minimap');
+	var $spans = $('.cregit-span');
+	var $content = $('#source-content');
+	var $minimapView = $('#minimap-view-shade,#minimap-view-frame');
+	var $navbar = $('#navbar');
+	var $contributor_rows = $(".contributor-row");
+	var $contributor_headers = $(".table-header-row > th");
+	
 	var highlightMode = 'author';
 	var selectedAuthor = undefined;
 	var selectedCommit = undefined;
-	var spans = $('.cregit-span');
-	var content = $('#source-content');
 	var ageSetupDone = false;
 	var yearSetupDone = false;
 	var showCommitInfo = true;
+	var rendering = null;
+	var lastSortColumn = 1;
 	
 	function setup_highlight_age() {
 		var oldest = commits.reduce(function(x, y) { return (x.timestamp > y.timestamp ? x : y) });
@@ -15,7 +25,7 @@ $(document).ready(function() {
 		var base = oldest.timestamp;
 		var range = newest.timestamp - oldest.timestamp;
 		
-		spans.each(function() {
+		$spans.each(function() {
 			var commitInfo = commits[this.dataset.cidx]
 			var t = (commitInfo.timestamp - base) / range;
 			var tInv = 1.0 - t;
@@ -39,7 +49,7 @@ $(document).ready(function() {
 				yearMap[year] = 'year' + classIdx++;
 		});
 
-		spans.each(function() {
+		$spans.each(function() {
 			var commitInfo = commits[this.dataset.cidx]
 			var year = new Date(commitInfo.timestamp * 1000).getYear();
 			$(this).addClass(yearMap[year]);
@@ -68,14 +78,14 @@ $(document).ready(function() {
 		if (!ageSetupDone)
 			setup_highlight_age();
 		
-		spans.addClass('color-age')
+		$spans.addClass('color-age')
 	}
 	
 	function highlight_year() {
 		if (!yearSetupDone)
 			setup_highlight_year();
 		
-		spans.addClass('color-year')
+		$spans.addClass('color-year')
 		
 		hide_commit_info();
 		show_year_info();
@@ -84,11 +94,11 @@ $(document).ready(function() {
 	}
 	
 	function highlight_syntax() {
-		spans.addClass('color-fade color-pretty');
+		$spans.addClass('color-fade color-pretty');
 	}
 	
 	function highlight_commit(commit) {
-		spans.each(function() {
+		$spans.each(function() {
 			var commitInfo = commits[this.dataset.cidx]
 			if (commitInfo != commit)
 				$(this).addClass('color-fade');
@@ -96,7 +106,7 @@ $(document).ready(function() {
 	}
 	
 	function highlight_author(authorId) {
-		spans.each(function() {
+		$spans.each(function() {
 			var commitInfo = commits[this.dataset.cidx]
 			if (commitInfo.authorId != authorId)
 				$(this).addClass('color-fade');
@@ -104,7 +114,7 @@ $(document).ready(function() {
 	}
 	
 	function highlight_update() {
-		spans.removeClass('color-fade color-age color-year color-pretty');
+		$spans.removeClass('color-fade color-age color-year color-pretty');
 		if (highlightMode != 'year') {
 			hide_year_info();
 			showCommitInfo = true;
@@ -123,14 +133,17 @@ $(document).ready(function() {
 		} else if (highlightMode == 'author-single') {
 			highlight_author(selectedAuthor);
 		}
+		
+		render_minimap();
 	}
 	
 	function highlight_update_commit(commit) {
 		if (highlightMode != 'commit')
 			return;
 		
-		spans.removeClass('color-fade color-age color-pretty');
+		$spans.removeClass('color-fade color-age color-pretty');
 		highlight_commit(commit);
+		render_minimap();
 	}
 	
 	function highlight_select()
@@ -143,8 +156,6 @@ $(document).ready(function() {
 		else if (elem.selectedIndex == 2)
 			highlightMode = 'year';
 		else if (elem.selectedIndex == 3)
-			highlightMode = 'syntax';
-		else if (elem.selectedIndex == 4)
 			highlightMode = 'commit';
 		else
 			highlightMode = 'author-single';
@@ -187,7 +198,71 @@ $(document).ready(function() {
 		});
 	}
 	
-	spans.mouseover(function (event) {
+	function render_minimap() {
+		var canvas = document.getElementById("minimap-image");
+		canvas.width = $(canvas).width();
+		canvas.height = $(canvas).height();
+		
+		var ctx = canvas.getContext("2d");
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.setTransform(canvas.width / $content.width(), 0, 0, canvas.height / $content.height(), 0, 0);
+		
+		$spans.each(function(i, span) {
+			var s = $(span);
+			var left = s.offset().left - $content.offset().left;
+			var top = s.offset().top - $content.offset().top;
+			var text = s.text();
+			var lines = text.split("\n");
+			var lineHeight = s.height() / lines.length
+			
+			ctx.font = "sans-serif";
+			ctx.fillStyle = s.css("color");
+			for (var j = 0; j < lines.length; ++j)
+				ctx.fillRect(left, top + j * lineHeight, ctx.measureText(lines[j]).width, lineHeight);
+		});
+	}
+	
+	function update_minimap_view_pos()
+	{
+		var areaTop = $document.scrollTop() - $content.offset().top + $navbar.height();
+		var areaHeight = $content.height();
+		var mapHeight = $minimap.height();
+		var mapTop = (areaTop / areaHeight) * mapHeight;
+		$minimapView.css('top', Math.max(mapTop, 0));
+	}
+	
+	function update_minimap_view_size()
+	{
+		var viewHeight = $window.innerHeight() - $navbar.height();
+		var docHeight = $content.height();
+		var mapHeight = $minimap.height();
+		var mapViewHeight = (viewHeight / docHeight) * mapHeight;
+		$minimapView.css('height', mapViewHeight);
+	}
+	
+	function sort_contributors(column, ascending)
+	{
+		var rows = $contributor_rows.get();
+		if (column == 0)
+			rows.sort(function (a, b) { return a.children[0].firstChild.innerHTML.localeCompare(b.children[0].firstChild.innerHTML); });
+		else
+			rows.sort(function (a, b) { return parseFloat(a.children[column].innerHTML) - parseFloat(b.children[column].innerHTML); });
+		if (!ascending)
+			rows.reverse();
+		
+		$(".table-header-row").after(rows);
+	}
+	
+	$contributor_headers.click(function (event) {
+		event.stopPropagation();
+		
+		var column = Array.prototype.indexOf.call(this.parentNode.children, this);
+		sort_contributors(column, column != lastSortColumn);
+		
+		lastSortColumn = (column != lastSortColumn ? column : -1);
+	});
+	
+	$spans.mouseover(function (event) {
 		event.stopPropagation();
 		
 		if (!showCommitInfo)
@@ -199,7 +274,7 @@ $(document).ready(function() {
 		highlight_update_commit(commits[this.dataset.cidx]);
 	});
 	
-	spans.click(function (event) {
+	$spans.click(function (event) {
 		event.stopPropagation();
 		
 		if (!showCommitInfo)
@@ -210,28 +285,39 @@ $(document).ready(function() {
 		highlight_update_commit(selectedCommit);
 	});
 	
-	content.mouseover(function() {
+	$content.mouseover(function() {
 		if (selectedCommit == undefined) {
 			hide_commit_info();
 			highlight_update_commit(undefined);
 		}
 	});
 	
-	content.click(function() {
+	$content.click(function() {
 		selectedCommit = undefined;
 		hide_commit_info();
 		highlight_update_commit(undefined);
 	});
 	
-	content.mouseleave(function() {
+	$content.mouseleave(function() {
 		if (selectedCommit == undefined) {
 			hide_commit_info();
 			highlight_update_commit(undefined);
 		}
 	});
+	
+	$(window).scroll(function() {
+		update_minimap_view_pos();
+	});
+	
+	$(window).resize(function() {
+		update_minimap_view_pos();
+		update_minimap_view_size();
+	});
 
 	
 	$('#select-highlighting').change(highlight_select);
 	$('#select-highlighting').ready(highlight_select);
-	PR.prettyPrint();
+	
+	sort_contributors(1, false);
+	update_minimap_view_size();
 });

@@ -1,57 +1,108 @@
+html, body, div, pre, p, img
+{
+	box-sizing: border-box;
+}
+
+html, body
+{
+	width: 100%;
+	height: 100%;
+}
+
+h1
+{
+	margin: 0px 0px;
+}
+
+pre
+{
+	margin-top: 0px;
+	margin-bottom: 4px;
+}
+
+/* Navbar CSS */
+
 .navbar
 {
 	position: fixed;
+	left: 0;
     top: 0;
-    width: 100%;
-	padding: 8px;
+    width: 100%;	
+	height: 5em;
 	overflow: hidden;
-    background-color: #F0F0F0;
+	display: flex;
+	flex-direction: row;
+	background-color: #F0F0F0;
+}
+
+.navbar > div
+{
+	padding: 8px 16px;
+}
+
+.navbar-title-box
+{
+	padding: 8px 16px;
+	background-color: rgb(180, 180, 180);
+}
+
+/* Minimap CSS */
+
+.minimap
+{
+	position: fixed;
+	top: 5em;
+	right: 0;
+	width: 5vw;
+	height: calc(100vh - 5em);
+	overflow: hidden;
+	background-color: rgb(240, 240, 240);
+}
+
+.minimap-view-frame
+{
+	position: absolute;
+	height: 5vh;
+	width: 100%;
+	border: 1px solid rgb(240, 240, 240);
+}
+
+.minimap-view-shade
+{
+	position: absolute;
+	height: 5vh;
+	width: 100%;
+	border: 1px solid black;	
+	background-color: rgb(205, 205, 205);
+}
+
+.minimap-image
+{
+	position: absolute;
+	width: 4vw;
+	height: 100%;
+	margin-left: 1vw;
+}
+
+/* Infobox CSS */
+
+.layout-infobox
+{
+	position: fixed;
+	top: 6em;
+	right: 10vh;
+	width: 21em;
+	height: 10em;
+	overflow: hidden;
 }
 
 .commit-info
 {
-	position: fixed;
-	right: 1vh;
-	width: 21em;
-	height: 10em;
 	padding-top: 8px;
 	overflow: hidden;
 	background-color: #F0F0F0;
 	display: flex;
 	flex-direction: column;
-}
-
-.year-info
-{
-	position: fixed;
-	right: 1vh;
-	width: 5em;
-	padding: 8px;
-	overflow: hidden;
-	background-color: #F0F0F0;
-}
-
-.year-legend-item
-{
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	margin-bottom: 8px;
-}
-
-.year-legend-box
-{
-	float: left;
-	width: 1em;
-	height: 1em;
-	background-color: var(--year-color, #DDDDDD);
-	border: 1px solid black;
-	margin-right: 6px;
-}
-
-.hidden
-{
-	display: none;
 }
 
 .infotext
@@ -71,18 +122,52 @@
 	flex: 100;
 }
 
-.main
+/* Main Area CSS */
+
+.layout-main
 {
-	margin-top: 60px;
+	padding-top: 5em;
+	padding-right: 5vw;
 }
 
-pre
+/* Contributors Table CSS */
+
+.layout-contributors
 {
-	margin-top: 0px;
-	margin-bottom: 4px;
+	width: 100%;
+	padding: 16px 16px;
 }
 
-table > caption
+.contributors-table
+{
+	width: 60%;
+	padding: 0px 16px;
+	border: 1px solid rgb(210, 210, 255);	
+	border-radius: 5px;
+	margin-left: auto;
+    margin-right: auto;
+}
+
+.table-header-row { 
+  border: solid;
+  border-width: 1px 0;
+}
+
+.table-header-row > th { 
+  cursor: pointer;
+}
+
+.table-footer-row { 
+  border: solid;
+  border-width: 1px 0;
+}
+
+.hidden
+{
+	display: none;
+}
+
+caption
 {
 	text-align: left;
 	font-weight: bold;
@@ -90,25 +175,29 @@ table > caption
 
 th
 {
-	text-align: left;
+	padding: 8px 0px;
+	text-align: right;
 	font-weight: normal;
-	padding-left: 24px;
 }
 
 td
 {
 	text-align: right;
+	padding: 2px 0px;
 }
 
-th:first-child
+tr:nth-child(even)
 {
-	text-align: left;
-	font-weight: normal;
-	padding-left: 0px;
+	background-color: #f2f2f2;
 }
 
-td:first-child
+th:first-child, td:first-child
 {
+	padding-left: 16px;
 	text-align: left;
 }
 
+th:last-child, td:last-child
+{
+	padding-right: 16px;
+}

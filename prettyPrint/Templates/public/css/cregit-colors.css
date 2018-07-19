@@ -8,6 +8,11 @@
 	color: #DDDDDD;
 }
 
+.color-highlight
+{
+	color: #BB0000;
+}
+
 .color-age
 {
 	color: hsl(var(--age-hue, 0), var(--age-sat, 0%), var(--age-lum, 100%));

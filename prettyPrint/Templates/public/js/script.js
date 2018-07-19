@@ -97,6 +97,21 @@ $(document).ready(function() {
 		$spans.addClass('color-fade color-pretty');
 	}
 	
+	function highlight_date_range() {
+		var from = document.getElementById("date-from").valueAsDate;
+		var to = document.getElementById("date-to").valueAsDate;		
+		$spans.each(function() {
+			var commitInfo = commits[this.dataset.cidx];
+			var date = new Date(commitInfo.timestamp * 1000);
+			if (from == null || to == null)
+				$(this).addClass('color-fade');
+			else if (date >= from && date <= to)
+				$(this).addClass('color-highlight');
+			else
+				$(this).addClass('color-fade');
+		});
+	}
+	
 	function highlight_commit(commit) {
 		$spans.each(function() {
 			var commitInfo = commits[this.dataset.cidx]
@@ -114,7 +129,7 @@ $(document).ready(function() {
 	}
 	
 	function highlight_update() {
-		$spans.removeClass('color-fade color-age color-year color-pretty');
+		$spans.removeClass('color-fade color-highlight color-age color-year color-pretty');
 		if (highlightMode != 'year') {
 			hide_year_info();
 			showCommitInfo = true;
@@ -125,7 +140,7 @@ $(document).ready(function() {
 		} else if (highlightMode == 'age') {
 			highlight_age();
 		} else if (highlightMode == 'year') {
-			highlight_year();
+			highlight_date_range();
 		} else if (highlightMode == 'syntax') {
 			highlight_syntax();
 		} else if (highlightMode == 'commit') {
@@ -146,6 +161,13 @@ $(document).ready(function() {
 		render_minimap();
 	}
 	
+	function highlight_update_date_range() {
+		if (highlightMode != 'year')
+			return;
+		
+		highlight_update();
+	}
+	
 	function highlight_select()
 	{
 		var elem = $('#select-highlighting').get(0);
@@ -159,6 +181,11 @@ $(document).ready(function() {
 			highlightMode = 'commit';
 		else
 			highlightMode = 'author-single';
+		
+		if (highlightMode == 'year')
+			$("#select-date-range").removeClass("hidden");
+		else
+			$("#select-date-range").addClass("hidden");
 		
 		selectedAuthor = elem.value;
 		highlight_update();
@@ -253,6 +280,14 @@ $(document).ready(function() {
 		$(".table-header-row").after(rows);
 	}
 	
+	function generate_line_numbers()
+	{
+		var text = "";
+		for (var i = 0; i < line_count; ++i)
+			text += i + "\n";
+		$("#line-numbers").text(text);
+	}
+	
 	$contributor_headers.click(function (event) {
 		event.stopPropagation();
 		
@@ -318,6 +353,15 @@ $(document).ready(function() {
 	$('#select-highlighting').change(highlight_select);
 	$('#select-highlighting').ready(highlight_select);
 	
+	$("#date-from").change(highlight_update_date_range);
+	$("#date-to").change(highlight_update_date_range);
+	
+	var dateFrom = new Date();
+	dateFrom.setYear(dateFrom.getFullYear() - 1);
+	document.getElementById("date-from").valueAsDate = dateFrom;
+	document.getElementById("date-to").valueAsDate = new Date();
+	
 	sort_contributors(1, false);
 	update_minimap_view_size();
+	generate_line_numbers();
 });

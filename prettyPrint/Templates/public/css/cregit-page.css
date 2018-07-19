@@ -130,6 +130,18 @@ pre
 	padding-right: 5vw;
 }
 
+#source-view
+{
+	display: flex;
+	flex-direction: row;
+}
+
+#line-numbers
+{
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
 /* Contributors Table CSS */
 
 .layout-contributors

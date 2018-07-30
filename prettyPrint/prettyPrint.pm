@@ -52,13 +52,14 @@ sub print_file {
 	my @params = get_template_parameters($sourceFile, $lineFile, $blameFile);
 	return 1 unless $params[0] != 1;
 	
-	my ($fileStats, $authorStats, $spans, $commits) = @params;
+	my ($fileStats, $authorStats, $spans, $commits, $contentGroups) = @params;
 
 	my $template = HTML::Template->new(filename => $options->{templateFile}, %$templateParams);
 	$template->param(file_name => $fileStats->{name});
 	$template->param(total_commits => $fileStats->{commits});
 	$template->param(total_tokens => $fileStats->{tokens});
 	$template->param(line_count => $fileStats->{line_count});
+	$template->param(content_groups => $contentGroups);
 	$template->param(commit_spans => $spans);
 	$template->param(commits => $commits);
 	$template->param(contributors => $authorStats);
@@ -111,15 +112,15 @@ sub get_template_parameters {
 	my $authorStat;
 	my $contentGroup = { done => 1, spans => []};
 	my $span = { cid => undef, start => 0 };
+	my $spanBreak = 0;
 	while (my $line = <$LINE> and my $blame = <$BLAME>) {
 		chomp $line;
 		chomp $blame;
-		my ($loc, $type, $token) = split(/\|/, $line);
+		my ($loc, $type, $token, $decl) = split(/\|/, $line, 4);
 		my ($cid, $blank, $blameInfo) = split(/;/, $blame, 3);
 		my ($type2, $token2) = split(/\|/, $blameInfo);
 		my $isMeta = ($loc =~ /-/);
 		my $isText = ($loc !~ /-/);
-		my $spanBreak = 0;
 		
 		if ($token ne $token2) {
 			return Error("[ln$tokenLine]blame-token mismatch");
@@ -149,6 +150,14 @@ sub get_template_parameters {
 				} else {
 					$contentGroup->{done} = 1;
 				}
+			}
+			
+			# function declaration
+			if ($type eq "DECL") {
+				my ($lineNum, $colNum) = split(/:/, $loc);
+				$contentGroup->{line_start} = $lineNum;
+				$contentGroup->{decltype} = $token;
+				$contentGroup->{declaration} = $decl;
 			}
 		}
 		
@@ -192,13 +201,17 @@ sub get_template_parameters {
 				$span = new_span($cid, $authorName, $index);
 				push(@spans, $span);
 				
-				# Update content group record
-				push(@{$contentGroup->{spans}}, $span);
+				# Update content group
 				if (!defined($contentGroup->{line_start})) {
 					$contentGroup->{line_start} = $lineNum;
 				}
+				push(@{$contentGroup->{spans}}, $span);
+				$contentGroup->{cids}->{$originalCid} = 1;
+				
+				$spanBreak = 0;
 			}
 			
+			$contentGroup->{tokens}++;
 			$authorStat->{tokens}++;
 			$fileStats->{tokens}++;
 		}
@@ -214,9 +227,13 @@ sub get_template_parameters {
 	$fileStats->{line_count} = $lineCount;
 	
 	# Update remaining content group data
-	@contentGroups[-1]->{line_end} = $lineCount;
-	for (my $i = 0; $i < scalar(@contentGroups) - 1; $i++) {
-		@contentGroups[$i]->{line_end} = @contentGroups[$i + 1]->{line_start};
+	my $groupCount = scalar(@contentGroups);
+	for (my $i = 0; $i < $groupCount; $i++) {
+		my $group = @contentGroups[$i];
+		$group->{line_end} = ($i < $groupCount - 1 ? @contentGroups[$i + 1]->{line_start} : $lineCount);
+		$group->{spans_count} = scalar @{$group->{spans}};
+		$group->{commits} = scalar %{$group->{cids}};
+		$group->{cids} = undef;
 	}
 	
 	# Update remaining author data
@@ -231,6 +248,7 @@ sub get_template_parameters {
 		$stat->{commit_percent} = sprintf("%.2f\%", 100.0 * $stat->{commit_proportion} );
 		$stat->{token_percent} = sprintf("%.2f\%", 100.0 * $stat->{token_proportion} );
 		$stat->{class} = "author" . scalar @authors;
+		$stat->{cids} = undef;
 		push(@authors, $stat);
 	}
 	
@@ -257,8 +275,14 @@ sub new_content_group {
 		done => 0,
 		type => $type,
 		spans => [],
+		spans_count => 0,
+		tokens => 0,
+		cids => { },
+		commits => 0,
 		line_start => undef,
 		line_end => undef,
+		decltype => "",
+		declaration => "",
 	};
 	
 	return $group;

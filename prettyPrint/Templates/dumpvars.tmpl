@@ -4,6 +4,8 @@
 <pre>
 cregit_version: <TMPL_VAR cregit_version>
 file_name: <TMPL_VAR file_name>
+creation_date: <TMPL_VAR creation_date>
+creation_author: <TMPL_VAR creation_author>
 total_commits: <TMPL_VAR total_commits>
 total_tokens: <TMPL_VAR total_tokens>
 line_count: <TMPL_VAR line_count>
@@ -11,6 +13,7 @@ web_root: <TMPL_VAR web_root>
 
 contributors:
 	<TMPL_LOOP contributors> - [<TMPL_VAR __index__>]
+		id: <TMPL_VAR id>
 		name: <TMPL_VAR ESCAPE=JS name>
 		commits: <TMPL_VAR commits>
 		tokens: <TMPL_VAR tokens>
@@ -18,14 +21,14 @@ contributors:
 		token_proportion: <TMPL_VAR token_proportion>
 		commit_percent: <TMPL_VAR commit_percent>
 		token_percent: <TMPL_VAR token_percent>
-		class: <TMPL_VAR class>
 	</TMPL_LOOP>
 	
 commits:
 	<TMPL_LOOP commits> - [<TMPL_VAR __index__>]
 		cid: <TMPL_VAR cid>
 		cregit_cid: <TMPL_VAR cregit_cid>
-		authorId: <TMPL_VAR ESCAPE=JS author>
+		author: <TMPL_VAR ESCAPE=JS author>
+		author_id: <TMPL_VAR ESCAPE=JS author_id>
 		date: <TMPL_VAR date>
 		epoch: <TMPL_VAR epoch>
 		summary: <TMPL_VAR ESCAPE=JS summary>
@@ -50,8 +53,7 @@ commit_spans:
 		cid: <TMPL_VAR cid>
 		cidx: <TMPL_VAR cidx>
 		author: <TMPL_VAR author>
-		author_idx: <TMPL_VAR author_idx>
-		author_class: <TMPL_VAR author_class>
+		author_id: <TMPL_VAR author_id>
 		body: <TMPL_VAR ESCAPE=js body>
 	</TMPL_LOOP>
 

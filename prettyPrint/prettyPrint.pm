@@ -17,6 +17,7 @@
 package PrettyPrint;
 use strict;
 use Date::Parse;
+use Date::Format;
 use DBI;
 use File::Basename;
 use Getopt::Long;
@@ -53,12 +54,16 @@ sub print_file {
 	return 1 unless $params[0] != 1;
 	
 	my ($fileStats, $authorStats, $spans, $commits, $contentGroups) = @params;
+	my $firstCommit = @$commits[0];
+	my $creationDate = time2str("%m-%d-%Y", $firstCommit->{epoch});
 
 	my $template = HTML::Template->new(filename => $options->{templateFile}, %$templateParams);
 	$template->param(file_name => $fileStats->{name});
 	$template->param(total_commits => $fileStats->{commits});
 	$template->param(total_tokens => $fileStats->{tokens});
 	$template->param(line_count => $fileStats->{line_count});
+	$template->param(creation_date => $creationDate);
+	$template->param(creation_author => $firstCommit->{author});
 	$template->param(content_groups => $contentGroups);
 	$template->param(commit_spans => $spans);
 	$template->param(commits => $commits);
@@ -236,33 +241,34 @@ sub get_template_parameters {
 		$group->{cids} = undef;
 	}
 	
-	# Update remaining author data
-	my $pred = sub { $authorStats->{$b}->{tokens} <=> $authorStats->{$a}->{tokens} };
-	my @sortedKeys = sort $pred (keys %$authorStats);
-	my @authors;
-	for my $key (@sortedKeys) {
-		my $stat = $authorStats->{$key};
-		$stat->{commits} = scalar keys %{$stat->{cids}};
-		$stat->{commit_proportion} = $stat->{commits} / $fileStats->{commits};
-		$stat->{token_proportion} = $stat->{tokens} / $fileStats->{tokens};
-		$stat->{commit_percent} = sprintf("%.2f\%", 100.0 * $stat->{commit_proportion} );
-		$stat->{token_percent} = sprintf("%.2f\%", 100.0 * $stat->{token_proportion} );
-		$stat->{class} = "author" . scalar @authors;
-		$stat->{cids} = undef;
-		push(@authors, $stat);
+	# Sort and update remaining author data
+	my @unsortedAuthors = values %$authorStats;
+	my @authors = sort { $b->{tokens} <=> $a->{tokens} } @unsortedAuthors;
+	for (my $i = 0; $i < $#authors; $i++) {
+		my $author = $authors[$i];
+		$author->{id} = $i;
+		$author->{commits} = scalar keys %{$author->{cids}};
+		$author->{commit_proportion} = $author->{commits} / $fileStats->{commits};
+		$author->{token_proportion} = $author->{tokens} / $fileStats->{tokens};
+		$author->{commit_percent} = sprintf("%.2f\%", 100.0 * $author->{commit_proportion} );
+		$author->{token_percent} = sprintf("%.2f\%", 100.0 * $author->{token_proportion} );
+		$author->{cids} = undef;
 	}
 	
-	# Sort commits
-	my @unsortedCommits = map { $_ } values %$commits;
-	my @commits = sort { $a->{epoch} cmp $b->{epoch} } @unsortedCommits;
+	# Sort and update remaining commit data
+	my @unsortedCommits = values %$commits;
+	my @commits = sort { $a->{epoch} <=> $b->{epoch} } @unsortedCommits;
+	my %authorMap = map { $authors[$_]->{name}, $_ } 0..$#authors;
+	for (my $i = 0; $i < $#commits; $i++) {
+		my $commit = $commits[$i];
+		$commit->{author_id} = $authorMap{$commit->{author}};
+	}
 	
 	# Update remaining span data
 	my %commitMap = map { $commits[$_]->{cregit_cid}, $_ } 0..$#commits;
-	my %authorMap = map { $authors[$_]->{name}, $_ } 0..$#authors;
 	for my $span (@spans) {
 		$span->{cidx} = $commitMap{$span->{cid}};
-		$span->{author_idx} = $authorMap{$span->{author}};
-		$span->{author_class} = "author" . $authorMap{$span->{author}};
+		$span->{author_id} = $authorMap{$span->{author}};
 		$span->{cid} = $commits[$span->{cidx}]->{cid};
 	}
 	
@@ -295,10 +301,10 @@ sub new_span {
 	my $span = {
 		cid => $cid,
 		author => $authorName,
+		author_id => -1,
 		start => $start,
 		length => 0,
 		body => "",
-		author_class => "",
 	};
 	
 	return $span;
@@ -309,6 +315,7 @@ sub get_author_stat {
 	my $authorStats = shift @_;
 	if ($authorStats->{$name} == undef) {
 		$authorStats->{$name} = {
+			id => -1,
 			name => $name,
 			tokens => 0,
 			cids => { },
@@ -318,7 +325,6 @@ sub get_author_stat {
 			token_proportion => 0,
 			commit_percent => "0%",
 			token_percent => "0%",
-			class => "",
 		};
 	}
 	
@@ -335,6 +341,7 @@ sub get_commit_stat {
 			cid => $originalCid,
 			cregit_cid => $cid,
 			author => $author,
+			author_id => -1,
 			date => $date,
 			epoch => str2time($date),
 			summary => $summary,

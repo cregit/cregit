@@ -11,7 +11,7 @@ $(document).ready(function() {
 	var $contributor_headers = $(".table-header-row > th");
 	
 	var highlightMode = 'author';
-	var selectedAuthor = undefined;
+	var selectedAuthorId = undefined;
 	var selectedCommit = undefined;
 	var ageSetupDone = false;
 	var yearSetupDone = false;
@@ -146,7 +146,7 @@ $(document).ready(function() {
 		} else if (highlightMode == 'commit') {
 			highlight_commit(selectedCommit);
 		} else if (highlightMode == 'author-single') {
-			highlight_author(selectedAuthor);
+			highlight_author(selectedAuthorId);
 		}
 		
 		render_minimap();
@@ -187,7 +187,7 @@ $(document).ready(function() {
 		else
 			$("#select-date-range").addClass("hidden");
 		
-		selectedAuthor = elem.value;
+		selectedAuthorId = elem.value;
 		highlight_update();
 	}
 	
@@ -207,11 +207,11 @@ $(document).ready(function() {
 	function show_commit_info(commitInfo) {
 		var date = new Date(commitInfo.timestamp * 1000);
 		var authorId = commitInfo.authorId;
-		var authorInfo = authors.find(function(x) { return x.authorId == authorId; });
+		var authorInfo = authors[authorId];
 		$('#commit-hash').text(commitInfo.cid);
 		$('#commit-date').text(date.toDateString().substr(4));
-		$('#commit-author').text(commitInfo.authorId);
-		$('#commit-author').attr("class", "infotext author-label " + authorInfo.class);
+		$('#commit-author').text(authorInfo.name);
+		$('#commit-author').attr("class", "infotext author-label author" + authorId);
 		$('#commit-comment').text(commitInfo.summary);
 		$('#commit-info').removeClass('hidden');
 		$('#commit-info').stop();

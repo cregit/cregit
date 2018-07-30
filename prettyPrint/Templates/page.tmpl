@@ -16,7 +16,7 @@
       <option>Between Dates</option>
       <option>Commit</option>
       <option disabled>──────────</option>
-      <TMPL_LOOP Contributors><option value="<TMPL_VAR name>"><TMPL_VAR name></option>
+      <TMPL_LOOP contributors><option value="<TMPL_VAR id>"><TMPL_VAR name></option>
       </TMPL_LOOP>
     </select>
   </div>
@@ -52,9 +52,9 @@
       <th>Commits</th>
       <th>Commit Proportion</th>
     </tr>
-    <TMPL_LOOP Contributors>
+    <TMPL_LOOP contributors>
     <tr class="contributor-row">
-      <td><span class="<TMPL_VAR class> author-label"><TMPL_VAR name></span></td>
+      <td><span class="author<TMPL_VAR id> author-label" data-author-id="<TMPL_VAR id>"><TMPL_VAR name></span></td>
       <td><TMPL_VAR tokens></td>
       <td><TMPL_VAR token_percent></td>
       <td><TMPL_VAR commits></td>
@@ -78,7 +78,7 @@
 
 <!-- Source Content -->
 <pre id="source-content" class="prettyprint lang-c">
-<TMPL_LOOP Commit_Spans><a class="cregit-span <TMPL_VAR author_class>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR body></a></TMPL_LOOP>
+<TMPL_LOOP Commit_Spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR body></a></TMPL_LOOP>
 </pre>
 
 </div>
@@ -90,11 +90,11 @@
 <!-- Commit Records -->
 <script>
 var commits = [
-<TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":"<TMPL_VAR epoch>", "authorId":"<TMPL_VAR ESCAPE=JS author>", "summary":"<TMPL_VAR ESCAPE=JS summary>" },
+<TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":"<TMPL_VAR epoch>", "authorId":"<TMPL_VAR ESCAPE=JS author_id>", "summary":"<TMPL_VAR ESCAPE=JS summary>" },
 </TMPL_LOOP>];
 
 var authors = [
-<TMPL_LOOP Contributors>{ "authorId":"<TMPL_VAR ESCAPE=JS name>", "class":"<TMPL_VAR ESCAPE=JS class>" },
+<TMPL_LOOP contributors>{ "authorId":"<TMPL_VAR id>", "name":"<TMPL_VAR ESCAPE=JS name>" },
 </TMPL_LOOP>];
 
 var line_count = <TMPL_VAR line_count>

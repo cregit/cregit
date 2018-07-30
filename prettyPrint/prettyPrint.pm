@@ -244,7 +244,7 @@ sub get_template_parameters {
 	# Sort and update remaining author data
 	my @unsortedAuthors = values %$authorStats;
 	my @authors = sort { $b->{tokens} <=> $a->{tokens} } @unsortedAuthors;
-	for (my $i = 0; $i < $#authors; $i++) {
+	for (my $i = 0; $i < scalar @authors; $i++) {
 		my $author = $authors[$i];
 		$author->{id} = $i;
 		$author->{commits} = scalar keys %{$author->{cids}};
@@ -259,7 +259,7 @@ sub get_template_parameters {
 	my @unsortedCommits = values %$commits;
 	my @commits = sort { $a->{epoch} <=> $b->{epoch} } @unsortedCommits;
 	my %authorMap = map { $authors[$_]->{name}, $_ } 0..$#authors;
-	for (my $i = 0; $i < $#commits; $i++) {
+	for (my $i = 0; $i < scalar @commits; $i++) {
 		my $commit = $commits[$i];
 		$commit->{author_id} = $authorMap{$commit->{author}};
 	}

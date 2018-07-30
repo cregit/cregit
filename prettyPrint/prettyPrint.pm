@@ -26,32 +26,39 @@ use Pod::Usage;
 my $dbh;
 my $metaQuery;
 my $metaCache = { };
-my $defaultTemplate = dirname(__FILE__) . "templates/page.tmpl";
+my $metaCacheEnabled = 1;
+my $defaultTemplate = dirname(__FILE__) . "/templates/page.tmpl";
+my $warningCount = 0;
+my $templateParams = {
+	loop_context_vars => 1,
+	die_on_bad_params => 0,
+};
 
 sub print_file {
 	my $sourceFile = shift @_;
 	my $blameFile = shift @_;
 	my $lineFile =  shift @_;
 	my $options = shift @_		// { };
-	
 	$options->{cregitVersion}	//= "0.0";
 	$options->{templateFile}	//= $defaultTemplate;
 	$options->{outputFile}		//= "";
 	$options->{webRoot}			//= "";
+	$warningCount = 0;
 
-	return Message("Source file does not exist [$sourceFile]") unless -f $sourceFile;
-	return Message("Tokenized line file does not exist [$lineFile]") unless -f $lineFile;
-	return Message("Tokenized blame file does not exist [$blameFile]") unless -f $blameFile;
+	return Error("Source file does not exist [$sourceFile]") unless -f $sourceFile;
+	return Error("Tokenized line file does not exist [$lineFile]") unless -f $lineFile;
+	return Error("Tokenized blame file does not exist [$blameFile]") unless -f $blameFile;
 
 	my @params = get_template_parameters($sourceFile, $lineFile, $blameFile);
-	return Message("Failed to parse input files") unless $params[0] != 1;
+	return 1 unless $params[0] != 1;
 	
 	my ($fileStats, $authorStats, $spans, $commits) = @params;
 
-	my $template = HTML::Template->new(filename => "Templates/page.tmpl", die_on_bad_params => 0);
+	my $template = HTML::Template->new(filename => $options->{templateFile}, %$templateParams);
 	$template->param(file_name => $fileStats->{name});
 	$template->param(total_commits => $fileStats->{commits});
 	$template->param(total_tokens => $fileStats->{tokens});
+	$template->param(line_count => $fileStats->{line_count});
 	$template->param(commit_spans => $spans);
 	$template->param(commits => $commits);
 	$template->param(contributors => $authorStats);
@@ -59,8 +66,9 @@ sub print_file {
 	$template->param(web_root => $options->{webRoot});
 
 	my $file = undef;
-	if ($options->{outputFile} ne "") {
-		open($file, ">", $options->{outputFile}) or die("cannot write to [$options->{outputFile}]");
+	my $outputPath = $options->{outputFile};
+	if ($outputPath ne "") {
+		open($file, ">", $outputPath) or return Error("cannot write to [$outputPath]");
 	} else {
 		$file = *STDOUT
 	}
@@ -75,93 +83,127 @@ sub get_template_parameters {
 	my $fileStats = { name => "", tokens => 0, commits => 0 };
 	my $authorStats = { };
 	my $commits = { };
+	my @contentGroups;
 	my @spans;
 	
-	$metaCache = { };
+	return Error("unable to open [$sourceFile] file") unless open(my $SRC, $sourceFile);
+	return Error("unable to open [$lineFile] file") unless open(my $LINE, $lineFile);
+	return Error("unable to open [$blameFile] file") unless open(my $BLAME, $blameFile);
+	return Error("[$lineFile] is not a line token file") unless <$LINE> =~ /begin_unit/;
+	return Error("[$blameFile] is not a blame token file") unless <$BLAME> =~ /begin_unit/;
 	
-	return Message("unable to open [$sourceFile] file") unless open(my $SRC, $sourceFile);
-	return Message("unable to open [$lineFile] file") unless open(my $LINE, $lineFile);
-	return Message("unable to open [$blameFile] file") unless open(my $BLAME, $blameFile);
-	return Message("[$lineFile] is not a line token file") unless <$LINE> =~ /begin_unit/;
-	return Message("[$blameFile] is not a blame token file") unless <$BLAME> =~ /begin_unit/;
-
 	# Read source text and map line numbers to indices
+	my @srcLineLengths = (-1);
 	my @srcLineIndices = (-1);
 	my $srcText = "";
 	my $lineIndex = 0;
+	my $lineCount = 0;
 	while (my $line = <$SRC>) {
 		push(@srcLineIndices, $lineIndex);
+		push(@srcLineLengths, length($line));
 		$srcText .= $line;
 		$lineIndex += length($line);
+		$lineCount++;
 	}
 	
 	# Parse line and blame token files together
+	my $tokenLine = 2;
 	my $authorStat;
-	my $span = { cid => undef };
+	my $contentGroup = { done => 1, spans => []};
+	my $span = { cid => undef, start => 0 };
 	while (my $line = <$LINE> and my $blame = <$BLAME>) {
 		chomp $line;
 		chomp $blame;
-		my @parts = split(/\|/, $line);
-		my @parts2 = split(/;/, $blame);
-		my @parts3 = split(/\|/, $parts2[2]);
-		my ($loc, $type, $token) = @parts;
-		my $cid = $parts2[0];
-		my ($type2, $token2) = @parts3;
+		my ($loc, $type, $token) = split(/\|/, $line);
+		my ($cid, $blank, $blameInfo) = split(/;/, $blame, 3);
+		my ($type2, $token2) = split(/\|/, $blameInfo);
+		my $isMeta = ($loc =~ /-/);
+		my $isText = ($loc !~ /-/);
+		my $spanBreak = 0;
 		
-		#if ($token != $token2) {
-		#	die "blame-token mismatch";
-		#}
+		if ($token ne $token2) {
+			return Error("[ln$tokenLine]blame-token mismatch");
+		}
 		
-		if ($loc !~ /-/) {	
-			if ($cid ne %$span{cid}) {		
-				# Update commit record
-				my $commitStat = $commits->{$cid};
-				if ($commitStat == undef) {
-					my ($author, $date, $summary) = get_cid_meta($cid);
-					$commitStat = {
-						cid => $cid,
-						author => $author,
-						date => $date,
-						epoch => str2time($date),
-						summary => $summary,
-					};
-					$commits->{$cid} = $commitStat;
+		if ($isMeta)
+		{
+			# Start content group
+			if ($type =~ /begin_/) {
+				if (!$contentGroup->{done} && $contentGroup->{type} ne "unknown") {
+					Warning("[ln$tokenLine]Encountered new content group without ending the previous one.");
 				}
+				
+				my $groupType = substr($type, length("begin_"));
+				$contentGroup = new_content_group($groupType);
+				$spanBreak = 1;
+				push (@contentGroups, $contentGroup);
+			}
+			
+			# End content group
+			if ($type =~ /end_/ and $type ne "end_unit") {
+				if ($contentGroup->{done}) {
+					Warning("[ln$tokenLine]Encountered end of content group without starting one.");
+				}
+				if (substr($type, length("end_")) ne $contentGroup->{type}) {
+					Warning("[ln$tokenLine]Content group end type does not match the type of the current one. Continuing.");
+				} else {
+					$contentGroup->{done} = 1;
+				}
+			}
+		}
+		
+		if ($isText)
+		{
+			my ($lineNum, $colNum) = split(/:/, $loc);
+			my $lineLength = $srcLineLengths[$lineNum];
+			
+			if ($lineNum - 1 > $lineCount) {
+				return Error("[ln$tokenLine] Received position $loc but source file is only $lineCount lines long.");
+			} elsif ($colNum - 1 > $lineLength) {
+				return Error("[ln$tokenLine] Received position $loc but source line is only $lineLength characters long.");
+			}
+		
+			if ($contentGroup->{done}) {
+				Warning("[ln$tokenLine]Encountered text content outside of content group. Adding to new group.");
+				$contentGroup = new_content_group("unknown");
+				$spanBreak = 1;
+				push (@contentGroups, $contentGroup);
+			}
+		
+			if ($cid ne %$span{cid} or $spanBreak) {
+				my $commitStat = get_commit_stat($cid, $commits);
+				my $authorName = $commitStat->{author};
+				my $originalCid = $commitStat->{cid};
 				
 				# Update author record
-				my $author = $commitStat->{author};
-				$authorStat = $authorStats->{$author};
-				if ($authorStat == undef) {
-					my $authorIdx = scalar (keys %$authorStats);
-					$authorStat = {
-						name => $author,
-						tokens => 0,
-						cids => { },
-					};
-					$authorStats->{$author} = $authorStat;
-				}
-				$authorStat->{cids}->{$cid} = 1;
+				$authorStat = get_author_stat($authorName, $authorStats);
+				$authorStat->{cids}->{$originalCid} = 1;
 				
-				# Update span record
-				my ($lineNum, $colNum) = split(/:/, $loc);
+				# Update previous span record
 				my $index = $srcLineIndices[$lineNum] + $colNum - 1;
 				$span->{length} = $index - $span->{start};
 				$span->{body} = substr($srcText, $span->{start}, $span->{length});
-				$span = {
-					cid => $cid,
-					author => $author,
-					date => $commitStat->{date},
-					start => $index,
-					length => 0,
-					body => "",
-					author_class => "",
-				};
+				
+				# Sanity check
+				return Error("[ln$tokenLine]Span start is undefined") if !defined($span->{start});
+				return Error("[ln$tokenLine]Span length is negative. This is likely due to a mismatch between the blame/token files and the source file.") if $span->{length} < 0;
+				
+				# Start a new span
+				$span = new_span($cid, $authorName, $index);
 				push(@spans, $span);
+				
+				# Update content group record
+				push(@{$contentGroup->{spans}}, $span);
+				if (!defined($contentGroup->{line_start})) {
+					$contentGroup->{line_start} = $lineNum;
+				}
 			}
 			
 			$authorStat->{tokens}++;
 			$fileStats->{tokens}++;
 		}
+		
+		$tokenLine++;
 	}
 	$span->{length} = length($srcText) - $span->{start};
 	$span->{body} = substr($srcText, $span->{start}, $span->{length});
@@ -169,33 +211,134 @@ sub get_template_parameters {
 	# Update remaining file data
 	$fileStats->{name} = fileparse($sourceFile);
 	$fileStats->{commits} = scalar keys %$commits;
+	$fileStats->{line_count} = $lineCount;
+	
+	# Update remaining content group data
+	@contentGroups[-1]->{line_end} = $lineCount;
+	for (my $i = 0; $i < scalar(@contentGroups) - 1; $i++) {
+		@contentGroups[$i]->{line_end} = @contentGroups[$i + 1]->{line_start};
+	}
 	
 	# Update remaining author data
-	my @authorStatsList;
-	for my $key (sort keys %$authorStats) {
+	my $pred = sub { $authorStats->{$b}->{tokens} <=> $authorStats->{$a}->{tokens} };
+	my @sortedKeys = sort $pred (keys %$authorStats);
+	my @authors;
+	for my $key (@sortedKeys) {
 		my $stat = $authorStats->{$key};
 		$stat->{commits} = scalar keys %{$stat->{cids}};
 		$stat->{commit_proportion} = $stat->{commits} / $fileStats->{commits};
 		$stat->{token_proportion} = $stat->{tokens} / $fileStats->{tokens};
 		$stat->{commit_percent} = sprintf("%.2f\%", 100.0 * $stat->{commit_proportion} );
 		$stat->{token_percent} = sprintf("%.2f\%", 100.0 * $stat->{token_proportion} );
-		$stat->{class} = "author" . scalar @authorStatsList;
-		push(@authorStatsList, $stat);
+		$stat->{class} = "author" . scalar @authors;
+		push(@authors, $stat);
 	}
 	
 	# Sort commits
 	my @unsortedCommits = map { $_ } values %$commits;
-	my @commits = sort { $a->{timestamp} cmp $b->{timestamp} } @unsortedCommits;
+	my @commits = sort { $a->{epoch} cmp $b->{epoch} } @unsortedCommits;
 	
 	# Update remaining span data
-	my %commitMap = map { $commits[$_]->{cid}, $_ } 0..$#commits;
-	my %classMap = map { $authorStatsList[$_]->{name}, "author$_" } 0..$#authorStatsList;
+	my %commitMap = map { $commits[$_]->{cregit_cid}, $_ } 0..$#commits;
+	my %authorMap = map { $authors[$_]->{name}, $_ } 0..$#authors;
 	for my $span (@spans) {
 		$span->{cidx} = $commitMap{$span->{cid}};
-		$span->{author_class} = $classMap{$span->{author}};
+		$span->{author_idx} = $authorMap{$span->{author}};
+		$span->{author_class} = "author" . $authorMap{$span->{author}};
+		$span->{cid} = $commits[$span->{cidx}]->{cid};
 	}
 	
-	return ($fileStats, [@authorStatsList], [@spans], [@commits])
+	return ($fileStats, [@authors], [@spans], [@commits], [@contentGroups])
+}
+
+sub new_content_group {
+	my $type = shift @_;
+	my $group = {
+		done => 0,
+		type => $type,
+		spans => [],
+		line_start => undef,
+		line_end => undef,
+	};
+	
+	return $group;
+}
+
+sub new_span {
+	my $cid = shift @_;
+	my $authorName = shift @_;
+	my $start = shift @_;
+	my $span = {
+		cid => $cid,
+		author => $authorName,
+		start => $start,
+		length => 0,
+		body => "",
+		author_class => "",
+	};
+	
+	return $span;
+}
+
+sub get_author_stat {
+	my $name = shift @_;
+	my $authorStats = shift @_;
+	if ($authorStats->{$name} == undef) {
+		$authorStats->{$name} = {
+			name => $name,
+			tokens => 0,
+			cids => { },
+			tokens => 0,
+			commits => 0,
+			commit_proportion => 0,
+			token_proportion => 0,
+			commit_percent => "0%",
+			token_percent => "0%",
+			class => "",
+		};
+	}
+	
+	return $authorStats->{$name};
+}
+
+sub get_commit_stat {
+	my $cid = shift @_;
+	my $commitStats = shift @_;
+	
+	if ($commitStats->{$cid} == undef) {
+		my ($author, $date, $summary, $originalCid) = get_cid_meta($cid);
+		$commitStats->{$cid} = {
+			cid => $originalCid,
+			cregit_cid => $cid,
+			author => $author,
+			date => $date,
+			epoch => str2time($date),
+			summary => $summary,
+		};
+	}
+
+	return $commitStats->{$cid};
+}
+
+sub get_cid_meta {
+    my $cid = shift @_;
+	
+	if ($metaCache->{$cid} != undef) {
+        return @{$metaCache->{$cid}};
+    }
+	
+	my $result = $metaQuery->execute($cid);
+	my @meta = $metaQuery->fetchrow();
+	if (!defined($result) or scalar(@meta) != 5 ) {
+		Warning("Unable to retrieve metadata for commit [$cid]");
+		@meta = ("unknown", "", "");
+	}
+	
+	if ($metaCacheEnabled) {
+		$metaCache->{$cid} = [@meta];
+	}
+	
+	return @meta;
 }
 
 sub setup_dbi {
@@ -208,39 +351,37 @@ sub setup_dbi {
 	$dbh->do("attach database '$authorsDB' as a;");
 	
 	$metaQuery = $dbh->prepare("
-	select coalesce(personname, personid, 'Unknown'), autdate, summary, originalcid, repo  
-	from commits  natural left join commitmap 
-	   left join emails on (autname = emailname and autemail = emailaddr)
-	   natural left join persons
-	where cid = ?;"
+		select coalesce(personname, personid, 'Unknown'), autdate, summary, originalcid, repo  
+		from commits  natural left join commitmap 
+		   left join emails on (autname = emailname and autemail = emailaddr)
+		   natural left join persons
+		where cid = ?;"
 	);
-	
-	# Print column names
-	# my $testQuery = $dbh->prepare("select * from commits limit 1");
-	# $testQuery->execute();
-	# print STDERR join(" ", @{$testQuery->{NAME}});
 }
 
-sub get_cid_meta {
-    my ($cid) = @_;
-	if (defined($metaCache->{$cid})) {
-        return @{$metaCache->{$cid}};
-    }
-	
-	my $result = $metaQuery->execute($cid);
-	my @meta = $metaQuery->fetchrow();
-	$metaCache->{$cid} = [@meta];
-	
-	if (!defined($result) or scalar(@meta) != 5 ) {
-		print STDERR "metadata for commit not found [$cid]";
-		
+sub test_print_db_info {
+	my $testQuery = $dbh->prepare("SELECT name FROM sqlite_master WHERE type='table';");
+	$testQuery->execute();
+	while (my $row = $testQuery->fetchrow()) {
+		print STDERR $row, "\n";
 	}
-	
-	return @meta;
+
+	my $testQuery2 = $dbh->prepare("select * from commits limit 1");
+	$testQuery2->execute();
+	print STDERR join(" ", @{$testQuery2->{NAME}});
 }
 
-sub Message {
+sub Error {
     my $message = shift @_;
-    print STDERR $message, "\n";
+    print STDERR "Error: ", $message, "\n";
 	return 1;
 }
+
+sub Warning {
+	my $message = shift @_;
+	print STDERR "Warning: ", $message, "\n";
+	$warningCount++;
+	return 1;
+}
+
+1;

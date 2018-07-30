@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<body>
+<pre>
+cregit_version: <TMPL_VAR cregit_version>
+file_name: <TMPL_VAR file_name>
+total_commits: <TMPL_VAR total_commits>
+total_tokens: <TMPL_VAR total_tokens>
+line_count: <TMPL_VAR line_count>
+web_root: <TMPL_VAR web_root>
+
+contributors:
+	<TMPL_LOOP contributors> - [<TMPL_VAR __index__>]
+		name: <TMPL_VAR ESCAPE=JS name>
+		commits: <TMPL_VAR commits>
+		tokens: <TMPL_VAR tokens>
+		commit_proportion: <TMPL_VAR commit_proportion>
+		token_proportion: <TMPL_VAR token_proportion>
+		commit_percent: <TMPL_VAR commit_percent>
+		token_percent: <TMPL_VAR token_percent>
+		class: <TMPL_VAR class>
+	</TMPL_LOOP>
+	
+commits:
+	<TMPL_LOOP commits> - [<TMPL_VAR __index__>]
+		cid: <TMPL_VAR cid>
+		cregit_cid: <TMPL_VAR cregit_cid>
+		authorId: <TMPL_VAR ESCAPE=JS author>
+		date: <TMPL_VAR date>
+		epoch: <TMPL_VAR epoch>
+		summary: <TMPL_VAR ESCAPE=JS summary>
+	</TMPL_LOOP>
+	
+content_groups:
+	<TMPL_LOOP content_groups> - [<TMPL_VAR __index__>]
+		type: <TMPL_VAR type>
+		line_start: <TMPL_VAR line_start>
+		line_end: <TMPL_VAR line_end>
+	</TMPL_LOOP>
+
+commit_spans:
+	<TMPL_LOOP commit_spans> - [<TMPL_VAR __index__>]
+		start: <TMPL_VAR start>
+		length: <TMPL_VAR length>
+		cid: <TMPL_VAR cid>
+		cidx: <TMPL_VAR cidx>
+		author: <TMPL_VAR author>
+		author_idx: <TMPL_VAR author_idx>
+		author_class: <TMPL_VAR author_class>
+		body: <TMPL_VAR ESCAPE=js body>
+	</TMPL_LOOP>
+
+</pre>
+</body>
+</html>

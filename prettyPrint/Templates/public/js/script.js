@@ -283,7 +283,7 @@ $(document).ready(function() {
 	function generate_line_numbers()
 	{
 		var text = "";
-		for (var i = 0; i < line_count; ++i)
+		for (var i = 1; i <= line_count; ++i)
 			text += i + "\n";
 		$("#line-numbers").text(text);
 	}
@@ -361,7 +361,6 @@ $(document).ready(function() {
 	document.getElementById("date-from").valueAsDate = dateFrom;
 	document.getElementById("date-to").valueAsDate = new Date();
 	
-	sort_contributors(1, false);
 	update_minimap_view_size();
 	generate_line_numbers();
 });

@@ -36,6 +36,7 @@ my $outputFile = undef;
 my $dryrun = 0;
 my $filter = "";
 my $filter_lang = 0;
+my $skip_existing = 0;
 
 sub print_one {
 	my $sourceFile = shift @ARGV;
@@ -47,8 +48,8 @@ sub print_one {
 	Usage("Source file does not exist [$sourceFile]", 0) unless -f $sourceFile;
 	Usage("Tokenized blame file does not exist [$blameFile]", 0) unless -f $blameFile;
 	Usage("Tokenized line file does not exist [$lineFile]", 0) unless -f $lineFile;
-	Usage("Database of tokenized repository does not exists [$sourceDB]", 0) unless -f $sourceDB;
-	Usage("Database of authors does not exists [$authorsDB]", 0) unless -f $authorsDB;
+	Usage("Database of tokenized repository does not exist [$sourceDB]", 0) unless -f $sourceDB;
+	Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
 	
 	PrettyPrint::setup_dbi($sourceDB, $authorsDB);
 	print_with_options($sourceFile, $blameFile, $lineFile);
@@ -73,8 +74,8 @@ sub print_many {
 	Usage("Source directory does not exist [$repoDir]", 0) unless -d $repoDir;
 	Usage("Tokenized blame file directory does not exist [$blameDir]", 0) unless -d $blameDir;
 	Usage("Tokenized line file directory does not exist [$lineDir]", 0) unless -d $lineDir;
-	Usage("Database of tokenized repository does not exists [$sourceDB]", 0) unless -f $sourceDB;
-	Usage("Database of authors does not exists [$authorsDB]", 0) unless -f $authorsDB;
+	Usage("Database of tokenized repository does not exist [$sourceDB]", 0) unless -f $sourceDB;
+	Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
 	
 	unless(-e $outputDir or mkdir $outputDir) {
         die "Unable to create output directory: $outputDir\n";
@@ -104,6 +105,7 @@ sub print_many {
 			$options->{webRoot} = $relative;
 		};
 		
+		goto EXISTS if (-f $outputFile and $skip_existing);
 		goto NOSOURCE if (! -f $originalFile);
 		goto NOBLAME if (! -f $blameFile);
 		goto NOLINE if (! -f $lineFile);
@@ -121,9 +123,10 @@ sub print_many {
 		$count++;
 		
 		next;
-		NOSOURCE:	print("file does not exist in local repo [$originalFile]. Skipping\n") if $verbose; next;
-		NOBLAME:	print("blame file [$blameFile] does not exist. Skipping\n") if $verbose; next;
-		NOLINE:		print("line file [$lineFile] does not exist. skipping\n") if $verbose; next;
+		EXISTS:		print("output file already exists. Skipping.\n") if $verbose; next;
+		NOSOURCE:	print("file does not exist in local repo [$originalFile]. Skipping.\n") if $verbose; next;
+		NOBLAME:	print("blame file [$blameFile] does not exist. Skipping.\n") if $verbose; next;
+		NOLINE:		print("line file [$lineFile] does not exist. skipping.\n") if $verbose; next;
 	}
 	
 	print "Processed: [$count]\n";
@@ -162,6 +165,7 @@ GetOptions(
 	"dryrun" => \$dryrun,
 	"filter=s" => \$filter,
 	"filter-lang=s" => \$filter_lang,
+	"skip-existing" => \$skip_existing,
 ) or die("Error in command line arguments\n");
 
 exit pod2usage(-verbose=>1) if ($help);
@@ -197,6 +201,7 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
                            Defaults to empty
     
      Options: (multi)
+        --skip-existing    Skip files that have already been generated.
         --webroot          The web_root template parameter value.
                            Defaults to empty
         --webroot-relative Specifies that the value of webroot should

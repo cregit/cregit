@@ -1,3 +1,18 @@
+:root
+{
+	--palette1: rgb(4, 9, 21);
+	--palette2: rgb(12, 19, 34);
+	--palette3: rgb(22, 29, 45);
+	--palette4: rgb(59, 67, 85);
+	--palette5: rgb(127, 136, 154);
+	--palette7: rgb(16, 31, 66);
+	--palette8: rgb(45, 64, 108);
+	
+	--highlight1: rgb(180, 180, 180);
+	--highlight2: rgb(205, 205, 205);
+	--highlight3: rgb(240, 240, 240);
+}
+
 html, body, div, pre, p, img
 {
 	box-sizing: border-box;
@@ -7,6 +22,7 @@ html, body
 {
 	width: 100%;
 	height: 100%;
+	margin: 0;
 }
 
 h1
@@ -20,9 +36,27 @@ pre
 	margin-bottom: 4px;
 }
 
+.flex-columns
+{
+	display: flex;
+	flex-direction: column;
+}
+
+.flex-vcenter
+{
+	justify-content: center;
+}
+
+.text-middle
+{
+	width: 100%;
+	text-align: center;
+	box-sizing: border-box;
+}
+
 /* Navbar CSS */
 
-.navbar
+#navbar
 {
 	position: fixed;
 	left: 0;
@@ -32,18 +66,38 @@ pre
 	overflow: hidden;
 	display: flex;
 	flex-direction: row;
-	background-color: #F0F0F0;
+	background-color: var(--highlight3);
 }
 
-.navbar > div
+#navbar-title-box
+{
+	padding: 8px 16px;
+	background-color: var(--palette3);
+}
+
+#navbar-option-box
 {
 	padding: 8px 16px;
 }
 
-.navbar-title-box
+#navbar-date-range
 {
 	padding: 8px 16px;
-	background-color: rgb(180, 180, 180);
+}
+
+#navbar-pad-box
+{
+	
+}
+
+.title-text
+{
+	color: var(--palette5);
+}
+
+.origin-text
+{
+	color: var(--palette4);
 }
 
 /* Minimap CSS */
@@ -56,7 +110,7 @@ pre
 	width: 5vw;
 	height: calc(100vh - 5em);
 	overflow: hidden;
-	background-color: rgb(240, 240, 240);
+	background-color: var(--highlight3);
 }
 
 .minimap-view-frame
@@ -64,7 +118,7 @@ pre
 	position: absolute;
 	height: 5vh;
 	width: 100%;
-	border: 1px solid rgb(240, 240, 240);
+	border: 1px solid var(--highlight3);
 }
 
 .minimap-view-shade
@@ -73,7 +127,7 @@ pre
 	height: 5vh;
 	width: 100%;
 	border: 1px solid black;	
-	background-color: rgb(205, 205, 205);
+	background-color: var(--highlight2);
 }
 
 .minimap-image
@@ -100,7 +154,7 @@ pre
 {
 	padding-top: 8px;
 	overflow: hidden;
-	background-color: #F0F0F0;
+	background-color: var(--highlight3);
 	display: flex;
 	flex-direction: column;
 }
@@ -124,7 +178,7 @@ pre
 
 /* Main Area CSS */
 
-.layout-main
+#main-content
 {
 	padding-top: 5em;
 	padding-right: 5vw;
@@ -136,10 +190,28 @@ pre
 	flex-direction: row;
 }
 
+#source-content
+{
+	width: 100%;
+}
+
 #line-numbers
 {
+	padding-left: 24px;
+	padding-right: 24px;
+	text-align: right;
+	
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+
+#footer
+{
 	padding-left: 12px;
-	padding-right: 12px;
+	padding-bottom: 4px;
 }
 
 /* Contributors Table CSS */
@@ -177,6 +249,11 @@ pre
 .hidden
 {
 	display: none;
+}
+
+.table-author
+{
+	cursor: pointer;
 }
 
 caption

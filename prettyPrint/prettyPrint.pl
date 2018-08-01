@@ -33,6 +33,7 @@ my $templateFile = undef;
 my $webRoot = "";
 my $webRootRelative = 0;
 my $outputFile = undef;
+my $gitURL = "";
 my $dryrun = 0;
 my $filter = "";
 my $filter_lang = 0;
@@ -143,6 +144,7 @@ sub print_with_options {
 	$options->{templateFile} //= $templateFile;
 	$options->{outputFile} //= $outputFile;
 	$options->{webRoot} //= $webRoot;
+	$options->{gitURL} //= $gitURL;
 	
 	return PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
 }
@@ -161,6 +163,7 @@ GetOptions(
 	"template=s" => \$templateFile,
 	"webroot=s" => \$webRoot,
 	"webroot-relative" => \$webRootRelative,
+	"git-url" => \$gitURL,
 	"output=s" => \$outputFile,
 	"dryrun" => \$dryrun,
 	"filter=s" => \$filter,
@@ -198,6 +201,8 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
      Options: (single)
         --output           The output file. Defaults to STDOUT.
         --webroot          The web_root template parameter value.
+                           Defaults to empty
+        --git-url          The git_url template parameter value.
                            Defaults to empty
     
      Options: (multi)

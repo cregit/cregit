@@ -44,6 +44,7 @@ sub print_file {
 	$options->{templateFile}	//= $defaultTemplate;
 	$options->{outputFile}		//= "";
 	$options->{webRoot}			//= "";
+	$options->{gitURL}			//= "";
 	$warningCount = 0;
 
 	return Error("Source file does not exist [$sourceFile]") unless -f $sourceFile;
@@ -55,7 +56,8 @@ sub print_file {
 	
 	my ($fileStats, $authorStats, $spans, $commits, $contentGroups) = @params;
 	my $firstCommit = @$commits[0];
-	my $creationDate = time2str("%m-%d-%Y", $firstCommit->{epoch});
+	my $creationDate = time2str("%Y-%m-%d", $firstCommit->{epoch});
+	my @sortedAuthors = sort { $a->{name} cmp $b->{name} } @$authorStats;
 
 	my $template = HTML::Template->new(filename => $options->{templateFile}, %$templateParams);
 	$template->param(file_name => $fileStats->{name});
@@ -68,8 +70,10 @@ sub print_file {
 	$template->param(commit_spans => $spans);
 	$template->param(commits => $commits);
 	$template->param(contributors => $authorStats);
+	$template->param(contributors_sorted => [@sortedAuthors]);
 	$template->param(cregit_version => $options->{cregitVersion});
 	$template->param(web_root => $options->{webRoot});
+	$template->param(git_url => $options->{gitURL});
 
 	my $file = undef;
 	my $outputPath = $options->{outputFile};

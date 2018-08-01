@@ -3,11 +3,6 @@
 	color: var(--author-color);
 }
 
-.color-fade
-{
-	color: #DDDDDD;
-}
-
 .color-highlight
 {
 	color: #BB0000;
@@ -18,14 +13,9 @@
 	color: hsl(var(--age-hue, 0), var(--age-sat, 0%), var(--age-lum, 100%));
 }
 
-.color-year
+.color-fade
 {
-	color: var(--year-color, #DDDDDD);
-}
-
-.color-pretty span
-{
-	color: var(--pretty-color, #DDDDDD);
+	color: #DDDDDD;
 }
 
 .color-ease
@@ -98,80 +88,3 @@
 .author58 { --author-color: hsl(112, 052%, 031%); }
 .author59 { --author-color: hsl(151, 071%, 039%); }
 .author60 { --author-color: hsl(078, 058%, 049%); }
-
-.year0 { --year-color: hsl(112, 052%, 031%); }
-.year1 { --year-color: hsl(017, 097%, 044%); }
-.year2 { --year-color: hsl(199, 079%, 038%); }
-.year3 { --year-color: hsl(195, 035%, 030%); }
-.year4 { --year-color: hsl(030, 050%, 040%); }
-.year5 { --year-color: hsl(013, 053%, 050%); }
-.year6 { --year-color: hsl(125, 085%, 025%); }
-.year7 { --year-color: hsl(160, 060%, 026%); }
-.year8 { --year-color: hsl(299, 059%, 039%); }
-.year9 { --year-color: hsl(134, 074%, 042%); }
-.year10 { --year-color: hsl(065, 025%, 045%); }
-.year11 { --year-color: hsl(212, 032%, 044%); }
-.year12 { --year-color: hsl(026, 086%, 039%); }
-.year13 { --year-color: hsl(056, 036%, 050%); }
-.year14 { --year-color: hsl(004, 064%, 041%); }
-.year15 { --year-color: hsl(355, 075%, 025%); }
-.year16 { --year-color: hsl(078, 058%, 049%); }
-.year17 { --year-color: hsl(151, 071%, 039%); }
-.year18 { --year-color: hsl(303, 023%, 047%); }
-.year19 { --year-color: hsl(147, 027%, 047%); }
-.year20 { --year-color: hsl(164, 024%, 031%); }
-.year21 { --year-color: hsl(186, 046%, 047%); }
-.year22 { --year-color: hsl(043, 083%, 040%); }
-.year23 { --year-color: hsl(121, 041%, 035%); }
-.year24 { --year-color: hsl(290, 070%, 040%); }
-.year25 { --year-color: hsl(047, 047%, 051%); }
-.year26 { --year-color: hsl(260, 040%, 025%); }
-.year27 { --year-color: hsl(325, 045%, 032%); }
-.year28 { --year-color: hsl(039, 039%, 026%); }
-.year29 { --year-color: hsl(086, 066%, 037%); }
-.year30 { --year-color: hsl(286, 026%, 028%); }
-.year31 { --year-color: hsl(095, 055%, 033%); }
-.year32 { --year-color: hsl(177, 057%, 035%); }
-.year33 { --year-color: hsl(108, 088%, 037%); }
-.year34 { --year-color: hsl(143, 063%, 046%); }
-.year35 { --year-color: hsl(234, 054%, 025%); }
-.year36 { --year-color: hsl(117, 077%, 029%); }
-.year37 { --year-color: hsl(277, 037%, 029%); }
-.year38 { --year-color: hsl(099, 099%, 027%); }
-.year39 { --year-color: hsl(190, 090%, 026%); }
-.year40 { --year-color: hsl(238, 098%, 052%); }
-.year41 { --year-color: hsl(342, 042%, 041%); }
-.year42 { --year-color: hsl(073, 033%, 025%); }
-.year43 { --year-color: hsl(091, 091%, 047%); }
-.year44 { --year-color: hsl(173, 093%, 047%); }
-.year45 { --year-color: hsl(021, 061%, 036%); }
-.year46 { --year-color: hsl(273, 073%, 050%); }
-.year47 { --year-color: hsl(338, 078%, 051%); }
-.year48 { --year-color: hsl(351, 031%, 051%); }
-.year49 { --year-color: hsl(156, 096%, 032%); }
-.year50 { --year-color: hsl(034, 094%, 053%); }
-.year51 { --year-color: hsl(312, 092%, 028%); }
-.year52 { --year-color: hsl(000, 000%, 000%); }
-.year53 { --year-color: hsl(182, 082%, 033%); }
-.year54 { --year-color: hsl(247, 087%, 031%); }
-.year55 { --year-color: hsl(329, 089%, 037%); }
-.year56 { --year-color: hsl(104, 044%, 045%); }
-.year57 { --year-color: hsl(316, 056%, 025%); }
-.year58 { --year-color: hsl(208, 068%, 052%); }
-.year59 { --year-color: hsl(169, 049%, 031%); }
-.year60 { --year-color: hsl(017, 097%, 044%); }
-
-/* Google prettify classes */
-.str { --pretty-color: #800 }  /* string content */
-.kwd { --pretty-color: #008 }  /* a keyword */
-.com { --pretty-color: #080 }  /* a comment */
-.typ { --pretty-color: #606 }  /* a type name */
-.lit { --pretty-color: #066 }  /* a literal value */
-.pun { --pretty-color: #660 }  /* punctuation */
-.opn, .clo { --pretty-color: #660 } /*lisp open bracket, lisp close bracket */
-.tag { --pretty-color: #008 }  /* a markup tag name */
-.atn { --pretty-color: #606 }  /* a markup attribute name */
-.atv { --pretty-color: #080 }  /* a markup attribute value */
-.dec, .var { --pretty-color: #606 }  /* a declaration; a variable name */
-.fun { --pretty-color: red } /* a function name */
-.pln { --pretty-color: black }

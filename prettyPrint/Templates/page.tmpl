@@ -5,8 +5,8 @@
 <body>
 <div id="navbar">
   <div id="navbar-title-box" class="flex-columns">
-    <h1 class="title-text"><TMPL_VAR file_name></h1>
-	<span class="origin-text"><TMPL_VAR creation_date /> | <TMPL_VAR creation_author /></span>
+    <h1 class="title-text"><TMPL_VAR ESCAPE=HTML file_name></h1>
+	<span class="origin-text"><TMPL_VAR creation_date /> | <TMPL_VAR ESCAPE=HTML creation_author /></span>
   </div>
   <div id="navbar-option-box" class="flex-columns flex-vcenter">
     <span>Highlighting</span>
@@ -15,7 +15,7 @@
 	  <option value="age">By Age</option>
       <option value="commit">By Commit</option>
       <option disabled>──────────</option>
-      <TMPL_LOOP contributors_sorted><option id="<TMPL_VAR id>" value="single-author"><TMPL_VAR name></option>
+      <TMPL_LOOP contributors_sorted><option id="<TMPL_VAR id>" value="single-author"><TMPL_VAR ESCAPE=HTML name></option>
       </TMPL_LOOP>
     </select>
 	</span>
@@ -47,7 +47,7 @@
     </tr>
     <TMPL_LOOP contributors>
     <tr class="contributor-row">
-      <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
+      <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
       <td><TMPL_VAR tokens></td>
       <td><TMPL_VAR token_percent></td>
       <td><TMPL_VAR commits></td>
@@ -71,7 +71,7 @@
 
 <!-- Source Content -->
 <pre id="source-content" class="prettyprint lang-c">
-<TMPL_LOOP Commit_Spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR body></a></TMPL_LOOP>
+<TMPL_LOOP Commit_Spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR ESCAPE=HTML body></a></TMPL_LOOP>
 </pre>
 
 </div>

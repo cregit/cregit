@@ -15,8 +15,6 @@
 #
 
 use strict;
-use lib '.';
-use PrettyPrint;
 use Date::Parse;
 use DBI;
 use File::Path;
@@ -24,6 +22,9 @@ use File::Basename;
 use Getopt::Long;
 use HTML::Template;
 use Pod::Usage;
+
+use lib dirname(__FILE__);
+use PrettyPrint;
 
 my $cregitVersion = "1.0-RC2";
 my $man = 0;

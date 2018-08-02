@@ -114,25 +114,19 @@ $(document).ready(function() {
 		$minimapView.css('height', mapViewHeight);
 	}
 	
-	function ShowCommitInfo(commitInfo) {
-		var date = new Date(commitInfo.timestamp * 1000);
+	function ShowCommitInfo(commitInfo, clicked) {
 		var authorId = commitInfo.authorId;
-		var authorInfo = authors[authorId];
-		$('#commit-hash').text(commitInfo.cid);
-		$('#commit-date').text(date.toDateString().substr(4));
-		$('#commit-author').text(authorInfo.name);
-		$('#commit-author').attr("class", "infotext author-label author" + authorId);
-		$('#commit-comment').text(commitInfo.summary);
-		$('#commit-info').removeClass('hidden');
-		$('#commit-info').stop();
-		$('#commit-info').fadeIn(200);
+		var authorName = authors[authorId].name;
+		var cid = commitInfo.cid;
+		var date = new Date(commitInfo.timestamp * 1000);
+		var summary = commitInfo.summary;
+		var styleClass = "author-label author" + authorId;
+		
+		show_commit_popup(cid, authorName, date, summary, styleClass, clicked);
 	}
 	
 	function HideCommitInfo() {
-		$('#commit-info').stop();
-		$('#commit-info').fadeOut(200, function() {
-			$('#commit-info').addClass('hidden');
-		});
+		hide_commit_popup();
 	}
 	
 	function SortContributors(column, reverse)
@@ -246,7 +240,7 @@ $(document).ready(function() {
 			return; // Disable hot tracking on large source files.
 		
 		highlightedCommit = commits[this.dataset.cidx]
-		ShowCommitInfo(highlightedCommit);
+		ShowCommitInfo(highlightedCommit, false);
 		
 		if (highlightMode == 'commit')
 			UpdateHighlight();
@@ -260,7 +254,7 @@ $(document).ready(function() {
 		
 		selectedCommit = commits[this.dataset.cidx];
 		highlightedCommit = commits[this.dataset.cidx];
-		ShowCommitInfo(selectedCommit);
+		ShowCommitInfo(selectedCommit, true);
 		
 		if (highlightMode == 'commit')
 			UpdateHighlight();
@@ -354,19 +348,11 @@ $(document).ready(function() {
 	
 	$("#date-slider-range").slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
 	
-	var menuItems =
-	{
-		"copy": { name: "Copy", icon: "copy", callback: ContextMenuCopy_Click },
-		"sep1": "---------",
-		"github": { name: "View on Github", callback: ContextMenuGithub_Click },
-	}
-	
-	$.contextMenu({ selector: '#commit-hash', trigger: 'left', items: menuItems });
-	
 	$(window).scroll(Window_Scroll);
 	$(window).resize(Window_Resize);
 	
 	UpdateMinimapViewSize();
 	GenerateLineNumbers();
 	SetupAgeColors();
+	initialize_commit_popup(git_url);
 });

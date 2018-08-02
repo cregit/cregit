@@ -242,6 +242,8 @@ $(document).ready(function() {
 		event.stopPropagation();
 		if (selectedCommit != undefined)
 			return;
+		if (line_count > 5000)
+			return; // Disable hot tracking on large source files.
 		
 		highlightedCommit = commits[this.dataset.cidx]
 		ShowCommitInfo(highlightedCommit);
@@ -300,6 +302,24 @@ $(document).ready(function() {
 			UpdateHighlight();
 	}
 	
+	function ContextMenuCopy_Click(itemKey, opt)
+	{
+		var cid = selectedCommit.cid
+		var $temp =  $("<textarea>");
+        $("body").append($temp);
+        $temp.val(cid).select();
+        document.execCommand("copy");
+        $temp.remove();
+	}
+	
+	function ContextMenuGithub_Click(itemKey, opt)
+	{
+		var location = new URL(git_url)
+		var url = location.toString() + "/commit/" + selectedCommit.cid;
+		
+		window.open(url, "cregit-window");
+	}
+	
 	function Window_Scroll()
 	{
 		UpdateMinimapViewPosition();
@@ -333,6 +353,15 @@ $(document).ready(function() {
 	$(".table-author").click(AuthorLabel_Click);
 	
 	$("#date-slider-range").slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
+	
+	var menuItems =
+	{
+		"copy": { name: "Copy", icon: "copy", callback: ContextMenuCopy_Click },
+		"sep1": "---------",
+		"github": { name: "View on Github", callback: ContextMenuGithub_Click },
+	}
+	
+	$.contextMenu({ selector: '#commit-hash', trigger: 'left', items: menuItems });
 	
 	$(window).scroll(Window_Scroll);
 	$(window).resize(Window_Resize);

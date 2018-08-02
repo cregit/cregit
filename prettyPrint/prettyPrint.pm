@@ -45,6 +45,7 @@ sub print_file {
 	$options->{outputFile}		//= "";
 	$options->{webRoot}			//= "";
 	$options->{gitURL}			//= "";
+	$options->{userVars}		//= {};
 	$warningCount = 0;
 
 	return Error("Source file does not exist [$sourceFile]") unless -f $sourceFile;
@@ -74,7 +75,8 @@ sub print_file {
 	$template->param(cregit_version => $options->{cregitVersion});
 	$template->param(web_root => $options->{webRoot});
 	$template->param(git_url => $options->{gitURL});
-
+	$template->param($options->{userVars});
+	
 	my $file = undef;
 	my $outputPath = $options->{outputFile};
 	if ($outputPath ne "") {

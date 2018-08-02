@@ -38,6 +38,8 @@ my $dryrun = 0;
 my $filter = "";
 my $filter_lang = 0;
 my $skip_existing = 0;
+my @userVars;
+my %userVars;
 
 sub print_one {
 	my $sourceFile = shift @ARGV;
@@ -145,6 +147,7 @@ sub print_with_options {
 	$options->{outputFile} //= $outputFile;
 	$options->{webRoot} //= $webRoot;
 	$options->{gitURL} //= $gitURL;
+	$options->{userVars} //= {%userVars};
 	
 	return PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
 }
@@ -163,17 +166,20 @@ GetOptions(
 	"template=s" => \$templateFile,
 	"webroot=s" => \$webRoot,
 	"webroot-relative" => \$webRootRelative,
-	"git-url" => \$gitURL,
+	"git-url=s" => \$gitURL,
 	"output=s" => \$outputFile,
 	"dryrun" => \$dryrun,
 	"filter=s" => \$filter,
 	"filter-lang=s" => \$filter_lang,
 	"skip-existing" => \$skip_existing,
+	"template-var=s" => \@userVars,
 ) or die("Error in command line arguments\n");
+%userVars = map { split(/=/, $_, 2) } @userVars;
 
 exit pod2usage(-verbose=>1) if ($help);
 exit pod2usage(-verbose=>2) if ($man);
 exit pod2usage(-verbose=>1, -exit=>1) if (!defined(@ARGV[0]));
+exit pod2usage(-verbose=>1, -exit=>1) if (not -f @ARGV[0] and not -d @ARGV[0]);
 exit pod2usage(-verbose=>1, -exit=>1) if (-f @ARGV[0] and scalar(@ARGV) != 5);
 exit pod2usage(-verbose=>1, -exit=>1) if (-d @ARGV[0] and scalar(@ARGV) != 6);
 exit print_one() if -f @ARGV[0];
@@ -204,6 +210,8 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
                            Defaults to empty
         --git-url          The git_url template parameter value.
                            Defaults to empty
+        --template-var     Defines additional template variables.
+                           Usage: --template-var [variable]=[value]
     
      Options: (multi)
         --skip-existing    Skip files that have already been generated.

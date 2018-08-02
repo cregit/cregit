@@ -1,9 +1,13 @@
 document.selectedCid = undefined;
 document.gitUrl = "";
 
-function windowpop(url)
-{
-	window.open(url, "cregit-window");
+function windowpop(url) {
+    var width = 800;
+    var height = 1200;
+    var leftPosition = (window.screen.width / 2) - ((width / 2) + 10);
+    var topPosition = (window.screen.height / 2) - ((height / 2) + 50);
+    
+    window.open(url, "cregit", "status=no,height=" + height + ",width=" + width + ",resizable=yes,left=" + leftPosition + ",top=" + topPosition + ",screenX=" + leftPosition + ",screenY=" + topPosition);
 }
 
 function menu_copy(itemKey, opt)

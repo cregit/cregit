@@ -135,7 +135,7 @@ sub print_many {
 	
 	print "Processed: [$count]\n";
 	print "Errors: [$errorCount]\n";
-	return 0;
+	return $errorCount > 0;
 }
 
 sub print_with_options {

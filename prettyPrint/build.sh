@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILD_LOCAL=yes
+LOCAL_PREVIEW=yes
 OUTPUT_DIR="Output"
 GIT_URL="http://github.com/git/git"
 
@@ -11,7 +11,7 @@ PERSONS_DB="../../2.17/token.db"
 TOKEN_DB="../../2.17/persons.db"
 FLAGS="--filter-lang=c --git-url=${GIT_URL}"
 
-if [ "$BUILD_LOCAL" = "yes" ]; then
+if [ "$LOCAL_PREVIEW" = "yes" ]; then
 	FLAGS+=" --webroot-relative"
 fi
 

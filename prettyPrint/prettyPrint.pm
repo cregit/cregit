@@ -55,10 +55,11 @@ sub print_file {
 	my @params = get_template_parameters($sourceFile, $lineFile, $blameFile);
 	return 1 unless $params[0] != 1;
 	
-	my ($fileStats, $authorStats, $spans, $commits, $contentGroups) = @params;
+	my ($fileStats, $authors, $spans, $commits, $contentGroups) = @params;
 	my $firstCommit = @$commits[0];
 	my $creationDate = time2str("%Y-%m-%d", $firstCommit->{epoch});
-	my @sortedAuthors = sort { $a->{name} cmp $b->{name} } @$authorStats;
+	my @authorsByName = sort { $a->{name} cmp $b->{name} } @$authors;
+	my @functionStats = grep { $_->{decltype} eq "function" } @$contentGroups;
 
 	my $template = HTML::Template->new(filename => $options->{templateFile}, %$templateParams);
 	$template->param(file_name => $fileStats->{name});
@@ -68,10 +69,11 @@ sub print_file {
 	$template->param(creation_date => $creationDate);
 	$template->param(creation_author => $firstCommit->{author});
 	$template->param(content_groups => $contentGroups);
+	$template->param(function_stats => [@functionStats]);
 	$template->param(commit_spans => $spans);
 	$template->param(commits => $commits);
-	$template->param(contributors => $authorStats);
-	$template->param(contributors_sorted => [@sortedAuthors]);
+	$template->param(contributors => $authors);
+	$template->param(contributors_by_name => [@authorsByName]);
 	$template->param(cregit_version => $options->{cregitVersion});
 	$template->param(web_root => $options->{webRoot});
 	$template->param(git_url => $options->{gitURL});
@@ -121,6 +123,7 @@ sub get_template_parameters {
 	# Parse line and blame token files together
 	my $tokenLine = 2;
 	my $authorStat;
+	my $contentGroupAuthorStat;
 	my $contentGroup = { done => 1, spans => []};
 	my $span = { cid => undef, start => 0 };
 	my $spanBreak = 0;
@@ -218,11 +221,14 @@ sub get_template_parameters {
 				}
 				push(@{$contentGroup->{spans}}, $span);
 				$contentGroup->{cids}->{$originalCid} = 1;
+				$contentGroupAuthorStat = get_author_stat($authorName, $contentGroup->{contributors});
+				$contentGroupAuthorStat->{cids}->{$originalCid} = 1;
 				
 				$spanBreak = 0;
 			}
 			
 			$contentGroup->{tokens}++;
+			$contentGroupAuthorStat->{tokens}++;
 			$authorStat->{tokens}++;
 			$fileStats->{tokens}++;
 		}
@@ -237,21 +243,11 @@ sub get_template_parameters {
 	$fileStats->{commits} = scalar keys %$commits;
 	$fileStats->{line_count} = $lineCount;
 	
-	# Update remaining content group data
-	my $groupCount = scalar(@contentGroups);
-	for (my $i = 0; $i < $groupCount; $i++) {
-		my $group = @contentGroups[$i];
-		$group->{line_end} = ($i < $groupCount - 1 ? @contentGroups[$i + 1]->{line_start} : $lineCount);
-		$group->{spans_count} = scalar @{$group->{spans}};
-		$group->{commits} = scalar %{$group->{cids}};
-		$group->{cids} = undef;
-	}
-	
 	# Sort and update remaining author data
 	my @unsortedAuthors = values %$authorStats;
-	my @authors = sort { $b->{tokens} <=> $a->{tokens} } @unsortedAuthors;
-	for (my $i = 0; $i < scalar @authors; $i++) {
-		my $author = $authors[$i];
+	my @sortedAuthors = sort { $b->{tokens} <=> $a->{tokens} } @unsortedAuthors;
+	for (my $i = 0; $i < scalar @sortedAuthors; $i++) {
+		my $author = @sortedAuthors[$i];
 		$author->{id} = $i;
 		$author->{commits} = scalar keys %{$author->{cids}};
 		$author->{commit_proportion} = $author->{commits} / $fileStats->{commits};
@@ -261,10 +257,32 @@ sub get_template_parameters {
 		$author->{cids} = undef;
 	}
 	
+	# Update remaining content group data
+	my $groupCount = scalar(@contentGroups);
+	for (my $i = 0; $i < $groupCount; $i++) {
+		my $group = @contentGroups[$i];
+		$group->{id} = $i;
+		$group->{line_end} = ($i < $groupCount - 1 ? @contentGroups[$i + 1]->{line_start} : $lineCount);
+		$group->{spans_count} = scalar @{$group->{spans}};
+		$group->{commits} = scalar %{$group->{cids}};
+		$group->{cids} = undef;
+		
+		# Update authors stats for this content group
+		my @sortedAuthorStats = ();
+		for my $author (@sortedAuthors) {
+			my $authorName = $author->{name};
+			my $stat = get_author_stat($authorName, $group->{contributors});
+			$stat->{commits} = scalar keys %{$stat->{cids}};
+			$stat->{cids} = undef;
+			push (@sortedAuthorStats, $stat);
+		}
+		$group->{contributors} = [@sortedAuthorStats];
+	}
+	
 	# Sort and update remaining commit data
 	my @unsortedCommits = values %$commits;
 	my @commits = sort { $a->{epoch} <=> $b->{epoch} } @unsortedCommits;
-	my %authorMap = map { $authors[$_]->{name}, $_ } 0..$#authors;
+	my %authorMap = map { @sortedAuthors[$_]->{name}, $_ } 0..$#sortedAuthors;
 	for (my $i = 0; $i < scalar @commits; $i++) {
 		my $commit = $commits[$i];
 		$commit->{author_id} = $authorMap{$commit->{author}};
@@ -278,19 +296,21 @@ sub get_template_parameters {
 		$span->{cid} = $commits[$span->{cidx}]->{cid};
 	}
 	
-	return ($fileStats, [@authors], [@spans], [@commits], [@contentGroups])
+	return ($fileStats, [@sortedAuthors], [@spans], [@commits], [@contentGroups])
 }
 
 sub new_content_group {
 	my $type = shift @_;
 	my $group = {
-		done => 0,
+		id => -1,
 		type => $type,
+		done => 0,
 		spans => [],
 		spans_count => 0,
 		tokens => 0,
 		cids => { },
 		commits => 0,
+		contributors => { },
 		line_start => undef,
 		line_end => undef,
 		decltype => "",

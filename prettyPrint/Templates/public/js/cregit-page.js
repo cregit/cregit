@@ -1,18 +1,20 @@
 $(document).ready(function() {
 	
-	var timeMin = parseInt(commits[0].timestamp);
-	var timeMax = parseInt(commits[commits.length - 1].timestamp);
+	var timeMin = commits[0].timestamp;
+	var timeMax = commits[commits.length - 1].timestamp;
 	var timeRange = timeMax - timeMin;
 	
 	var highlightMode = 'author';
 	var selectedAuthorId = undefined;
 	var selectedCommit = undefined;
+	var selectedGroupId = 'overall';
 	var highlightedCommit = undefined;
 	var dateFrom = new Date(timeMin * 1000);
 	var dateTo = new Date(timeMax * 1000);
 	
 	var guiUpdate = false;
-	var lastSortColumn = 1;
+	var sortColumn = 1;
+	var sortReverse = false;
 	
 	var $window = $(window);
 	var $document = $(document);
@@ -24,6 +26,37 @@ $(document).ready(function() {
 	var $contributor_rows = $(".contributor-row");
 	var $contributor_headers = $(".table-header-row > th");
 	var $highlightSelect = $('#select-highlighting');
+	var $statSelect = $('#select-stats');
+	
+	function ProcessSlices(jquery, length, interval, fn)
+	{
+		clearTimeout(this.slicesCallback);
+		this.slicesCallback = undefined;
+		if (jquery.length == 0)
+			return;
+		
+		var context = this;
+		var cur = jquery.slice(0, length);
+		var next = jquery.slice(length);
+		cur.each(fn);
+		
+		this.slicesCallback = setTimeout(function() { ProcessSlices(next, length, interval, fn); }, interval);
+	}
+	
+	function Debounce(fn, timeout)
+	{
+		var callback;
+		return function() {
+			var context = this;
+			var args = arguments;
+			var doNow = function() {
+				fn.apply(context, args);
+				callback = undefined;
+			};
+			clearTimeout(callback);
+			callback = setTimeout(doNow, timeout);
+		};
+	}
 	
 	function ApplyHighlight()
 	{
@@ -32,12 +65,15 @@ $(document).ready(function() {
 		var authorId = commitInfo.authorId;
 		var commitId = commitInfo.cid;
 		var highlightedCommitId = (highlightedCommit != undefined ? highlightedCommit.cid : undefined)
+		var groupId = this.parentElement.dataset.groupid;
 		
 		var dateOkay = highlightMode == 'commit' || date >= dateFrom && date <= dateTo;
 		var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
 		var commitOkay = highlightMode != 'commit' || commitId == highlightedCommitId;
-		var allOkay = dateOkay && authorOkay && commitOkay;
+		var groupOkay = highlightMode == 'commit' || (selectedGroupId == 'overall' || groupId == selectedGroupId);
+		var allOkay = dateOkay && authorOkay && commitOkay && groupOkay;
 		
+		$(this).removeClass('color-fade color-highlight color-age color-year color-pretty');
 		if (!allOkay)
 			$(this).addClass('color-fade');
 		if (highlightMode == 'age')
@@ -65,8 +101,9 @@ $(document).ready(function() {
 		ageSetupDone = true;
 	}
 	
+	
+	
 	function UpdateHighlight() {
-		$spans.removeClass('color-fade color-highlight color-age color-year color-pretty');
 		$spans.each(ApplyHighlight);
 		
 		RenderMinimap();
@@ -81,18 +118,38 @@ $(document).ready(function() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.setTransform(canvas.width / $content.width(), 0, 0, canvas.height / $content.height(), 0, 0);
 		
-		$spans.each(function(i, span) {
+		var unitX = $content.width() / canvas.width;
+		var tabSize = $content.css("tab-size");
+		var content = $content.get(0);
+		var baseTop = content.offsetTop;
+		var baseLeft = content.offsetLeft;
+		ProcessSlices($spans, 500, 50, function(i, span) {
 			var s = $(span);
-			var left = s.offset().left - $content.offset().left;
-			var top = s.offset().top - $content.offset().top;
+			var startTop = span.offsetTop - baseTop;
+			var startLeft = span.offsetLeft - baseLeft;
 			var text = s.text();
 			var lines = text.split("\n");
-			var lineHeight = s.height() / lines.length
+			var lineHeight = 15;
+			var left = startLeft;
 			
-			ctx.font = "sans-serif";
+			ctx.font = $content.css("font-size") + " " + $content.css("font-family");
 			ctx.fillStyle = s.css("color");
-			for (var j = 0; j < lines.length; ++j)
-				ctx.fillRect(left, top + j * lineHeight, ctx.measureText(lines[j]).width, lineHeight);
+			for (var j = 0; j < lines.length; ++j) {
+				var line = lines[j].replace("\t", " ".repeat(tabSize));
+				var top = startTop + j * lineHeight;
+				var left = (j == 0 ? startLeft : 0);
+				var parts = line.split(/(\s{4,})/);
+				for (var k = 0; k < parts.length; ++k)
+				{
+					var txt = parts[k];
+					var width = Math.max(ctx.measureText(txt).width, unitX);
+					if (parts[k].trim() != "")
+						ctx.fillRect(left, top, width, lineHeight);
+					
+					if (txt != "")
+						left += width;
+				}
+			}
 		});
 	}
 	
@@ -131,11 +188,16 @@ $(document).ready(function() {
 	
 	function SortContributors(column, reverse)
 	{
+		var cmp = function(a, b) { if (a < b) return -1; if (a > b) return 1; return 0; };
+		var lexical = function (a, b) { return a.children[0].firstChild.innerHTML.localeCompare(b.children[0].firstChild.innerHTML); };
+		var numeric = function (a, b) { return cmp(parseFloat(b.children[column].innerHTML), parseFloat(a.children[column].innerHTML)); };
+		var numericThenLex = function (a, b) { return numeric(a, b) || lexical(a, b); };
+		
 		var rows = $contributor_rows.get();
 		if (column == 0)
-			rows.sort(function (a, b) { return a.children[0].firstChild.innerHTML.localeCompare(b.children[0].firstChild.innerHTML); });
+			rows.sort(lexical);
 		else
-			rows.sort(function (a, b) { return parseFloat(b.children[column].innerHTML) - parseFloat(a.children[column].innerHTML); });
+			rows.sort(numericThenLex);
 		if (reverse)
 			rows.reverse();
 		
@@ -149,7 +211,7 @@ $(document).ready(function() {
 			text += i + "\n";
 		$("#line-numbers").text(text);
 	}
-	
+
 	function HighlightSelect_Changed()
 	{
 		if (guiUpdate)
@@ -163,6 +225,33 @@ $(document).ready(function() {
 		else
 			selectedAuthorId = undefined;
 			
+		UpdateHighlight();
+	}
+	
+	function StatSelect_Changed()
+	{
+		var elem = $statSelect.get(0);
+		var index = elem.selectedIndex;
+		var stat = stats[index];
+		selectedGroupId = elem.value;
+		
+		var footer = $('.table-footer-row > td');
+		var rows = $('.contributor-row');
+		footer.get(1).innerHTML = stat.tokens;
+		footer.get(3).innerHTML = stat.commits;
+		
+		var rows = $contributor_rows.get();
+		for (var i = 0; i < authors.length; ++i) {
+			var id = authors[i].authorId;
+			var cells = $(rows[id]).find("td");
+			cells.get(0).childNodes[0].innerHTML = authors[i].name;
+			cells.get(1).innerHTML = stat.tokens_by_author[i];
+			cells.get(2).innerHTML = (stat.tokens_by_author[i] / stat.tokens * 100).toFixed(2) + '%';
+			cells.get(3).innerHTML = stat.commits_by_author[i];
+			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
+		}
+		
+		SortContributors(sortColumn, sortReverse);
 		UpdateHighlight();
 	}
 	
@@ -199,7 +288,7 @@ $(document).ready(function() {
 		$("#date-to").get(0).valueAsDate = dateTo;
 		guiUpdate = false;
 		
-		UpdateHighlight();
+		this.UpdateHighlight();
 	}
 	
 	function AuthorLabel_Click(event)
@@ -226,9 +315,10 @@ $(document).ready(function() {
 		event.stopPropagation();
 		
 		var column = Array.prototype.indexOf.call(this.parentNode.children, this);
-		SortContributors(column, column == lastSortColumn);
+		sortReverse = !sortReverse && (column == sortColumn);
+		sortColumn = column;
 		
-		lastSortColumn = (column != lastSortColumn ? column : -1);
+		SortContributors(sortColumn, sortReverse);
 	}
 	
 	function CregitSpan_MouseOver(event)
@@ -236,12 +326,12 @@ $(document).ready(function() {
 		event.stopPropagation();
 		if (selectedCommit != undefined)
 			return;
-		if (line_count > 5000)
-			return; // Disable hot tracking on large source files.
 		
 		highlightedCommit = commits[this.dataset.cidx]
 		ShowCommitInfo(highlightedCommit, false);
 		
+		if (line_count > 5000)
+			return; // Disable hot tracking on large source files.
 		if (highlightMode == 'commit')
 			UpdateHighlight();
 	}
@@ -323,6 +413,7 @@ $(document).ready(function() {
 	{
 		UpdateMinimapViewPosition();
 		UpdateMinimapViewSize();
+		RenderMinimap();
 	}
 	
 	$contributor_headers.click(ColumnHeader_Click);
@@ -338,6 +429,8 @@ $(document).ready(function() {
 	$highlightSelect.change(HighlightSelect_Changed);
 	$highlightSelect.ready(HighlightSelect_Changed);
 	
+	$statSelect.change(StatSelect_Changed);
+	
 	$("#date-from").change(DateInput_Changed);
 	$("#date-to").change(DateInput_Changed);
 	
@@ -346,10 +439,11 @@ $(document).ready(function() {
 	
 	$(".table-author").click(AuthorLabel_Click);
 	
+	$("#date-slider-range").get(0).UpdateHighlight = Debounce(UpdateHighlight, 75);
 	$("#date-slider-range").slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
 	
 	$(window).scroll(Window_Scroll);
-	$(window).resize(Window_Resize);
+	$(window).resize(Debounce(Window_Resize, 250));
 	
 	UpdateMinimapViewSize();
 	GenerateLineNumbers();

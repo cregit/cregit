@@ -206,20 +206,24 @@ pre
 
 /* Contributors Table CSS */
 
-.layout-contributors
-{
-	width: 100%;
-	padding: 16px 16px;
-}
-
-.contributors-table
+#stats-view
 {
 	width: 60%;
-	padding: 0px 16px;
-	border: 1px solid var(--accent1);
-	border-radius: 5px;
+	padding: 16px 16px;
 	margin-left: auto;
     margin-right: auto;
+}
+
+#select-stats
+{
+	width: 100%;
+}
+
+.stats-table
+{
+	width: 100%;
+	border: 1px solid var(--accent1);
+	border-radius: 5px;
 }
 
 .table-header-row { 

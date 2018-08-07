@@ -15,10 +15,9 @@
 	  <option value="age">By Age</option>
       <option value="commit">By Commit</option>
       <option disabled>──────────</option>
-      <TMPL_LOOP contributors_sorted><option id="<TMPL_VAR id>" value="single-author"><TMPL_VAR ESCAPE=HTML name></option>
+      <TMPL_LOOP contributors_by_name><option id="<TMPL_VAR id>" value="single-author"><TMPL_VAR ESCAPE=HTML name></option>
       </TMPL_LOOP>
     </select>
-	</span>
   </div>
   <div id="navbar-date-range" class="flex-columns flex-vcenter">
 	<div><input id="date-from" type="date"><input id="date-to" type="date"></div>
@@ -34,32 +33,37 @@
 <div id="main-content">
 
 <!-- Contributors -->
-<div class="layout-contributors"/>
+<div id="stats-view">
+  <pre>Contributors:</pre>
+  <select id="select-stats">
+    <option value="overall">Overall</option>
+    <TMPL_LOOP function_stats><option value="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML declaration></option>
+    </TMPL_LOOP>
+  </select>
   <pre>
-  <table class="contributors-table">
-    <caption>Overall Contributors:</caption>
-    <tr class="table-header-row">
-      <th>Author</th>
-      <th>Tokens</th>
-      <th>Token Proportion</th>
-      <th>Commits</th>
-      <th>Commit Proportion</th>
-    </tr>
-    <TMPL_LOOP contributors>
-    <tr class="contributor-row">
-      <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
-      <td><TMPL_VAR tokens></td>
-      <td><TMPL_VAR token_percent></td>
-      <td><TMPL_VAR commits></td>
-      <td><TMPL_VAR commit_percent></td>
-    </tr></TMPL_LOOP>
-    <tr class="table-footer-row">
-      <td>Total</td>
-      <td><TMPL_VAR total_tokens></td>
-      <td></td>
-      <td><TMPL_VAR total_commits></td>
-      <td></td>
-  </table>
+    <table class="stats-table">
+      <tr class="table-header-row">
+        <th>Author</th>
+        <th>Tokens</th>
+        <th>Token Proportion</th>
+        <th>Commits</th>
+        <th>Commit Proportion</th>
+      </tr>
+      <TMPL_LOOP contributors>
+      <tr class="contributor-row">
+        <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
+        <td><TMPL_VAR tokens></td>
+        <td><TMPL_VAR token_percent></td>
+        <td><TMPL_VAR commits></td>
+        <td><TMPL_VAR commit_percent></td>
+      </tr></TMPL_LOOP>
+      <tr class="table-footer-row">
+        <td>Total</td>
+        <td><TMPL_VAR total_tokens></td>
+        <td></td>
+        <td><TMPL_VAR total_commits></td>
+        <td></td>
+    </table>
   </pre>
 </div>
 
@@ -71,7 +75,7 @@
 
 <!-- Source Content -->
 <pre id="source-content" class="prettyprint lang-c">
-<TMPL_LOOP Commit_Spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR ESCAPE=HTML body></a></TMPL_LOOP>
+<TMPL_LOOP content_groups><span data-groupid="<TMPL_VAR id>"><TMPL_LOOP spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR ESCAPE=HTML body></a></TMPL_LOOP></span></TMPL_LOOP>
 </pre>
 
 </div>
@@ -85,13 +89,31 @@
 
 <!-- Data Records -->
 <script>
-var commits = [
-<TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":"<TMPL_VAR epoch>", "authorId":"<TMPL_VAR ESCAPE=JS author_id>", "summary":"<TMPL_VAR ESCAPE=JS summary>" },
-</TMPL_LOOP>];
-
 var authors = [
 <TMPL_LOOP contributors>{ "authorId":"<TMPL_VAR id>", "name":"<TMPL_VAR ESCAPE=JS name>" },
 </TMPL_LOOP>];
+
+var commits = [
+<TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":<TMPL_VAR epoch>, "authorId":<TMPL_VAR author_id>, "summary":"<TMPL_VAR ESCAPE=JS summary>" },
+</TMPL_LOOP>];
+
+var stats = [
+{
+  "name": "overall",
+  "commits": <TMPL_VAR total_commits>,
+  "tokens": <TMPL_VAR total_tokens>,
+  "commits_by_author": [<TMPL_LOOP contributors><TMPL_VAR commits>, </TMPL_LOOP>],
+  "tokens_by_author": [<TMPL_LOOP contributors><TMPL_VAR tokens>, </TMPL_LOOP>],
+},
+<TMPL_LOOP function_stats>{
+  "name": "<TMPL_VAR ESCAPE=JS declaration>",
+  "commits": <TMPL_VAR commits>,
+  "tokens": <TMPL_VAR tokens>,
+  "commits_by_author": [<TMPL_LOOP contributors><TMPL_VAR commits>, </TMPL_LOOP>],
+  "tokens_by_author": [<TMPL_LOOP contributors><TMPL_VAR tokens>, </TMPL_LOOP>],
+},
+</TMPL_LOOP>
+];
 
 var line_count = <TMPL_VAR line_count>;
 var git_url = "<TMPL_VAR ESCAPE=JS git_url>";

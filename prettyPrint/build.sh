@@ -17,5 +17,5 @@ fi
 
 set -x
 perl prettyPrint.pl ${FLAGS} "${ORIGINAL_REPO}" "${BLAME_DIRECTORY}" "${TOKEN_DIRECTORY}" "${PERSONS_DB}" "${TOKEN_DB}" "${OUTPUT_DIR}"
-cp -r Templates/public ${OUTPUT_DIR}/
+cp -r Templates/public/. ${OUTPUT_DIR}/public
 

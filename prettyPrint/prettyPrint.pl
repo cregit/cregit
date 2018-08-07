@@ -24,7 +24,7 @@ use HTML::Template;
 use Pod::Usage;
 
 use lib dirname(__FILE__);
-use PrettyPrint;
+use prettyPrint;
 
 my $cregitVersion = "1.0-RC2";
 my $man = 0;

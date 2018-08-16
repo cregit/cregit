@@ -36,8 +36,8 @@
 <div id="stats-view">
   <pre>Contributors:</pre>
   <select id="select-stats">
-    <option value="overall">Overall</option>
-    <TMPL_LOOP function_stats><option value="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML declaration></option>
+    <option value="overall" data-start="1" data-end="<TMPL_VAR line_count>">Overall</option>
+    <TMPL_LOOP function_stats><option value="<TMPL_VAR id>" data-start="<TMPL_VAR line_start>" data-end="<TMPL_VAR line_end>"><TMPL_VAR ESCAPE=HTML declaration></option>
     </TMPL_LOOP>
   </select>
   <pre>
@@ -69,15 +69,12 @@
 
 <hr>
 
-<div id="source-view">
-
-<pre id="line-numbers"></pre>
-
 <!-- Source Content -->
-<pre id="source-content" class="prettyprint lang-c">
-<TMPL_LOOP content_groups><span data-groupid="<TMPL_VAR id>"><TMPL_LOOP spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR ESCAPE=HTML body></a></TMPL_LOOP></span></TMPL_LOOP>
+<div id="source-view">
+<pre id="line-numbers"></pre>
+<pre id="source-content">
+<TMPL_LOOP content_groups><span class="content-group" data-groupid="<TMPL_VAR id>"><TMPL_LOOP spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR ESCAPE=HTML body></a></TMPL_LOOP></span></TMPL_LOOP>
 </pre>
-
 </div>
 
 <hr>

@@ -7,7 +7,6 @@ $(document).ready(function() {
 	var highlightMode = 'author';
 	var selectedAuthorId = undefined;
 	var selectedCommit = undefined;
-	var selectedGroupId = 'overall';
 	var highlightedCommit = undefined;
 	var dateFrom = new Date(timeMin * 1000);
 	var dateTo = new Date(timeMax * 1000);
@@ -28,6 +27,8 @@ $(document).ready(function() {
 	var $contributor_headers = $(".table-header-row > th");
 	var $highlightSelect = $('#select-highlighting');
 	var $statSelect = $('#select-stats');
+	var $content_groups = $(".content-group");
+	var $lineAnchors = undefined;
 	
 	function ProcessSlices(jquery, length, interval, fn)
 	{
@@ -76,8 +77,7 @@ $(document).ready(function() {
 		var dateOkay = highlightMode == 'commit' || date >= dateFrom && date <= dateTo;
 		var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
 		var commitOkay = highlightMode != 'commit' || commitId == highlightedCommitId;
-		var groupOkay = highlightMode == 'commit' || (selectedGroupId == 'overall' || groupId == selectedGroupId);
-		var allOkay = dateOkay && authorOkay && commitOkay && groupOkay;
+		var allOkay = dateOkay && authorOkay && commitOkay;
 		
 		$(this).removeClass('color-fade color-highlight color-age color-year color-pretty');
 		if (!allOkay)
@@ -107,10 +107,27 @@ $(document).ready(function() {
 		ageSetupDone = true;
 	}
 	
-	
-	
 	function UpdateHighlight() {
 		$spans.each(ApplyHighlight);
+		
+		RenderMinimap();
+	}
+	
+	function UpdateVisibility(groupId, lineStart, lineEnd) {
+		$content_groups.each(function() {
+			if (groupId == "overall" || groupId == this.dataset.groupid)
+				$(this).removeClass("hidden");
+			else
+				$(this).addClass("hidden");
+		});
+		
+		$lineAnchors.each(function() {
+			var number = parseInt(this.innerHTML);
+			if (number >= lineStart && number < lineEnd)
+				$(this).removeClass("hidden");
+			else
+				$(this).addClass("hidden");
+		});
 		
 		RenderMinimap();
 	}
@@ -131,6 +148,9 @@ $(document).ready(function() {
 		var baseLeft = content.offsetLeft;
 		ProcessSlices($spans, 500, 50, function(i, span) {
 			var s = $(span);
+			if (s.is(":hidden"))
+				return;
+			
 			var startTop = span.offsetTop - baseTop;
 			var startLeft = span.offsetLeft - baseLeft;
 			var text = s.text();
@@ -157,6 +177,8 @@ $(document).ready(function() {
 				}
 			}
 		});
+		
+		UpdateMinimapViewSize();
 	}
 	
 	function UpdateMinimapViewPosition()
@@ -212,10 +234,16 @@ $(document).ready(function() {
 	
 	function GenerateLineNumbers()
 	{
+		var line_numbers = $("#line-numbers")
 		var text = "";
-		for (var i = 1; i <= line_count; ++i)
-			text += i + "\n";
-		$("#line-numbers").text(text);
+		for (var i = 1; i <= line_count; ++i) {
+			var elem = $("<a></a>");
+			elem.text(i);
+			elem.addClass("line-number");
+			line_numbers.append(elem);
+		}
+		
+		$lineAnchors = $(".line-number");
 	}
 	
 	function DoMinimapScroll(event)
@@ -250,7 +278,6 @@ $(document).ready(function() {
 		var elem = $statSelect.get(0);
 		var index = elem.selectedIndex;
 		var stat = stats[index];
-		selectedGroupId = elem.value;
 		
 		var footer = $('.table-footer-row > td');
 		var rows = $('.contributor-row');
@@ -266,10 +293,20 @@ $(document).ready(function() {
 			cells.get(2).innerHTML = (stat.tokens_by_author[i] / stat.tokens * 100).toFixed(2) + '%';
 			cells.get(3).innerHTML = stat.commits_by_author[i];
 			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
+			
+			if (stat.tokens_by_author[i] != 0)
+				$(cells.get(0).childNodes[0]).removeClass("color-fade");
+			else
+				$(cells.get(0).childNodes[0]).addClass("color-fade");
 		}
 		
 		SortContributors(sortColumn, sortReverse);
-		UpdateHighlight();
+		
+		var option = elem.options[elem.selectedIndex];
+		var groupId = option.value;
+		var lineStart = option.dataset.start;
+		var lineEnd = option.dataset.end;
+		UpdateVisibility(groupId, lineStart, lineEnd);
 	}
 	
 	function DateInput_Changed()
@@ -458,7 +495,6 @@ $(document).ready(function() {
 	function Window_Resize()
 	{
 		UpdateMinimapViewPosition();
-		UpdateMinimapViewSize();
 		RenderMinimap();
 	}
 	
@@ -492,8 +528,8 @@ $(document).ready(function() {
 	$(document).mousemove(Document_MouseMove);
 	$(document).mouseup(Document_MouseUp);
 	$(document).bind("selectstart", null, Document_SelectStart);
+	$(document).scroll(Window_Scroll);
 	
-	$(window).scroll(Window_Scroll);
 	$(window).resize(Debounce(Window_Resize, 250));
 	
 	UpdateMinimapViewSize();

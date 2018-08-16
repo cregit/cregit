@@ -14,7 +14,7 @@
 	--accent1: rgb(210, 210, 255);
 }
 
-.cregit-span
+.cregit-span, .author-label
 {
 	color: var(--author-color);
 }
@@ -42,7 +42,6 @@
     -webkit-transition:color 0.2s ease-in;
 }
 
-.author-label { color: var(--author-color);	}
 .author0 { --author-color: hsl(017, 097%, 044%); }
 .author1 { --author-color: hsl(169, 049%, 031%); }
 .author2 { --author-color: hsl(208, 068%, 052%); }

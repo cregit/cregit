@@ -10,15 +10,9 @@ html, body
 	margin: 0;
 }
 
-h1
+h1, pre
 {
 	margin: 0px 0px;
-}
-
-pre
-{
-	margin-top: 0px;
-	margin-bottom: 4px;
 }
 
 .flex-columns
@@ -189,13 +183,19 @@ pre
 {
 	padding-left: 24px;
 	padding-right: 24px;
+	margin-botom: 0px;
 	text-align: right;
 	
+	user-select: none;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
 	-o-user-select: none;
-	user-select: none;
+}
+
+.line-number
+{
+	display: block;
 }
 
 #footer

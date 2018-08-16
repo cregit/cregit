@@ -15,6 +15,7 @@ $(document).ready(function() {
 	var guiUpdate = false;
 	var sortColumn = 1;
 	var sortReverse = false;
+	var scrollDrag = false;
 	
 	var $window = $(window);
 	var $document = $(document);
@@ -56,6 +57,11 @@ $(document).ready(function() {
 			clearTimeout(callback);
 			callback = setTimeout(doNow, timeout);
 		};
+	}
+	
+	function AdjustForNavbar(yPos)
+	{
+		return yPos - $navbar.height();
 	}
 	
 	function ApplyHighlight()
@@ -164,7 +170,7 @@ $(document).ready(function() {
 	
 	function UpdateMinimapViewSize()
 	{
-		var viewHeight = $window.innerHeight() - $navbar.height();
+		var viewHeight = AdjustForNavbar($window.innerHeight());
 		var docHeight = $content.height();
 		var mapHeight = $minimap.height();
 		var mapViewHeight = (viewHeight / docHeight) * mapHeight;
@@ -210,6 +216,17 @@ $(document).ready(function() {
 		for (var i = 1; i <= line_count; ++i)
 			text += i + "\n";
 		$("#line-numbers").text(text);
+	}
+	
+	function DoMinimapScroll(event)
+	{
+		var mouseY = event.clientY;
+		var minimapY = mouseY - $minimap.get(0).offsetTop;
+		var contentY = minimapY / $minimap.height() * $content.height();
+		var scrollY = AdjustForNavbar($content.offset().top + contentY);
+		var scrollYMid = scrollY - AdjustForNavbar(window.innerHeight) / 2;
+		
+		document.documentElement.scrollTop = scrollYMid;
 	}
 
 	function HighlightSelect_Changed()
@@ -319,6 +336,35 @@ $(document).ready(function() {
 		sortColumn = column;
 		
 		SortContributors(sortColumn, sortReverse);
+	}
+	
+	function Minimap_MouseDown(event)
+	{
+		if (event.buttons == 1) {
+			scrollDrag = true;
+			DoMinimapScroll(event);
+		}
+	}
+	
+	function Document_MouseUp(event)
+	{
+		if (event.buttons == 1)
+			scrollDrag = false;
+	}
+	
+	function Document_MouseMove(event)
+	{
+		if (scrollDrag && event.buttons == 1)
+			DoMinimapScroll(event);
+		else
+			scrollDrag = false;
+	}
+	
+	function Document_SelectStart(event)
+	{
+		// Disable text selection while dragging the minimap.
+		if (scrollDrag)
+			event.preventDefault();
 	}
 	
 	function CregitSpan_MouseOver(event)
@@ -441,6 +487,11 @@ $(document).ready(function() {
 	
 	$("#date-slider-range").get(0).UpdateHighlight = Debounce(UpdateHighlight, 75);
 	$("#date-slider-range").slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
+	
+	$minimap.mousedown(Minimap_MouseDown);
+	$(document).mousemove(Document_MouseMove);
+	$(document).mouseup(Document_MouseUp);
+	$(document).bind("selectstart", null, Document_SelectStart);
 	
 	$(window).scroll(Window_Scroll);
 	$(window).resize(Debounce(Window_Resize, 250));

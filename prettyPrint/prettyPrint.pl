@@ -38,7 +38,7 @@ my $gitURL = "";
 my $dryrun = 0;
 my $filter = "";
 my $filter_lang = 0;
-my $skip_existing = 0;
+my $overwrite = 0;
 my @userVars;
 my %userVars;
 
@@ -109,7 +109,7 @@ sub print_many {
 			$options->{webRoot} = $relative;
 		};
 		
-		goto EXISTS if (-f $outputFile and $skip_existing);
+		goto EXISTS if (-f $outputFile and !$overwrite);
 		goto NOSOURCE if (! -f $originalFile);
 		goto NOBLAME if (! -f $blameFile);
 		goto NOLINE if (! -f $lineFile);
@@ -172,7 +172,7 @@ GetOptions(
 	"dryrun" => \$dryrun,
 	"filter=s" => \$filter,
 	"filter-lang=s" => \$filter_lang,
-	"skip-existing" => \$skip_existing,
+	"overwrite" => \$overwrite,
 	"template-var=s" => \@userVars,
 ) or die("Error in command line arguments\n");
 %userVars = map { split(/=/, $_, 2) } @userVars;
@@ -215,7 +215,7 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
                            Usage: --template-var [variable]=[value]
     
      Options: (multi)
-        --skip-existing    Skip files that have already been generated.
+        --overwrite        Overwrite existing files that have previously been generated.
         --webroot          The web_root template parameter value.
                            Defaults to empty
         --webroot-relative Specifies that the value of webroot should

@@ -81,7 +81,7 @@ h1, pre
 
 /* Minimap CSS */
 
-.minimap
+#minimap
 {
 	position: fixed;
 	top: 5em;
@@ -92,20 +92,19 @@ h1, pre
 	background-color: var(--highlight4);
 }
 
-.minimap-view-frame
+#minimap-view-frame
 {
 	position: absolute;
 	height: 5%;
 	width: 100%;
-	border: 1px solid var(--highlight4);
+	border: 1px solid black;
 }
 
-.minimap-view-shade
+#minimap-view-shade
 {
 	position: absolute;
 	height: 5%;
 	width: 100%;
-	border: 1px solid black;	
 	background-color: var(--highlight2);
 }
 

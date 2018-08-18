@@ -123,13 +123,42 @@ $(document).ready(function() {
 		
 		$lineAnchors.each(function() {
 			var number = parseInt(this.innerHTML);
-			if (number >= lineStart && number < lineEnd)
+			if (number >= lineStart && number <= lineEnd)
 				$(this).removeClass("hidden");
 			else
 				$(this).addClass("hidden");
 		});
 		
 		RenderMinimap();
+	}
+	
+	function ResetHighlightMode() {
+		var highlightSelect = $highlightSelect.get(0);
+		var statSelect = $statSelect.get(0);
+		var date_from = $("#date-from").get(0)
+		var date_to = $("#date-to").get(0);
+		
+		// Reset highlighting parameters
+		highlightMode = 'author'
+		selectedAuthorId = undefined;
+		selectedCommit = undefined;
+		highlightedCommit = undefined;
+		dateFrom = new Date(timeMin * 1000);
+		dateTo = new Date(timeMax * 1000);
+		
+		// Reset gui elements
+		guiUpdate = true;
+		highlightSelect.value = "author";
+		statSelect.value = "overall";
+		date_from.valueAsDate = dateFrom;
+		date_to.valueAsData = dateTo;
+		$( "#date-slider-range" ).slider("values", [0, timeRange]);
+		guiUpdate = false;
+		
+		// Update visuals
+		UpdateHighlight();
+		UpdateContributionStats(stats[0]);
+		UpdateVisibility("overall", 0, line_count);
 	}
 	
 	function RenderMinimap() {
@@ -232,13 +261,39 @@ $(document).ready(function() {
 		$(".table-header-row").after(rows);
 	}
 	
+	function UpdateContributionStats(stat)
+	{
+		var footer = $('.table-footer-row > td');
+		var rows = $('.contributor-row');
+		footer.get(1).innerHTML = stat.tokens;
+		footer.get(3).innerHTML = stat.commits;
+		
+		var rows = $contributor_rows.get();
+		for (var i = 0; i < authors.length; ++i) {
+			var id = authors[i].authorId;
+			var cells = $(rows[id]).find("td");
+			cells.get(0).childNodes[0].innerHTML = authors[i].name;
+			cells.get(1).innerHTML = stat.tokens_by_author[i];
+			cells.get(2).innerHTML = (stat.tokens_by_author[i] / stat.tokens * 100).toFixed(2) + '%';
+			cells.get(3).innerHTML = stat.commits_by_author[i];
+			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
+			
+			if (stat.tokens_by_author[i] != 0)
+				$(cells.get(0).childNodes[0]).removeClass("color-fade");
+			else
+				$(cells.get(0).childNodes[0]).addClass("color-fade");
+		}
+		
+		SortContributors(sortColumn, sortReverse);
+	}
+	
 	function GenerateLineNumbers()
 	{
 		var line_numbers = $("#line-numbers")
 		var text = "";
 		for (var i = 1; i <= line_count; ++i) {
 			var elem = $("<a></a>");
-			elem.text(i);
+			elem.text(i + " ");
 			elem.addClass("line-number");
 			line_numbers.append(elem);
 		}
@@ -265,6 +320,11 @@ $(document).ready(function() {
 		var elem = $highlightSelect.get(0);
 		var option = elem.options[elem.selectedIndex];
 		highlightMode = option.value;
+		if (highlightMode == 'reset') {
+			ResetHighlightMode();
+			return;
+		}
+
 		if (option.id != '')
 			selectedAuthorId = option.id;
 		else
@@ -277,30 +337,7 @@ $(document).ready(function() {
 	{
 		var elem = $statSelect.get(0);
 		var index = elem.selectedIndex;
-		var stat = stats[index];
-		
-		var footer = $('.table-footer-row > td');
-		var rows = $('.contributor-row');
-		footer.get(1).innerHTML = stat.tokens;
-		footer.get(3).innerHTML = stat.commits;
-		
-		var rows = $contributor_rows.get();
-		for (var i = 0; i < authors.length; ++i) {
-			var id = authors[i].authorId;
-			var cells = $(rows[id]).find("td");
-			cells.get(0).childNodes[0].innerHTML = authors[i].name;
-			cells.get(1).innerHTML = stat.tokens_by_author[i];
-			cells.get(2).innerHTML = (stat.tokens_by_author[i] / stat.tokens * 100).toFixed(2) + '%';
-			cells.get(3).innerHTML = stat.commits_by_author[i];
-			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
-			
-			if (stat.tokens_by_author[i] != 0)
-				$(cells.get(0).childNodes[0]).removeClass("color-fade");
-			else
-				$(cells.get(0).childNodes[0]).addClass("color-fade");
-		}
-		
-		SortContributors(sortColumn, sortReverse);
+		UpdateContributionStats(stats[index]);
 		
 		var option = elem.options[elem.selectedIndex];
 		var groupId = option.value;

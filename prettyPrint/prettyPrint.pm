@@ -167,7 +167,7 @@ sub get_template_parameters {
 			}
 			
 			# function declaration
-			if ($type eq "DECL") {
+			if ($type eq "DECL" and !defined($contentGroup->{line_start})) {
 				my ($lineNum, $colNum) = split(/:/, $loc);
 				$contentGroup->{line_start} = $lineNum;
 				$contentGroup->{decltype} = $token;
@@ -192,8 +192,12 @@ sub get_template_parameters {
 				$spanBreak = 1;
 				push (@contentGroups, $contentGroup);
 			}
+			
+			if ($cid ne %$span{cid}) {
+				$spanBreak = 1;
+			}
 		
-			if ($cid ne %$span{cid} or $spanBreak) {
+			if ($spanBreak) {
 				my $commitStat = get_commit_stat($cid, $commits);
 				my $authorName = $commitStat->{author};
 				my $originalCid = $commitStat->{cid};
@@ -261,8 +265,11 @@ sub get_template_parameters {
 	my $groupCount = scalar(@contentGroups);
 	for (my $i = 0; $i < $groupCount; $i++) {
 		my $group = @contentGroups[$i];
+		my $next = @contentGroups[$i + 1] // { line_start => $lineCount + 1 };
+		my $lineEnd = $next->{line_start} - 1;
+		
 		$group->{id} = $i;
-		$group->{line_end} = ($i < $groupCount - 1 ? @contentGroups[$i + 1]->{line_start} : $lineCount);
+		$group->{line_end} = $lineEnd;
 		$group->{spans_count} = scalar @{$group->{spans}};
 		$group->{commits} = scalar %{$group->{cids}};
 		$group->{cids} = undef;

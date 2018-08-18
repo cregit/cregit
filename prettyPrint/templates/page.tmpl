@@ -35,14 +35,13 @@
 
 <!-- Contributors -->
 <div id="stats-view">
-  <pre>Contributors:</pre>
   <select id="select-stats">
     <option value="overall" data-start="1" data-end="<TMPL_VAR line_count>">Overall</option>
     <TMPL_LOOP function_stats><option value="<TMPL_VAR id>" data-start="<TMPL_VAR line_start>" data-end="<TMPL_VAR line_end>"><TMPL_VAR ESCAPE=HTML declaration></option>
     </TMPL_LOOP>
   </select>
-  <pre>
     <table class="stats-table">
+	  <caption>Contributors: <span id="contributor-count"><TMPL_VAR contributors_count></span></caption>
       <tr class="table-header-row">
         <th>Author</th>
         <th>Tokens</th>
@@ -65,7 +64,6 @@
         <td><TMPL_VAR total_commits></td>
         <td></td>
     </table>
-  </pre>
 </div>
 
 <hr>

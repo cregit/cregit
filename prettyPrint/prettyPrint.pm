@@ -74,6 +74,7 @@ sub print_file {
 	$template->param(commits => $commits);
 	$template->param(contributors => $authors);
 	$template->param(contributors_by_name => [@authorsByName]);
+	$template->param(contributors_count => scalar @authorsByName);
 	$template->param(cregit_version => $options->{cregitVersion});
 	$template->param(web_root => $options->{webRoot});
 	$template->param(git_url => $options->{gitURL});

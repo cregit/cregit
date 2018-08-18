@@ -151,7 +151,7 @@ $(document).ready(function() {
 		highlightSelect.value = "author";
 		statSelect.value = "overall";
 		date_from.valueAsDate = dateFrom;
-		date_to.valueAsData = dateTo;
+		date_to.valueAsDate = dateTo;
 		$( "#date-slider-range" ).slider("values", [0, timeRange]);
 		guiUpdate = false;
 		
@@ -263,11 +263,13 @@ $(document).ready(function() {
 	
 	function UpdateContributionStats(stat)
 	{
+		var countHeader = $('#contributor-count');
 		var footer = $('.table-footer-row > td');
 		var rows = $('.contributor-row');
 		footer.get(1).innerHTML = stat.tokens;
 		footer.get(3).innerHTML = stat.commits;
 		
+		var active_authors = 0;
 		var rows = $contributor_rows.get();
 		for (var i = 0; i < authors.length; ++i) {
 			var id = authors[i].authorId;
@@ -278,11 +280,15 @@ $(document).ready(function() {
 			cells.get(3).innerHTML = stat.commits_by_author[i];
 			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
 			
-			if (stat.tokens_by_author[i] != 0)
+			if (stat.tokens_by_author[i] > 0) {
+				active_authors++;
 				$(cells.get(0).childNodes[0]).removeClass("color-fade");
-			else
+			} else {
 				$(cells.get(0).childNodes[0]).addClass("color-fade");
+			}
 		}
+		
+		countHeader.text(active_authors);
 		
 		SortContributors(sortColumn, sortReverse);
 	}

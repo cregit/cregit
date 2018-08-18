@@ -251,8 +251,10 @@ h1, pre
 
 caption
 {
+	margin-top: 2em;
 	text-align: left;
 	font-weight: bold;
+	font-family: monospace;
 }
 
 th
@@ -260,12 +262,14 @@ th
 	padding: 8px 0px;
 	text-align: right;
 	font-weight: normal;
+	font-family: monospace;
 }
 
 td
 {
 	text-align: right;
 	padding: 2px 0px;
+	font-family: monospace;
 }
 
 tr:nth-child(even)

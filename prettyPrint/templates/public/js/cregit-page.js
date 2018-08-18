@@ -296,15 +296,37 @@ $(document).ready(function() {
 	function GenerateLineNumbers()
 	{
 		var line_numbers = $("#line-numbers")
-		var text = "";
+		
+		// Prevent reflow while adding line anchors
+		line_numbers.addClass("hidden");
 		for (var i = 1; i <= line_count; ++i) {
 			var elem = $("<a></a>");
-			elem.text(i + " ");
+			elem.text(" " + i);
 			elem.addClass("line-number");
+			elem.attr("href", "#" + i);
 			line_numbers.append(elem);
 		}
+		line_numbers.removeClass("hidden");
 		
 		$lineAnchors = $(".line-number");
+		$lineAnchors.click(LineAnchor_Click);
+	}
+	
+	function ParseFragmentString()
+	{
+		var frag = location.hash.substr(1);
+		if (frag == "")
+			return;
+		
+		var parts = frag.split(",");
+		var line = parseInt(parts[0]);
+		
+		var lineAnchor = $lineAnchors.get(line - 1);
+		if(lineAnchor != undefined) {
+			var top = AdjustForNavbar(lineAnchor.offsetTop - AdjustForNavbar(window.innerHeight) / 2);
+			$(document.documentElement).stop();
+			$(document.documentElement).animate({scrollTop: top}, 200, function(){});
+		}
 	}
 	
 	function DoMinimapScroll(event)
@@ -416,6 +438,13 @@ $(document).ready(function() {
 		sortColumn = column;
 		
 		SortContributors(sortColumn, sortReverse);
+	}
+	
+	function LineAnchor_Click(event)
+	{
+		var top = AdjustForNavbar(this.offsetTop - AdjustForNavbar(window.innerHeight) / 2);
+		$(document.documentElement).stop();
+		$(document.documentElement).animate({scrollTop: top}, 200, function(){});
 	}
 	
 	function Minimap_MouseDown(event)
@@ -576,7 +605,11 @@ $(document).ready(function() {
 	$(window).resize(Debounce(Window_Resize, 250));
 	
 	UpdateMinimapViewSize();
-	GenerateLineNumbers();
 	SetupAgeColors();
+	
+	GenerateLineNumbers();
+	UpdateMinimapViewPosition();
+	ParseFragmentString();
+	
 	initialize_commit_popup(git_url);
 });

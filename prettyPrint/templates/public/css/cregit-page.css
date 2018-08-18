@@ -195,6 +195,8 @@ h1, pre
 .line-number
 {
 	display: block;
+	text-decoration: none;
+	color: black;
 }
 
 #footer

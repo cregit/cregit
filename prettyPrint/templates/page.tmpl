@@ -16,7 +16,7 @@
 	  <option value="age">By Age</option>
       <option value="commit">By Commit</option>
       <option disabled>──────────</option>
-      <TMPL_LOOP contributors_by_name><option id="<TMPL_VAR id>" value="single-author"><TMPL_VAR ESCAPE=HTML name></option>
+      <TMPL_LOOP contributors_by_name><option id="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></option>
       </TMPL_LOOP>
     </select>
   </div>

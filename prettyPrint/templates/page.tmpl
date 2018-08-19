@@ -2,7 +2,7 @@
 <html lang="en-us">
 <TMPL_INCLUDE Name="header.tmpl">
 
-<body>
+<body class="flex-columns">
 <div id="navbar">
   <div id="navbar-title-box" class="flex-columns">
     <h1 class="title-text"><TMPL_VAR ESCAPE=HTML file_name></h1>
@@ -25,13 +25,13 @@
 	<div id="date-slider-range"></div>
   </div>
 </div>
+
+<div id="main-content">
 <div id="minimap" class="minimap layout-minimap">
   <div id="minimap-view-shade" class="minimap-view-shade"></div>
   <canvas id="minimap-image" class="minimap-image"></canvas>
   <div id="minimap-view-frame" class="minimap-view"></div>
 </div>
-
-<div id="main-content">
 
 <!-- Contributors -->
 <div id="stats-view">

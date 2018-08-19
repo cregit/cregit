@@ -29,6 +29,7 @@ $(document).ready(function() {
 	var $statSelect = $('#select-stats');
 	var $content_groups = $(".content-group");
 	var $lineAnchors = undefined;
+	var $mainContent = $("#main-content");
 	
 	function ProcessSlices(jquery, length, interval, fn)
 	{
@@ -58,11 +59,6 @@ $(document).ready(function() {
 			clearTimeout(callback);
 			callback = setTimeout(doNow, timeout);
 		};
-	}
-	
-	function AdjustForNavbar(yPos)
-	{
-		return yPos - $navbar.height();
 	}
 	
 	function ApplyHighlight()
@@ -162,6 +158,13 @@ $(document).ready(function() {
 	}
 	
 	function RenderMinimap() {
+		var scrollVisible = $mainContent.get(0).scrollHeight > $mainContent.get(0).clientHeight;
+		if (!scrollVisible) {
+			$minimap.addClass("hidden");
+			return;
+		}
+		$minimap.removeClass("hidden");
+		
 		var canvas = document.getElementById("minimap-image");
 		canvas.width = $(canvas).width();
 		canvas.height = $(canvas).height();
@@ -207,25 +210,30 @@ $(document).ready(function() {
 			}
 		});
 		
+		UpdateMinimapViewPosition();
 		UpdateMinimapViewSize();
 	}
 	
 	function UpdateMinimapViewPosition()
 	{
-		var areaTop = $document.scrollTop() - $content.offset().top + $navbar.height();
+		var areaY = -$content.position().top;
 		var areaHeight = $content.height();
 		var mapHeight = $minimap.height();
-		var mapTop = (areaTop / areaHeight) * mapHeight;
-		$minimapView.css('top', Math.max(mapTop, 0));
+		var mapYMax = (areaHeight - $mainContent.height()) / areaHeight * mapHeight;
+		var mapY = (areaY / areaHeight) * mapHeight;
+		
+		$minimapView.css('top', Math.max(0, Math.min(mapY, mapYMax)));
 	}
 	
 	function UpdateMinimapViewSize()
 	{
-		var viewHeight = AdjustForNavbar($window.innerHeight());
+		var viewHeight = $mainContent.innerHeight();
 		var docHeight = $content.height();
 		var mapHeight = $minimap.height();
+		var mapViewHeightMax = $minimap.height()
 		var mapViewHeight = (viewHeight / docHeight) * mapHeight;
-		$minimapView.css('height', mapViewHeight);
+		
+		$minimapView.css('height', Math.min(mapViewHeight, mapViewHeightMax));
 	}
 	
 	function ShowCommitInfo(commitInfo, clicked) {
@@ -323,21 +331,21 @@ $(document).ready(function() {
 		
 		var lineAnchor = $lineAnchors.get(line - 1);
 		if(lineAnchor != undefined) {
-			var top = AdjustForNavbar(lineAnchor.offsetTop - AdjustForNavbar(window.innerHeight) / 2);
-			$(document.documentElement).stop();
-			$(document.documentElement).animate({scrollTop: top}, 200, function(){});
+			var top = lineAnchor.offsetTop - $mainContent.height() / 2;
+			$mainContent.stop();
+			$mainContent.animate({scrollTop: top}, 200, function(){});
 		}
 	}
 	
 	function DoMinimapScroll(event)
 	{
 		var mouseY = event.clientY;
-		var minimapY = mouseY - $minimap.get(0).offsetTop;
+		var minimapY = mouseY - $minimap.offset().top;
 		var contentY = minimapY / $minimap.height() * $content.height();
-		var scrollY = AdjustForNavbar($content.offset().top + contentY);
-		var scrollYMid = scrollY - AdjustForNavbar(window.innerHeight) / 2;
+		var scrollY = $content.get(0).offsetTop + contentY;
+		var scrollYMid = scrollY - $mainContent.height() / 2;
 		
-		document.documentElement.scrollTop = scrollYMid;
+		$mainContent.scrollTop(scrollYMid);
 	}
 
 	function HighlightSelect_Changed()
@@ -372,6 +380,8 @@ $(document).ready(function() {
 		var lineStart = option.dataset.start;
 		var lineEnd = option.dataset.end;
 		UpdateVisibility(groupId, lineStart, lineEnd);
+		UpdateMinimapViewPosition();
+		UpdateMinimapViewSize();
 	}
 	
 	function DateInput_Changed()
@@ -442,9 +452,9 @@ $(document).ready(function() {
 	
 	function LineAnchor_Click(event)
 	{
-		var top = AdjustForNavbar(this.offsetTop - AdjustForNavbar(window.innerHeight) / 2);
-		$(document.documentElement).stop();
-		$(document.documentElement).animate({scrollTop: top}, 200, function(){});
+		var top = this.offsetTop - $mainContent.height() / 2;
+		$mainContent.stop();
+		$mainContent.animate({scrollTop: top}, 200, function(){});
 	}
 	
 	function Minimap_MouseDown(event)
@@ -566,7 +576,6 @@ $(document).ready(function() {
 	
 	function Window_Resize()
 	{
-		UpdateMinimapViewPosition();
 		RenderMinimap();
 	}
 	
@@ -600,8 +609,8 @@ $(document).ready(function() {
 	$(document).mousemove(Document_MouseMove);
 	$(document).mouseup(Document_MouseUp);
 	$(document).bind("selectstart", null, Document_SelectStart);
-	$(document).scroll(Window_Scroll);
 	
+	$mainContent.scroll(Window_Scroll);
 	$(window).resize(Debounce(Window_Resize, 250));
 	
 	UpdateMinimapViewSize();

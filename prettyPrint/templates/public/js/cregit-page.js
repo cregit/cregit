@@ -31,6 +31,7 @@ $(document).ready(function() {
 	var $lineAnchors = undefined;
 	var $mainContent = $("#main-content");
 	var $dateGradient = $("#date-gradient");
+	var $dateSliderRange = $("#date-slider-range");
 	
 	function ProcessSlices(jquery, length, interval, fn)
 	{
@@ -162,17 +163,15 @@ $(document).ready(function() {
 		// Reset gui elements
 		guiUpdate = true;
 		highlightSelect.value = "author";
-		statSelect.value = "overall";
 		date_from.valueAsDate = dateFrom;
 		date_to.valueAsDate = dateTo;
-		$( "#date-slider-range" ).slider("values", [0, timeRange]);
+		$dateSliderRange.slider("values", [0, timeRange]);
 		guiUpdate = false;
 		$dateGradient.addClass("invisible");
 		
 		// Update visuals
+		HideCommitInfo();
 		UpdateHighlight();
-		UpdateContributionStats(stats[0]);
-		UpdateVisibility("overall", 0, line_count);
 	}
 	
 	function RenderMinimap() {
@@ -419,7 +418,7 @@ $(document).ready(function() {
 		var timeEnd = dateTo.getTime() / 1000 - timeMin;
 		
 		guiUpdate = true;
-		$( "#date-slider-range" ).slider("values", [timeStart, timeEnd]);
+		$dateSliderRange.slider("values", [timeStart, timeEnd]);
 		guiUpdate = false;
 		
 		UpdateHighlight();
@@ -507,6 +506,12 @@ $(document).ready(function() {
 		// Disable text selection while dragging the minimap.
 		if (scrollDrag)
 			event.preventDefault();
+	}
+	
+	function Document_KeyDown(event)
+	{
+		if (event.key == "Escape")
+			ResetHighlightMode();
 	}
 	
 	function CregitSpan_MouseOver(event)
@@ -625,13 +630,14 @@ $(document).ready(function() {
 	
 	$(".table-author").click(AuthorLabel_Click);
 	
-	$("#date-slider-range").get(0).UpdateHighlight = Debounce(UpdateHighlight, 75);
-	$("#date-slider-range").slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
+	$dateSliderRange.get(0).UpdateHighlight = Debounce(UpdateHighlight, 75);
+	$dateSliderRange.slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
 	
 	$minimap.mousedown(Minimap_MouseDown);
 	$(document).mousemove(Document_MouseMove);
 	$(document).mouseup(Document_MouseUp);
 	$(document).bind("selectstart", null, Document_SelectStart);
+	$(document).keydown(Document_KeyDown);
 	
 	$mainContent.scroll(Window_Scroll);
 	$(window).resize(Debounce(Window_Resize, 250));

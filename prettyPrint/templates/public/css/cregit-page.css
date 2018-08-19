@@ -28,6 +28,17 @@ h1, pre
 	justify-content: center;
 }
 
+.flex-expand
+{
+	flex-grow: 100;
+}
+
+.flex-ruler
+{
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
 .text-middle
 {
 	width: 100%;
@@ -99,7 +110,8 @@ h1, pre
 {
 	position: sticky;
 	float: right;
-	top: 0;
+	top: 0px;
+	bottom: 1px;
 	left: 95%;
 	width: 5%;
 	height: 99.9%;
@@ -187,11 +199,15 @@ h1, pre
 	overflow: auto;
 }
 
+#main-body
+{
+	min-height: 100%;
+}
+
 #source-view
 {
 	display: flex;
 	flex-direction: row;
-	min-height: 25em;
 }
 
 #source-content
@@ -205,6 +221,7 @@ h1, pre
 	padding-right: 24px;
 	margin-botom: 0px;
 	text-align: right;
+	min-width: 6em;
 	
 	user-select: none;
 	-moz-user-select: none;

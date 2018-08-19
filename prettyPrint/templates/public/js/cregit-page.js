@@ -30,6 +30,7 @@ $(document).ready(function() {
 	var $content_groups = $(".content-group");
 	var $lineAnchors = undefined;
 	var $mainContent = $("#main-content");
+	var $dateGradient = $("#date-gradient");
 	
 	function ProcessSlices(jquery, length, interval, fn)
 	{
@@ -83,21 +84,37 @@ $(document).ready(function() {
 	}
 	
 	function SetupAgeColors() {
-		var oldest = commits.reduce(function(x, y) { return (x.timestamp > y.timestamp ? x : y) });
-		var newest = commits.reduce(function(x, y) { return (x.timestamp < y.timestamp ? x : y) });
+		var oldest = commits.reduce(function(x, y) { return (x.timestamp < y.timestamp ? x : y) });
+		var newest = commits.reduce(function(x, y) { return (x.timestamp > y.timestamp ? x : y) });
 		var base = oldest.timestamp;
 		var range = newest.timestamp - oldest.timestamp;
+		
+		function convert(color) {
+			var canvas = document.createElement("canvas");
+			var context = canvas.getContext("2d");
+			context.fillStyle = color;
+			return parseInt(context.fillStyle.substr(1), 16);
+		}
+		
+		function lerp(c1, c2, t) {
+			var r = (c1 & 0xFF0000) * (1 - t) + (c2 & 0xFF0000) * t;
+			var g = (c1 & 0x00FF00) * (1 - t) + (c2 & 0x00FF00) * t;
+			var b = (c1 & 0x0000FF) * (1 - t) + (c2 & 0x0000FF) * t;
+			return (r & 0xFF0000) | (g & 0x00FF00) | (b & 0x0000FF);
+		}
+		
+		var root = $(":root");
+		var ageOld = convert(root.css("--age-old"));
+		var ageMid = convert(root.css("--age-mid"));
+		var ageNew = convert(root.css("--age-new"));
 		
 		$spans.each(function() {
 			var commitInfo = commits[this.dataset.cidx]
 			var t = (commitInfo.timestamp - base) / range;
-			var tInv = 1.0 - t;
-			var hue = 0 - Math.min(120 * t * 2, 120);
-			var saturation = 1 - Math.max(t - 0.5, 0) * 2;
-			var luminosity = 0.5 + (Math.max(t - 0.5, 0) * 0.3);
-			this.style.setProperty('--age-hue', hue);
-			this.style.setProperty('--age-sat', saturation * 100 + '%');
-			this.style.setProperty('--age-lum', luminosity * 100 + '%');
+			var color = (t < 0.5 ? lerp(ageOld, ageMid, 0) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
+			var htmlColor = "#" + ("000000" + color.toString(16)).substr(-6);
+
+			this.style.setProperty('--age-color', htmlColor);
 		});
 		
 		ageSetupDone = true;
@@ -150,6 +167,7 @@ $(document).ready(function() {
 		date_to.valueAsDate = dateTo;
 		$( "#date-slider-range" ).slider("values", [0, timeRange]);
 		guiUpdate = false;
+		$dateGradient.addClass("invisible");
 		
 		// Update visuals
 		UpdateHighlight();
@@ -360,6 +378,11 @@ $(document).ready(function() {
 			ResetHighlightMode();
 			return;
 		}
+		
+		if (highlightMode == 'age')
+			$dateGradient.removeClass("invisible");
+		else
+			$dateGradient.addClass("invisible");
 
 		if (option.id != '')
 			selectedAuthorId = option.id;

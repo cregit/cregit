@@ -66,6 +66,22 @@ h1, pre
 	padding: 8px 16px;
 }
 
+#date-slider-range
+{
+	height: 12px;
+}
+
+#date-gradient
+{
+	height: 8px;
+	border-radius: 2px;
+	background-image: linear-gradient(to right, var(--age-old), var(--age-mid), var(--age-new));
+	
+	-moz-transition:opacity 0.2s ease-in;
+    -o-transition:opacity 0.2s ease-in;
+    -webkit-transition:opacity 0.2s ease-in;
+}
+
 #navbar-pad-box
 {
 	
@@ -125,7 +141,7 @@ h1, pre
 {
 	position: fixed;
 	top: 6em;
-	right: 6%;
+	right: 8%;
 	width: 21em;
 	height: 10em;
 	overflow: hidden;
@@ -253,6 +269,11 @@ h1, pre
 .hidden
 {
 	display: none;
+}
+
+.invisible
+{
+	opacity: 0;
 }
 
 .table-author

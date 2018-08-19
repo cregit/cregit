@@ -1,17 +1,21 @@
 :root
 {
+	/* Page element colors */
 	--palette1: rgb(4, 9, 21);
 	--palette2: rgb(12, 19, 34);
 	--palette3: rgb(22, 29, 45);
 	--palette4: rgb(79, 87, 105);
 	--palette5: rgb(127, 136, 154);
-	
 	--highlight1: rgb(180, 180, 180);
 	--highlight2: rgb(205, 205, 205);
 	--highlight3: rgb(224, 224, 224);
 	--highlight4: rgb(240, 240, 240);
-	
 	--accent1: rgb(210, 210, 255);
+	
+	/* Gradient colors for coloring tokens by age */
+	--age-new: hsl(0, 100%, 50%);
+	--age-mid: hsl(-120, 100%, 50%);
+	--age-old: hsl(-120, 100%, 85%);
 }
 
 .cregit-span, .author-label
@@ -19,27 +23,14 @@
 	color: var(--author-color);
 }
 
-.color-highlight
-{
-	color: #BB0000;
-}
-
 .color-age
 {
-	color: hsl(var(--age-hue, 0), var(--age-sat, 0%), var(--age-lum, 100%));
+	color: var(--age-color);
 }
 
 .color-fade
 {
 	color: #DDDDDD;
-}
-
-.color-ease
-{
-	/* Looks nice, but very slow on ~4000 line files */
-	-moz-transition:color 0.2s ease-in;
-    -o-transition:color 0.2s ease-in;
-    -webkit-transition:color 0.2s ease-in;
 }
 
 .author0 { --author-color: hsl(017, 097%, 044%); }

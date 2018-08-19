@@ -33,6 +33,7 @@ $(document).ready(function() {
 	var $dateGradient = $("#date-gradient");
 	var $dateSliderRange = $("#date-slider-range");
 	
+	// Processes large jquery objects in slices of N=length at rest intervals of I=interval (ms)
 	function ProcessSlices(jquery, length, interval, fn)
 	{
 		clearTimeout(this.slicesCallback);
@@ -48,6 +49,7 @@ $(document).ready(function() {
 		this.slicesCallback = setTimeout(function() { ProcessSlices(next, length, interval, fn); }, interval);
 	}
 	
+	// Filter callback invocations until no invocations have been made for T=timeout (ms)
 	function Debounce(fn, timeout)
 	{
 		var callback;

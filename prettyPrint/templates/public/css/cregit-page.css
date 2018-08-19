@@ -9,6 +9,7 @@ html, body
 	height: 100%;
 	margin: 0;
 	overflow: hidden;
+	font-family: sans-serif;
 }
 
 h1, pre

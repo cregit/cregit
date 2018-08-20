@@ -482,6 +482,8 @@ $(document).ready(function() {
 		elem.selectedIndex = option.index;
 		guiUpdate = false;
 		
+		$dateGradient.addClass("invisible");
+		
 		UpdateHighlight();
 	}
 	

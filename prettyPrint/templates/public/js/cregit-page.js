@@ -23,8 +23,11 @@ $(document).ready(function() {
 	var $content = $('#source-content');
 	var $minimapView = $('#minimap-view-shade,#minimap-view-frame');
 	var $navbar = $('#navbar');
-	var $contributor_rows = $(".contributor-row");
-	var $contributor_headers = $(".table-header-row > th");
+	var $contributor_rows = $("#stats-table > tbody > tr");
+	var $contributor_header_row = $("#stats-table > thead > tr");
+	var $contributor_headers = $("#stats-table > thead > tr > th");
+	var $contributor_footers = $("#stats-table > tfoot > tr > td");
+	var $contributor_row_container = $("#stats-table > tbody");
 	var $highlightSelect = $('#select-highlighting');
 	var $statSelect = $('#select-stats');
 	var $content_groups = $(".content-group");
@@ -277,7 +280,10 @@ $(document).ready(function() {
 		var numeric = function (a, b) { return cmp(parseFloat(b.children[column].innerHTML), parseFloat(a.children[column].innerHTML)); };
 		var numericThenLex = function (a, b) { return numeric(a, b) || lexical(a, b); };
 		
+		var $rows = $contributor_rows;
 		var rows = $contributor_rows.get();
+		rows = rows.filter(function(x, i) { return !$(x).hasClass("innactive-row"); });
+		
 		if (column == 0)
 			rows.sort(lexical);
 		else
@@ -285,16 +291,22 @@ $(document).ready(function() {
 		if (reverse)
 			rows.reverse();
 		
-		$(".table-header-row").after(rows);
+		// Pad up to 6 rows using the longest name for visual stability.
+		while (rows.length < Math.min(6, $rows.length))
+			rows.push($("<tr class='contributor-row'><td>&nbsp</td><td/><td/><td/><td/></tr>").get(0));
+		
+		$rows.detach(); // Detach before empty so rows don't get deleted
+		$contributor_row_container.empty();
+		$contributor_row_container.append(rows);
 	}
 	
 	function UpdateContributionStats(stat)
 	{
 		var countHeader = $('#contributor-count');
-		var footer = $('.table-footer-row > td');
-		var rows = $('.contributor-row');
-		footer.get(1).innerHTML = stat.tokens;
-		footer.get(3).innerHTML = stat.commits;
+		var footers = $contributor_footers;
+		var rows = $contributor_rows;
+		footers.get(1).innerHTML = stat.tokens;
+		footers.get(3).innerHTML = stat.commits;
 		
 		var active_authors = 0;
 		var rows = $contributor_rows.get();
@@ -308,10 +320,10 @@ $(document).ready(function() {
 			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
 			
 			if (stat.tokens_by_author[i] > 0) {
+				row.removeClass("innactive-row");
 				active_authors++;
-				$(cells.get(0).childNodes[0]).removeClass("color-fade");
 			} else {
-				$(cells.get(0).childNodes[0]).addClass("color-fade");
+				row.addClass("innactive-row");
 			}
 		}
 		

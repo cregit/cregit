@@ -5,8 +5,8 @@
 <body class="flex-columns">
 <div id="navbar">
   <div id="navbar-title-box" class="flex-columns">
-    <h1 class="title-text"><TMPL_VAR ESCAPE=HTML file_name></h1>
-	<span class="origin-text"><TMPL_VAR creation_date /> | <TMPL_VAR ESCAPE=HTML creation_author /></span>
+    <h1 id="title-text"><TMPL_VAR ESCAPE=HTML file_name></h1>
+	<span id="origin-text"><TMPL_VAR creation_date /> | <TMPL_VAR ESCAPE=HTML creation_author /></span>
   </div>
   <div id="navbar-option-box" class="flex-columns flex-vcenter">
     <span>Highlighting</span>
@@ -42,29 +42,36 @@
     <TMPL_LOOP function_stats><option value="<TMPL_VAR id>" data-start="<TMPL_VAR line_start>" data-end="<TMPL_VAR line_end>"><TMPL_VAR ESCAPE=HTML declaration></option>
     </TMPL_LOOP>
   </select>
-    <table class="stats-table">
+    <table id="stats-table">
 	  <caption>Contributors: <span id="contributor-count"><TMPL_VAR contributors_count></span></caption>
-      <tr class="table-header-row">
-        <th>Author</th>
-        <th>Tokens</th>
-        <th>Token Proportion</th>
-        <th>Commits</th>
-        <th>Commit Proportion</th>
-      </tr>
-      <TMPL_LOOP contributors>
-      <tr class="contributor-row">
-        <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
-        <td><TMPL_VAR tokens></td>
-        <td><TMPL_VAR token_percent></td>
-        <td><TMPL_VAR commits></td>
-        <td><TMPL_VAR commit_percent></td>
-      </tr></TMPL_LOOP>
-      <tr class="table-footer-row">
-        <td>Total</td>
-        <td><TMPL_VAR total_tokens></td>
-        <td></td>
-        <td><TMPL_VAR total_commits></td>
-        <td></td>
+	  <thead>
+        <tr>
+          <th>Author</th>
+          <th>Tokens</th>
+          <th>Token Proportion</th>
+          <th>Commits</th>
+          <th>Commit Proportion</th>
+        </tr>
+	  </thead>
+	  <tbody>
+        <TMPL_LOOP contributors>
+        <tr class="contributor-row">
+          <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
+          <td><TMPL_VAR tokens></td>
+          <td><TMPL_VAR token_percent></td>
+          <td><TMPL_VAR commits></td>
+          <td><TMPL_VAR commit_percent></td>
+        </tr></TMPL_LOOP>
+	  </tbody>
+	  <tfoot>
+        <tr>
+          <td>Total</td>
+          <td><TMPL_VAR total_tokens></td>
+          <td></td>
+          <td><TMPL_VAR total_commits></td>
+          <td></td>
+	    </tr>
+	  </tfoot>
     </table>
 </div>
 

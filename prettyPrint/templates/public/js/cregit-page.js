@@ -189,13 +189,6 @@ $(document).ready(function() {
 	}
 	
 	function RenderMinimap() {
-		var scrollVisible = $mainContent.get(0).scrollHeight > $mainContent.get(0).clientHeight;
-		if (!scrollVisible) {
-			$minimap.addClass("hidden");
-			return;
-		}
-		$minimap.removeClass("hidden");
-		
 		var canvas = document.getElementById("minimap-image");
 		canvas.width = $(canvas).width();
 		canvas.height = $(canvas).height();
@@ -203,6 +196,14 @@ $(document).ready(function() {
 		var ctx = canvas.getContext("2d");
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.setTransform(canvas.width / $content.width(), 0, 0, canvas.height / $content.height(), 0, 0);
+		
+		
+		var scrollVisible = $mainContent.get(0).scrollHeight > $mainContent.get(0).clientHeight;
+		if (!scrollVisible) {
+			$minimapView.addClass("hidden");
+			return;
+		}
+		$minimapView.removeClass("hidden");
 		
 		var unitX = $content.width() / canvas.width;
 		var tabSize = $content.css("tab-size");
@@ -357,7 +358,6 @@ $(document).ready(function() {
 		$content.before($lineNumbers);
 
 		$lineAnchors = $lineNumbers.children("a");
-		console.log($lineAnchors.length);
 	}
 	
 	function ParseFragmentString()

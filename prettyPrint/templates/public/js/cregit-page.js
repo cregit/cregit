@@ -20,7 +20,6 @@ $(document).ready(function() {
 	var $document = $(document);
 	var $minimap = $('#minimap');
 	var $spans = $('.cregit-span');
-	var $content = $('#source-content');
 	var $minimapView = $('#minimap-view-shade,#minimap-view-frame');
 	var $navbar = $('#navbar');
 	var $contributor_rows = $("#stats-table > tbody > tr");
@@ -31,6 +30,9 @@ $(document).ready(function() {
 	var $highlightSelect = $('#select-highlighting');
 	var $statSelect = $('#select-stats');
 	var $content_groups = $(".content-group");
+	var $sourceView = $('#source-view');
+	var $content = $('#source-content');
+	var $lineNumbers = $("#line-numbers");
 	var $lineAnchors = undefined;
 	var $mainContent = $("#main-content");
 	var $dateGradient = $("#date-gradient");
@@ -133,6 +135,10 @@ $(document).ready(function() {
 	}
 	
 	function UpdateVisibility(groupId, lineStart, lineEnd) {
+		 // Prevent reflows.
+		$content.detach();
+		$lineNumbers.detach();
+		
 		$content_groups.each(function() {
 			if (groupId == "overall" || groupId == this.dataset.groupid)
 				$(this).removeClass("hidden");
@@ -140,13 +146,16 @@ $(document).ready(function() {
 				$(this).addClass("hidden");
 		});
 		
-		$lineAnchors.each(function() {
-			var number = parseInt(this.innerHTML);
+		$lineAnchors.each(function(i) {
+			var number = i + 1;
 			if (number >= lineStart && number <= lineEnd)
 				$(this).removeClass("hidden");
 			else
 				$(this).addClass("hidden");
 		});
+		
+		$sourceView.append($lineNumbers);
+		$sourceView.append($content);
 		
 		RenderMinimap();
 	}
@@ -312,7 +321,8 @@ $(document).ready(function() {
 		var rows = $contributor_rows.get();
 		for (var i = 0; i < authors.length; ++i) {
 			var id = authors[i].authorId;
-			var cells = $(rows[id]).find("td");
+			var row = $(rows[id]);
+			var cells = row.find("td");
 			cells.get(0).childNodes[0].innerHTML = authors[i].name;
 			cells.get(1).innerHTML = stat.tokens_by_author[i];
 			cells.get(2).innerHTML = (stat.tokens_by_author[i] / stat.tokens * 100).toFixed(2) + '%';
@@ -334,21 +344,20 @@ $(document).ready(function() {
 	
 	function GenerateLineNumbers()
 	{
-		var line_numbers = $("#line-numbers")
-		
 		// Prevent reflow while adding line anchors
-		line_numbers.addClass("hidden");
+		$lineNumbers.detach();
+		var lineNumbers = $lineNumbers.get(0);
 		for (var i = 1; i <= line_count; ++i) {
-			var elem = $("<a></a>");
-			elem.text(" " + i);
-			elem.addClass("line-number");
-			elem.attr("href", "#" + i);
-			line_numbers.append(elem);
+			var a = document.createElement("a");
+			a.innerHTML = i;
+			a.href = ("#" + i);
+			a.className = "line-number";
+			lineNumbers.appendChild(a);
 		}
-		line_numbers.removeClass("hidden");
-		
-		$lineAnchors = $(".line-number");
-		$lineAnchors.click(LineAnchor_Click);
+		$content.before($lineNumbers);
+
+		$lineAnchors = $lineNumbers.children("a");
+		console.log($lineAnchors.length);
 	}
 	
 	function ParseFragmentString()
@@ -359,8 +368,9 @@ $(document).ready(function() {
 		
 		var parts = frag.split(",");
 		var line = parseInt(parts[0]);
+		var index = Math.min(line, $lineAnchors.length) - 1;
 		
-		var lineAnchor = $lineAnchors.get(line - 1);
+		var lineAnchor = $lineAnchors.get(index);
 		if(lineAnchor != undefined) {
 			var top = lineAnchor.offsetTop - $mainContent.height() / 2;
 			$mainContent.stop();
@@ -484,13 +494,6 @@ $(document).ready(function() {
 		sortColumn = column;
 		
 		SortContributors(sortColumn, sortReverse);
-	}
-	
-	function LineAnchor_Click(event)
-	{
-		var top = this.offsetTop - $mainContent.height() / 2;
-		$mainContent.stop();
-		$mainContent.animate({scrollTop: top}, 200, function(){});
 	}
 	
 	function Minimap_MouseDown(event)
@@ -621,6 +624,11 @@ $(document).ready(function() {
 		RenderMinimap();
 	}
 	
+	function Window_HashChange()
+	{
+		ParseFragmentString();
+	}
+	
 	$contributor_headers.click(ColumnHeader_Click);
 	
 	$spans.mouseover(CregitSpan_MouseOver);
@@ -655,6 +663,7 @@ $(document).ready(function() {
 	
 	$mainContent.scroll(Window_Scroll);
 	$(window).resize(Debounce(Window_Resize, 250));
+	$(window).bind("hashchange", Window_HashChange);
 	
 	UpdateMinimapViewSize();
 	SetupAgeColors();

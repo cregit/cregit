@@ -671,7 +671,6 @@ $(document).ready(function() {
 	SetupAgeColors();
 	
 	GenerateLineNumbers();
-	UpdateMinimapViewPosition();
 	ParseFragmentString();
 	
 	initialize_commit_popup(git_url);

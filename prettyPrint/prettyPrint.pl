@@ -156,7 +156,7 @@ sub print_with_options {
 sub Usage {
     my ($message, $verbose) = @_;
     print STDERR $message, "\n";
-    pod2usage(-verbose=>$verbose) if $verbose > 0;
+    pod2usage(-verbose=>$verbose, -output=>">&STDERR") if $verbose > 0;
     exit(1);
 }
 
@@ -177,12 +177,12 @@ GetOptions(
 ) or die("Error in command line arguments\n");
 %userVars = map { split(/=/, $_, 2) } @userVars;
 
-exit pod2usage(-verbose=>1) if ($help);
-exit pod2usage(-verbose=>2) if ($man);
-exit pod2usage(-verbose=>1, -exit=>1) if (!defined(@ARGV[0]));
-exit pod2usage(-verbose=>1, -exit=>1) if (not -f @ARGV[0] and not -d @ARGV[0]);
-exit pod2usage(-verbose=>1, -exit=>1) if (-f @ARGV[0] and scalar(@ARGV) != 5);
-exit pod2usage(-verbose=>1, -exit=>1) if (-d @ARGV[0] and scalar(@ARGV) != 6);
+exit pod2usage(-verbose=>1, -output=>">&STDERR") if ($help);
+exit pod2usage(-verbose=>2, -output=>">&STDERR") if ($man);
+exit pod2usage(-verbose=>1, -output=>">&STDERR", -exit=>1) if (!defined(@ARGV[0]));
+exit pod2usage(-verbose=>1, -output=>">&STDERR", -exit=>1) if (not -f @ARGV[0] and not -d @ARGV[0]);
+exit pod2usage(-verbose=>1, -output=>">&STDERR", -exit=>1) if (-f @ARGV[0] and scalar(@ARGV) != 5);
+exit pod2usage(-verbose=>1, -output=>">&STDERR", -exit=>1) if (-d @ARGV[0] and scalar(@ARGV) != 6);
 exit print_one() if -f @ARGV[0];
 exit print_many() if -d @ARGV[0];
 
@@ -215,7 +215,8 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
                            Usage: --template-var [variable]=[value]
     
      Options: (multi)
-        --overwrite        Overwrite existing files that have previously been generated.
+        --overwrite        Overwrite existing files that have previously
+                           been generated.
         --webroot          The web_root template parameter value.
                            Defaults to empty
         --webroot-relative Specifies that the value of webroot should

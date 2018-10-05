@@ -132,13 +132,21 @@ sub get_template_parameters {
 		chomp $line;
 		chomp $blame;
 		my ($loc, $type, $token, $decl) = split(/\|/, $line, 4);
+                if (not $loc =~ /[0-9\-\:]/) {
+#                    return Error("[ln$tokenLine] tokenized file must include line numbers");
+                }
+
 		my ($cid, $blank, $blameInfo) = split(/;/, $blame, 3);
+               if (not $cid =~ /[0-9A-F]{16}/) {
+#                    return Error("[ln$tokenLine] file does not look like a blame file [$blame] no valid cid [$cid]");
+                }
+
 		my ($type2, $token2) = split(/\|/, $blameInfo);
 		my $isMeta = ($loc =~ /-/);
 		my $isText = ($loc !~ /-/);
 		
 		if ($token ne $token2) {
-			return Error("[ln$tokenLine]blame-token mismatch");
+			return Error("[ln$tokenLine]blame-token mismatch: from tokenized with line:[$line] from blame token file[$blame]");
 		}
 		
 		if ($isMeta)

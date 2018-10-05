@@ -194,9 +194,9 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
 
 =head1 SYNOPSIS
 
-  prettyPrint.pl [options] <sourceFile> <blameFile> <tokenFile> <cregitRepoDB> <authorsDB>
+  prettyPrint.pl [options] <sourceFile> <blameFile> <tokenFileWithLineNumbers> <cregitRepoDB> <authorsDB>
 
-  prettyPrint.pl [options] <repoDir> <blameDir> <tokenDir> <cregitRepoDB> <authorsDB> <outputDir>
+  prettyPrint.pl [options] <repoDir> <blameDir> <tokenDirWithLineNumbers> <cregitRepoDB> <authorsDB> <outputDir>
 
      Options:
         --help             Brief help message

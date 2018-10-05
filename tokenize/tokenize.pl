@@ -85,6 +85,11 @@ if ($language eq "") {
     $language = $extensions{$ext};
     Usage("Unknown extension [$ext] in file [$filename]. You must provide language using --language option") unless defined $language and $language ne "";
     Usage("Unknown parser for extension [$ext] in file [$filename]. You must provide language using --language option") unless defined defined($parsers{language});
+} else {
+    # check the extension exists
+    if (not (defined $parsers{$language}) or ($parsers{$language} eq "")) {
+        Usage("We do not know what to do with this extension [$language]");
+    }
 }
 
 Usage("filename not specified") if $filename eq "";
@@ -128,7 +133,7 @@ sub Tokenize {
     }
 
     my $status = execute_command(@command);
-    die "Unable to execute command " if $status != 0;
+    die "Unable to execute command @command" if $status != 0;
 }
 
 sub execute_command {

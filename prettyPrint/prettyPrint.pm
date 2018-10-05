@@ -132,8 +132,8 @@ sub get_template_parameters {
 		chomp $line;
 		chomp $blame;
 		my ($loc, $type, $token, $decl) = split(/\|/, $line, 4);
-                if (not $loc =~ /[0-9\-\:]/) {
-#                    return Error("[ln$tokenLine] tokenized file must include line numbers");
+                if (not ($loc =~ /^[0-9\:\-]+$/)) {
+                    return Error("[ln$tokenLine] tokenized file [$lineFile] must include line numbers [$line]");
                 }
 
 		my ($cid, $blank, $blameInfo) = split(/;/, $blame, 3);

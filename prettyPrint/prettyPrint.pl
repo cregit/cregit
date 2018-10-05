@@ -42,6 +42,8 @@ my $overwrite = 0;
 my @userVars;
 my %userVars;
 
+my $tokenExtension = ".blame.line";
+
 sub print_one {
 	my $sourceFile = shift @ARGV;
 	my $blameFile = shift @ARGV;
@@ -99,7 +101,7 @@ sub print_many {
 		
 		my $originalFile = File::Spec->catfile($repoDir, $filePath);
 		my $blameFile = File::Spec->catfile($blameDir, $filePath . ".blame");
-		my $lineFile = File::Spec->catfile($lineDir, $filePath . ".token");
+		my $lineFile = File::Spec->catfile($lineDir, $filePath . $tokenExtension);
 		my $outputFile = File::Spec->catfile($outputDir, $filePath . ".html");
 		my ($fileName, $fileDir) = fileparse($outputFile);
 		my $relative = File::Spec->abs2rel($outputDir, $fileDir);

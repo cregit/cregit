@@ -100,7 +100,7 @@ var authors = [
 </TMPL_LOOP>];
 
 var commits = [
-<TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":<TMPL_VAR epoch>, "authorId":<TMPL_VAR author_id>, "summary":"<TMPL_VAR ESCAPE=JS summary>" },
+        <TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":<TMPL_VAR epoch>, "authorId":<TMPL_VAR author_id>, "summary":"<TMPL_VAR ESCAPE=JS summary>", "repoUrl":"<TMPL_VAR ESCAPE=JS repoUrl>" },
 </TMPL_LOOP>];
 
 var stats = [

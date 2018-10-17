@@ -1,4 +1,5 @@
 document.selectedCid = undefined;
+document.selectedRepo = undefined;
 document.gitUrl = "";
 
 function windowpop(url) {
@@ -22,7 +23,11 @@ function menu_copy(itemKey, opt)
 
 function menu_github(itemKey, opt)
 {
-	var base = document.gitUrl;
+    var base = document.selectedRepo;
+    if (base == "") {
+      base = document.gitUrl;
+    }
+          
 	var cid = document.selectedCid;
 	var location = new URL(base)
 	var url = location.toString() + "/commit/" + cid;
@@ -34,11 +39,11 @@ function initialize_commit_popup(gitUrl)
 {
 	var popupHTML = "".concat(
 	"<div id='commit-info' class='commit-info layout-infobox hidden'>",
-    "  <pre style='font-weight:bold;' class='infotext'>Commit</pre>",
+    "  <span style='font-weight:bold;' class='infotext'>Commit:</span>",
     "  <a id='commit-hash' class='infotext' href='#'></a>",
-    "  <pre id='commit-author' class='infotext'></pre>",
-    "  <pre id='commit-date' class='infotext'></pre>",
-    "  <pre id='commit-comment' class='summaryBox'></pre>",
+    "  <span id='commit-author' class='infotext'></span>",
+    "  <span id='commit-date' class='infotext'></span>",
+    "  <span id='commit-comment' class='summaryBox'></span>",
     "</div>");
 	
 	var menuItems =
@@ -56,7 +61,7 @@ function initialize_commit_popup(gitUrl)
 	document.gitUrl = gitUrl;
 }
 
-function show_commit_popup(cid, author, date, summary, styleClasses, clicked)
+function show_commit_popup(cid, author, date, summary, repo, styleClasses, clicked)
 {
 	$('#commit-hash').text(cid);
 	$('#commit-date').text(date.toDateString().substr(4));
@@ -68,6 +73,8 @@ function show_commit_popup(cid, author, date, summary, styleClasses, clicked)
 	$('#commit-info').fadeIn(200);
 	
 	document.selectedCid = cid;
+        document.selectedRepo = repo;
+
 }
 
 function hide_commit_popup()

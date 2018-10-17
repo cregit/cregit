@@ -35,6 +35,9 @@ my $templateParams = {
 	die_on_bad_params => 0,
 };
 
+my $defaultGitUrl ;
+
+
 sub print_file {
 	my $sourceFile = shift @_;
 	my $blameFile = shift @_;
@@ -45,7 +48,7 @@ sub print_file {
 	$options->{outputFile}		//= "";
 	$options->{webRoot}			//= "";
 	$options->{gitURL}			//= "";
-	$options->{userVars}		//= {};
+
 	$warningCount = 0;
 
 	return Error("Source file does not exist [$sourceFile]") unless -f $sourceFile;
@@ -55,7 +58,7 @@ sub print_file {
 	my @params = get_template_parameters($sourceFile, $lineFile, $blameFile);
 	return 1 unless $params[0] != 1;
 	
-	my ($fileStats, $authors, $spans, $commits, $contentGroups) = @params;
+	my ($fileStats, $authors, $spans, $commits, $contentGroups, $repos) = @params;
 	my $firstCommit = @$commits[0];
 	my $creationDate = time2str("%Y-%m-%d", $firstCommit->{epoch});
 	my @authorsByName = sort { $a->{name} cmp $b->{name} } @$authors;
@@ -79,7 +82,9 @@ sub print_file {
 	$template->param(web_root => $options->{webRoot});
 	$template->param(git_url => $options->{gitURL});
 	$template->param($options->{userVars});
-	
+
+        $defaultGitUrl = $options->{gitURL};
+
 	my $file = undef;
 	my $outputPath = $options->{outputFile};
 	if ($outputPath ne "") {
@@ -98,6 +103,7 @@ sub get_template_parameters {
 	my $fileStats = { name => "", tokens => 0, commits => 0 };
 	my $authorStats = { };
 	my $commits = { };
+        my $repos   = { };
 	my @contentGroups;
 	my @spans;
 	
@@ -378,15 +384,17 @@ sub get_commit_stat {
 	my $commitStats = shift @_;
 	
 	if ($commitStats->{$cid} == undef) {
-		my ($author, $date, $summary, $originalCid) = get_cid_meta($cid);
-		$commitStats->{$cid} = {
+            my ($author, $date, $summary, $originalCid, $repoUrl) = get_cid_meta($cid);
+                    
+            $commitStats->{$cid} = {
 			cid => $originalCid,
 			cregit_cid => $cid,
 			author => $author,
 			author_id => -1,
 			date => $date,
 			epoch => str2time($date),
-			summary => $summary,
+                        summary => $summary,
+                        repoUrl => ($repoUrl || ""),
 		};
 	}
 
@@ -424,8 +432,8 @@ sub setup_dbi {
 	$dbh->do("attach database '$authorsDB' as a;");
 	
 	$metaQuery = $dbh->prepare("
-		select coalesce(personname, personid, 'Unknown'), autdate, summary, originalcid, repo  
-		from commits  natural left join commitmap 
+		select coalesce(personname, personid, 'Unknown'), autdate, summary, originalcid, repourl  
+		from commits  natural left join commitmap natural left join repos
 		   left join emails on (autname = emailname and autemail = emailaddr)
 		   natural left join persons
 		where cid = ?;"

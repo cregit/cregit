@@ -275,8 +275,8 @@ $(document).ready(function() {
 		var date = new Date(commitInfo.timestamp * 1000);
 		var summary = commitInfo.summary;
 		var styleClass = "author-label author" + authorId;
-		
-		show_commit_popup(cid, authorName, date, summary, styleClass, clicked);
+    	        var repoUrl = commitInfo.repoUrl;
+	    show_commit_popup(cid, authorName, date, summary, repoUrl, styleClass, clicked);
 	}
 	
 	function HideCommitInfo() {

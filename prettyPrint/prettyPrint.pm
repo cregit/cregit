@@ -432,10 +432,10 @@ sub setup_dbi {
 	$dbh->do("attach database '$authorsDB' as a;");
 	
 	$metaQuery = $dbh->prepare("
-		select coalesce(personname, personid, 'Unknown'), autdate, summary, originalcid, repourl  
-		from commits  natural left join commitmap natural left join repos
+		select coalesce(personname, 'Unknown'), autdate, summary, originalcid, repourl  
+		from commits  left join commitmap using (cid) left join repos using (repo)
 		   left join emails on (autname = emailname and autemail = emailaddr)
-		   natural left join persons
+		   left join persons using (personid)
 		where cid = ?;"
 	);
 }

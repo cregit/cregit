@@ -26,7 +26,7 @@ use Pod::Usage;
 use lib dirname(__FILE__);
 use prettyPrint;
 
-my $cregitVersion = "1.0-RC2";
+my $cregitVersion = "2.0-RC1";
 my $man = 0;
 my $help = 0;
 my $verbose = 0;

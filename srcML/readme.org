@@ -1,0 +1,19 @@
+* patch for srcML
+
+- This patch fixes the build under certain modern OSes (such as Debian 9)
+
+* How to use
+
+- download the srcML 0.9.5 Source Code: https://www.srcml.org/#download
+
+- apply patch
+
+- run cmake per the BUILD.md
+
+- edit src/CMakeFiles/srcml_shared.dir/link.txt as follows:
+ - replace "-lxml2 -Wl,-Bstatic" with "-lxml2 -Wl,--whole-archive"
+ - add "-Wl,--no-whole-archive" after "-lboost_atomic"
+
+- run make per the BUILD.md
+
+* This patch is under the same license as srcML (GPLv2+)

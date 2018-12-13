@@ -1,0 +1,103 @@
+diff -pur a/src/libsrcml/srcml_reader_handler.hpp b/src/libsrcml/srcml_reader_handler.hpp
+--- a/src/libsrcml/srcml_reader_handler.hpp	2015-05-19 18:36:48.000000000 -0700
++++ b/src/libsrcml/srcml_reader_handler.hpp	2018-11-22 07:46:50.733079890 -0800
+@@ -456,7 +456,7 @@ public :
+ 
+             if(uri == SRCML_CPP_NS_URI) {
+ 
+-                if(archive->language != 0) {
++                if(archive->language) {
+ 
+                     if(*archive->language == "C++" || *archive->language == "C" || *archive->language == "Objective-C")
+                         archive->options |= SRCML_OPTION_CPP | SRCML_OPTION_CPP_NOMACRO;
+diff -pur a/src/parser/KeywordLexer.g b/src/parser/KeywordLexer.g
+--- a/src/parser/KeywordLexer.g	2015-05-19 18:36:48.000000000 -0700
++++ b/src/parser/KeywordLexer.g	2018-12-13 13:42:32.496311210 -0800
+@@ -40,8 +40,8 @@ header {
+     #undef CONST
+     #undef VOID
+     #undef DELETE
+-    #undef FALSE
+-    #undef TRUE
++    #undef FALSE_
++    #undef TRUE_
+     #undef INTERFACE
+     #undef OUT
+     #undef IN
+@@ -513,8 +513,8 @@ KeywordLexer(UTF8CharBuffer* pinput, int
+         { "&amp;&amp;"   , RVALUEREF     , LANGUAGE_CXX_FAMILY }, 
+ 
+         // special C++ constant values
+-        { "false"        , FALSE         , LANGUAGE_OO }, 
+-        { "true"         , TRUE          , LANGUAGE_OO }, 
++        { "false"        , FALSE_        , LANGUAGE_OO }, 
++        { "true"         , TRUE_         , LANGUAGE_OO }, 
+ 
+         // C++ specifiers
+         { "final"         , FINAL          , LANGUAGE_CXX },
+@@ -647,12 +647,12 @@ KeywordLexer(UTF8CharBuffer* pinput, int
+         { "@synthesize"          , SYNTHESIZE          , LANGUAGE_OBJECTIVE_C },
+         { "@dynamic"             , DYNAMIC             , LANGUAGE_OBJECTIVE_C },
+         { "in"                   , IN                  , LANGUAGE_OBJECTIVE_C },
+-        { "@YES"                 , TRUE                , LANGUAGE_OBJECTIVE_C },
+-        { "@NO"                  , FALSE               , LANGUAGE_OBJECTIVE_C },
+-        { "YES"                  , TRUE                , LANGUAGE_OBJECTIVE_C },
+-        { "NO"                   , FALSE               , LANGUAGE_OBJECTIVE_C },
+-        { "@true"                , TRUE                , LANGUAGE_OBJECTIVE_C },
+-        { "@false"               , FALSE               , LANGUAGE_OBJECTIVE_C },
++        { "@YES"                 , TRUE_               , LANGUAGE_OBJECTIVE_C },
++        { "@NO"                  , FALSE_              , LANGUAGE_OBJECTIVE_C },
++        { "YES"                  , TRUE_               , LANGUAGE_OBJECTIVE_C },
++        { "NO"                   , FALSE_              , LANGUAGE_OBJECTIVE_C },
++        { "@true"                , TRUE_               , LANGUAGE_OBJECTIVE_C },
++        { "@false"               , FALSE_              , LANGUAGE_OBJECTIVE_C },
+         { "@encode"              , ENCODE              , LANGUAGE_OBJECTIVE_C },
+         { "@selector"            , SELECTOR            , LANGUAGE_OBJECTIVE_C },
+         { "@autoreleasepool"     , AUTORELEASEPOOL     , LANGUAGE_OBJECTIVE_C },
+diff -pur a/src/parser/OperatorLexer.g b/src/parser/OperatorLexer.g
+--- a/src/parser/OperatorLexer.g	2015-05-19 18:36:48.000000000 -0700
++++ b/src/parser/OperatorLexer.g	2018-12-13 13:42:24.016403475 -0800
+@@ -91,8 +91,8 @@ MSPEC;
+ BLOCKOP;
+ 
+ // literals
+-FALSE;
+-TRUE;
++FALSE_;
++TRUE_;
+ 
+ // Other
+ CUDA;
+diff -pur a/src/parser/srcml_bitset_token_sets.hpp b/src/parser/srcml_bitset_token_sets.hpp
+--- a/src/parser/srcml_bitset_token_sets.hpp	2015-05-19 18:36:48.000000000 -0700
++++ b/src/parser/srcml_bitset_token_sets.hpp	2018-12-13 13:42:15.208499402 -0800
+@@ -118,7 +118,7 @@ create_token_set(enum_preprocessing_toke
+ 
+ const antlr::BitSet srcMLParser::enum_preprocessing_token_set(bitset_buckets<enum_preprocessing_tokens>::data, bitset_buckets<enum_preprocessing_tokens>::num_token_longs);
+ 
+-create_token_set(literal_tokens, srcMLParser::CHAR_START, srcMLParser::COMPLEX_NUMBER, srcMLParser::STRING_START, srcMLParser::CONSTANTS, srcMLParser::FALSE, srcMLParser::TRUE, srcMLParser::NULLPTR,
++create_token_set(literal_tokens, srcMLParser::CHAR_START, srcMLParser::COMPLEX_NUMBER, srcMLParser::STRING_START, srcMLParser::CONSTANTS, srcMLParser::FALSE_, srcMLParser::TRUE_, srcMLParser::NULLPTR,
+                                  srcMLParser::NULLLITERAL, srcMLParser::NIL);
+ 
+ const antlr::BitSet srcMLParser::literal_tokens_set(bitset_buckets<literal_tokens>::data, bitset_buckets<literal_tokens>::num_token_longs);
+diff -pur a/src/parser/srcMLParser.g b/src/parser/srcMLParser.g
+--- a/src/parser/srcMLParser.g	2015-05-19 18:36:48.000000000 -0700
++++ b/src/parser/srcMLParser.g	2018-12-13 13:42:48.384138537 -0800
+@@ -5262,7 +5262,7 @@ identifier_list[] { ENTRY_DEBUG } :
+             // C
+             CRESTRICT | MUTABLE | CXX_TRY | CXX_CATCH/*| CXX_CLASS| THROW | CLASS | PUBLIC | PRIVATE | PROTECTED | NEW |
+             SIGNAL | FOREACH | FOREVER | VIRTUAL | FRIEND | OPERATOR | EXPLICIT | NAMESPACE | USING |
+-            DELETE | FALSE | TRUE | FINAL | OVERRIDE | CONSTEXPR | NOEXCEPT | THREADLOCAL | NULLPTR |
++            DELETE | FALSE_ | TRUE_ | FINAL | OVERRIDE | CONSTEXPR | NOEXCEPT | THREADLOCAL | NULLPTR |
+             DECLTYPE | ALIGNAS | TYPENAME | ALIGNOF*/
+ 
+ ;
+@@ -7931,7 +7931,7 @@ boolean[] { LightweightElement element(t
+             if (!isoption(parser_options, SRCML_OPTION_OPTIONAL_MARKUP) || isoption(parser_options, SRCML_OPTION_LITERAL))
+                 startElement(SBOOLEAN);
+         }
+-        (TRUE | FALSE)
++        (TRUE_ | FALSE_)
+ ;
+ 
+ // a derived class

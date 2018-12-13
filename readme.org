@@ -21,6 +21,12 @@
 2. apply the patch found in the directory [[./bfg/readme.org][bfg]].
 3. build
 
+** srcML
+
+1. if using certain modern OSes (such as Debian 9), you must patch srcML
+2. apply the patch found in the directory [[./srcML/readme.org][srcML]].
+3. build per the instructions there
+
 ** Dependencies:
 
 For each module, its dependencies are documented in their corresponding readme.org file.

@@ -25,6 +25,8 @@
 
 For each module, its dependencies are documented in their corresponding readme.org file.
 
+As an example, on Debian 9 the following packages must be installed: cmake libarchive-dev libxml++2.6-dev libxml2-dev libcurl4-openssl-dev libxslt1-dev libboost-all-dev libantlr-dev libssl-dev libxerces-c-dev exuberant-ctags libdbi-perl libjgit-java libhtml-fromtext-perl libset-scalar-perl libdbd-sqlite3-perl
+
 * How to build
 
 - use sbt to compile the scala code

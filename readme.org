@@ -27,7 +27,7 @@ For each module, its dependencies are documented in their corresponding readme.o
 
 * How to build
 
-- use sbt to compile the scala code
+- use sbt to compile the scala code (i.e. from https://www.scala-sbt.org/download.html repo)
 - use make to compile the C++ code
 - perl scripts can be run without compilation
 

@@ -39,8 +39,8 @@ my $dryrun = 0;
 my $filter = "";
 my $filter_lang = 0;
 my $overwrite = 0;
-my @userVars;
-my %userVars;
+my @userVars; # array
+my %userVars; # hashref
 
 my $tokenExtension = ".token.line";
 
@@ -64,19 +64,23 @@ sub print_one {
 }
 
 sub print_many {
-	my $repoDir = shift @ARGV;
-	my $blameDir = shift @ARGV;
-	my $lineDir = shift @ARGV;
-	my $sourceDB = shift @ARGV;
-	my $authorsDB = shift @ARGV;
-	my $outputDir = shift @ARGV;
+	my $repoDir = shift @ARGV; # original.repo/
+	my $blameDir = shift @ARGV; # blame/
+	my $lineDir = shift @ARGV; # token.line/
+	my $sourceDB = shift @ARGV; # cregitRepoDB: token.db
+	my $authorsDB = shift @ARGV; # authorsDB: persons.db
+	my $outputDir = shift @ARGV; # output directory
 	my $filter = $filter;
+
+	# filter for c and cpp programming language
+	# TODO
 	if ($filter_lang eq "c") {
 		$filter = "\\.(h|c)\$";
 	} elsif ($filter_lang eq "cpp") {
 		$filter = "\\.(h(pp)?|cpp)\$";
 	}
 	
+	# Usage($message, $verbose)
 	Usage("Source directory does not exist [$repoDir]", 0) unless -d $repoDir;
 	Usage("Tokenized blame file directory does not exist [$blameDir]", 0) unless -d $blameDir;
 	Usage("Tokenized line file directory does not exist [$lineDir]", 0) unless -d $lineDir;
@@ -96,14 +100,14 @@ sub print_many {
 	my $errorCount = 0;
 	while (my $filePath = <$FILES>) {
 		chomp $filePath;
-		next if ($filter ne "" and $filePath !~ /$filter/);
+		next if ($filter ne "" and $filePath !~ /$filter/); # if ($filter != "" and !$filePath.contains($filter)) continue; 
 		print(++$index . ": $filePath\n") if $verbose;
 		
 		my $originalFile = File::Spec->catfile($repoDir, $filePath);
-		my $blameFile = File::Spec->catfile($blameDir, $filePath . ".blame");
-		my $lineFile = File::Spec->catfile($lineDir, $filePath . $tokenExtension);
+		my $blameFile = File::Spec->catfile($blameDir, $filePath . ".blame"); # .blame
+		my $lineFile = File::Spec->catfile($lineDir, $filePath . $tokenExtension); # token.line
 		my $outputFile = File::Spec->catfile($outputDir, $filePath . ".html");
-		my ($fileName, $fileDir) = fileparse($outputFile);
+		my ($fileName, $fileDir) = fileparse($outputFile); # file path to dirs, filename and (optionally) the filename suffix
 		my $relative = File::Spec->abs2rel($outputDir, $fileDir);
 		my $options = { "outputFile" => $outputFile };
 		
@@ -118,7 +122,7 @@ sub print_many {
 		
 		print("$filePath\n") if !$verbose;
 		if (!$dryrun) {
-			File::Path::make_path($fileDir);
+			File::Path::make_path($fileDir); # create directories for output files
 			my $errorCode = print_with_options($originalFile, $blameFile, $lineFile, $options);
 			
 			if ($errorCode != 0) {
@@ -162,6 +166,7 @@ sub Usage {
     exit(1);
 }
 
+# Getopt::Long - Extended processing of command line options
 GetOptions(
 	"help" => \$help,
 	"man" => \$man,
@@ -190,6 +195,7 @@ exit print_many() if -d @ARGV[0];
 
 __END__
 
+# pod
 =head1 NAME
 
 prettyPrint-main.pl: create the "pretty" output of files in a git repository
@@ -229,4 +235,5 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
                                c      *.c|*.h
                                cpp    *.cpp|*.h|*.hpp
 
+# Pod block end
 =cut

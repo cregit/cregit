@@ -11,7 +11,7 @@ BLAME_DIRECTORY="${HOME_REPO}/v2.17/blame"
 TOKEN_DIRECTORY="${HOME_REPO}/v2.17/token.line"
 PERSONS_DB="${HOME_REPO}/v2.17/persons.db"
 TOKEN_DB="${HOME_REPO}/v2.17/token.db"
-FLAGS="--filter-lang=c --git-url=${GIT_URL} --verbose" # enable debug mode
+FLAGS="--filter-lang=c --git-url=${GIT_URL} --verbose" # show log
 
 if [ "$LOCAL_PREVIEW" = "yes" ]; then
 	FLAGS+=" --webroot-relative"
@@ -19,7 +19,7 @@ else
 	FLAGS+=" --webroot=${HOST_URL}"
 fi
 
-set -x
+set -x # activate debugging mode
 perl prettyPrint.pl ${FLAGS} "${ORIGINAL_REPO}" "${BLAME_DIRECTORY}" "${TOKEN_DIRECTORY}" "${TOKEN_DB}" "${PERSONS_DB}" "${OUTPUT_DIR}"
 #cp -r templates/public/. ${OUTPUT_DIR}/public
 

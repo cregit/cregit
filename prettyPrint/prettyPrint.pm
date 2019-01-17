@@ -26,19 +26,21 @@ use Pod::Usage;
 
 my $dbh;
 my $metaQuery;
-my $metaCache = { };
+my $metaCache = { }; # perl hash reference
 my $metaCacheEnabled = 1;
-my $defaultTemplate = dirname(__FILE__) . "/templates/page.tmpl";
+my $defaultTemplate = dirname(__FILE__) . "/templates/page.tmpl"; # perl html template file
 my $warningCount = 0;
 my $templateParams = {
 	loop_context_vars => 1,
 	die_on_bad_params => 0,
 };
 
-my $defaultGitUrl ;
+my $defaultGitUrl;
 
 
 sub print_file {
+	# PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
+	# @_: Within a subroutine the array @_ contains the parameters passed to that subroutine.
 	my $sourceFile = shift @_;
 	my $blameFile = shift @_;
 	my $lineFile =  shift @_;
@@ -103,14 +105,15 @@ sub get_template_parameters {
 	my $fileStats = { name => "", tokens => 0, commits => 0 };
 	my $authorStats = { };
 	my $commits = { };
-        my $repos   = { };
+    my $repos   = { };
 	my @contentGroups;
 	my @spans;
 	
+	# mapping $SRC, $LINE, $BLAME
 	return Error("unable to open [$sourceFile] file") unless open(my $SRC, $sourceFile);
 	return Error("unable to open [$lineFile] file") unless open(my $LINE, $lineFile);
 	return Error("unable to open [$blameFile] file") unless open(my $BLAME, $blameFile);
-	return Error("[$lineFile] is not a line token file") unless <$LINE> =~ /begin_unit/;
+	return Error("[$lineFile] is not a line token file") unless <$LINE> =~ /begin_unit/; # pattern binding operators
 	return Error("[$blameFile] is not a blame token file") unless <$BLAME> =~ /begin_unit/;
 	
 	# Read source text and map line numbers to indices
@@ -131,21 +134,23 @@ sub get_template_parameters {
 	my $tokenLine = 2;
 	my $authorStat;
 	my $contentGroupAuthorStat;
-	my $contentGroup = { done => 1, spans => []};
+	my $contentGroup = { done => 1, spans => [] };
 	my $span = { cid => undef, start => 0 };
 	my $spanBreak = 0;
 	while (my $line = <$LINE> and my $blame = <$BLAME>) {
-		chomp $line;
+		chomp $line; # get rid of \n
 		chomp $blame;
+		# line file data
 		my ($loc, $type, $token, $decl) = split(/\|/, $line, 4);
-                if (not ($loc =~ /^[0-9\:\-]+$/)) {
-                    return Error("[ln$tokenLine] tokenized file [$lineFile] must include line numbers [$line]");
-                }
+        if (not ($loc =~ /^[0-9\:\-]+$/)) {
+            return Error("[ln$tokenLine] tokenized file [$lineFile] must include line numbers [$line]");
+        }
 
+		# token file data
 		my ($cid, $blank, $blameInfo) = split(/;/, $blame, 3);
-               if (not $cid =~ /[0-9A-F]{16}/) {
-#                    return Error("[ln$tokenLine] file does not look like a blame file [$blame] no valid cid [$cid]");
-                }
+        if (not $cid =~ /[0-9A-F]{16}/) {
+            # return Error("[ln$tokenLine] file does not look like a blame file [$blame] no valid cid [$cid]");
+        }
 
 		my ($type2, $token2) = split(/\|/, $blameInfo);
 		my $isMeta = ($loc =~ /-/);
@@ -431,6 +436,7 @@ sub setup_dbi {
 	$dbh = DBI->connect($dsn, $user, $password, $options) or die $DBI::errstr;
 	$dbh->do("attach database '$authorsDB' as a;");
 	
+	# prepared statement
 	$metaQuery = $dbh->prepare("
 		select coalesce(personname, 'Unknown'), autdate, summary, originalcid, repourl  
 		from commits  left join commitmap using (cid) left join repos using (repo)

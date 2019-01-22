@@ -33,37 +33,37 @@ my $tokenExtension = ".token.line";
 
 sub print_dir_info {
     my $repoDir = shift @ARGV; # original.repo/
-	my $blameDir = shift @ARGV; # blame/
-	my $lineDir = shift @ARGV; # token.line/
-	my $sourceDB = shift @ARGV; # cregitRepoDB: token.db
-	my $authorsDB = shift @ARGV; # authorsDB: persons.db
-	my $outputDir = shift @ARGV; # output directory
-	my $filter = $filter; # filter key
+    my $blameDir = shift @ARGV; # blame/
+    my $lineDir = shift @ARGV; # token.line/
+    my $sourceDB = shift @ARGV; # cregitRepoDB: token.db
+    my $authorsDB = shift @ARGV; # authorsDB: persons.db
+    my $outputDir = shift @ARGV; # output directory
+    my $filter = $filter; # filter key
 
     # filter for c and cpp programming language
-	# TODO: compatible for other languages
-	if ($filter_lang eq "c") {
-		$filter = "\\.(h|c)\$";
-	} elsif ($filter_lang eq "cpp") {
-		$filter = "\\.(h(pp)?|cpp)\$";
-	}
+    # TODO: compatible for other languages
+    if ($filter_lang eq "c") {
+	    $filter = "\\.(h|c)\$";
+    } elsif ($filter_lang eq "cpp") {
+	    $filter = "\\.(h(pp)?|cpp)\$";
+    }
 
     # Usage($message, $verbose)
-	Usage("Source directory does not exist [$repoDir]", 0) unless -d $repoDir;
-	Usage("Tokenized blame file directory does not exist [$blameDir]", 0) unless -d $blameDir;
-	Usage("Tokenized line file directory does not exist [$lineDir]", 0) unless -d $lineDir;
-	Usage("Database of tokenized repository does not exist [$sourceDB]", 0) unless -f $sourceDB;
-	Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
+    Usage("Source directory does not exist [$repoDir]", 0) unless -d $repoDir;
+    Usage("Tokenized blame file directory does not exist [$blameDir]", 0) unless -d $blameDir;
+    Usage("Tokenized line file directory does not exist [$lineDir]", 0) unless -d $lineDir;
+    Usage("Database of tokenized repository does not exist [$sourceDB]", 0) unless -f $sourceDB;
+    Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
 
     # end program if directory cannot be created
     die "Unable to create output directory: $outputDir\n" unless (-e $outputDir or mkdir $outputDir);
 
     # prepare metaQuery
-	PrettyPrint::setup_dbi($sourceDB, $authorsDB);
+    PrettyPrint::setup_dbi($sourceDB, $authorsDB);
 	
- 	my $index = 0;
-	my $processCount = 0;
-	my $errorCount = 0;
+    my $index = 0;
+    my $processCount = 0;
+    my $errorCount = 0;
     my $rootDirectoryContent = file_system_object("root", "d", "");
 
     # update directory contents
@@ -269,7 +269,7 @@ GetOptions(
     "template-var=s" => \@userVars,
     "git-url=s" => \$gitURL,
     "webroot=s" => \$webRoot,
-	"webroot-relative" => \$webRootRelative,
+    "webroot-relative" => \$webRootRelative,
 ) or die("Error in command line arguments\n");
 %userVars = map { split(/=/, $_, 2) } @userVars; # split user defined variables
 

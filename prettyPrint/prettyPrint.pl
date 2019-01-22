@@ -155,6 +155,7 @@ sub print_with_options {
 	$options->{webRoot} //= $webRoot;
 	$options->{gitURL} //= $gitURL;
 	$options->{userVars} //= {%userVars};
+	$options->{verbose} //= $verbose;
 	
 	return PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
 }

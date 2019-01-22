@@ -11,7 +11,7 @@ BLAME_DIRECTORY="${HOME_REPO}/v2.17/blame"
 TOKEN_DIRECTORY="${HOME_REPO}/v2.17/token.line"
 PERSONS_DB="${HOME_REPO}/v2.17/persons.db"
 TOKEN_DB="${HOME_REPO}/v2.17/token.db"
-FLAGS="--filter-lang=c --git-url=${GIT_URL} --verbose" # show log
+FLAGS="--filter-lang=c --git-url=${GIT_URL} --verbose --overwrite" # verbose and overwrite
 
 if [ "$LOCAL_PREVIEW" = "yes" ]; then
 	FLAGS+=" --webroot-relative"

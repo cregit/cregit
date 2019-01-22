@@ -41,15 +41,17 @@ my $defaultGitUrl;
 sub print_file {
 	# PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
 	# @_: Within a subroutine the array @_ contains the parameters passed to that subroutine.
-	my $sourceFile = shift @_;
+	my $sourceFile = shift @_; # files in original.repo/git/
 	my $blameFile = shift @_;
 	my $lineFile =  shift @_;
-	my $options = shift @_		// { };
+	my $options = shift @_		// { }; # // does same thing as ||. if the $options(last shift) is undefined, it becomes {}
 	$options->{cregitVersion}	//= "0.0";
 	$options->{templateFile}	//= $defaultTemplate;
 	$options->{outputFile}		//= "";
 	$options->{webRoot}			//= "";
 	$options->{gitURL}			//= "";
+
+	# print Dumper(\$options) if $options->{verbose};
 
 	$warningCount = 0;
 
@@ -122,6 +124,8 @@ sub get_template_parameters {
 	my $srcText = "";
 	my $lineIndex = 0;
 	my $lineCount = 0;
+
+	# <>: readline operator in Perl
 	while (my $line = <$SRC>) {
 		push(@srcLineIndices, $lineIndex);
 		push(@srcLineLengths, length($line));
@@ -148,14 +152,16 @@ sub get_template_parameters {
 
 		# token file data
 		my ($cid, $blank, $blameInfo) = split(/;/, $blame, 3);
+		# validate cid - naive
         if (not $cid =~ /[0-9A-F]{16}/) {
             # return Error("[ln$tokenLine] file does not look like a blame file [$blame] no valid cid [$cid]");
         }
 
 		my ($type2, $token2) = split(/\|/, $blameInfo);
-		my $isMeta = ($loc =~ /-/);
+		my $isMeta = ($loc =~ /-/); # meta info
 		my $isText = ($loc !~ /-/);
 		
+		# check if blame file and token.line file are mismatched
 		if ($token ne $token2) {
 			return Error("[ln$tokenLine]blame-token mismatch: from tokenized with line:[$line] from blame token file[$blame]");
 		}
@@ -182,7 +188,7 @@ sub get_template_parameters {
 				if (substr($type, length("end_")) ne $contentGroup->{type}) {
 					Warning("[ln$tokenLine]Content group end type does not match the type of the current one. Continuing.");
 				} else {
-					$contentGroup->{done} = 1;
+					$contentGroup->{done} = 1; # set to 1, reached end of current type
 				}
 			}
 			
@@ -213,6 +219,7 @@ sub get_template_parameters {
 				push (@contentGroups, $contentGroup);
 			}
 			
+			# check if current cid is the same as last one
 			if ($cid ne %$span{cid}) {
 				$spanBreak = 1;
 			}
@@ -268,7 +275,7 @@ sub get_template_parameters {
 	$fileStats->{line_count} = $lineCount;
 	
 	# Sort and update remaining author data
-	my @unsortedAuthors = values %$authorStats;
+	my @unsortedAuthors = values %$authorStats; # dereferencing hash
 	my @sortedAuthors = sort { $b->{tokens} <=> $a->{tokens} } @unsortedAuthors;
 	for (my $i = 0; $i < scalar @sortedAuthors; $i++) {
 		my $author = @sortedAuthors[$i];
@@ -320,12 +327,13 @@ sub get_template_parameters {
 	for my $span (@spans) {
 		$span->{cidx} = $commitMap{$span->{cid}};
 		$span->{author_id} = $authorMap{$span->{author}};
-		$span->{cid} = $commits[$span->{cidx}]->{cid};
+		$span->{cid} = $commits[$span->{cidx}]->{cid}; # grab the real commit id
 	}
 	
 	return ($fileStats, [@sortedAuthors], [@spans], [@commits], [@contentGroups])
 }
 
+# create a new 'content group'
 sub new_content_group {
 	my $type = shift @_;
 	my $group = {

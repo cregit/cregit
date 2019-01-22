@@ -113,7 +113,7 @@ sub update_directory_stats {
         $author->{commit_proportion} = $author->{commits} / $totalCommit;
         $author->{token_proportion} = $author->{tokens} / $totalToken;
         $author->{commit_percent} = sprintf("%.2f\%", 100.0 * $author->{commit_proportion});
-		$author->{token_percent} = sprintf("%.2f\%", 100.0 * $author->{token_proportion});
+        $author->{token_percent} = sprintf("%.2f\%", 100.0 * $author->{token_proportion});
     }
     $directory->{authors} = [@sortedAuthors];
 

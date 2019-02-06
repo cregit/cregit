@@ -1,4 +1,10 @@
 $(document).ready(function() {
+
+	$(".content-stats-box").on("click", ".content-stats-graph", function() {
+		$contentGraph = $(this);
+		$contentDetail = $contentGraph.parent().next("div");
+		$contentDetail.slideToggle();
+	});
 	
 	var timeMin = commits[0].timestamp;
 	var timeMax = commits[commits.length - 1].timestamp;
@@ -136,7 +142,7 @@ $(document).ready(function() {
 	
 	function UpdateVisibility(groupId, lineStart, lineEnd) {
 		 // Prevent reflows.
-		$content.detach(); // removes the selected elements including all text and child nodes
+		$content.detach();
 		$lineNumbers.detach();
 		
 		$content_groups.each(function() {

@@ -2,7 +2,6 @@
 use strict;
 use Data::Dumper; # print stringified data
 use Date::Parse;
-use DBI;
 use File::Path;
 use File::Basename;
 use Getopt::Long;
@@ -31,14 +30,27 @@ my @userVars; # array
 my %userVars; # hashref
 my $tokenExtension = ".token.line";
 
+my $repoDir;
+my $blameDir;
+my $lineDir;
+my $sourceDB;
+my $authorsDB;
+my $outputDir;
+
+my $defaultTemplate = dirname(__FILE__) . "/templates/directory.tmpl";
+my $templateParams = {
+	loop_context_vars => 1,
+	die_on_bad_params => 0,
+};
+
 sub print_dir_info {
-    my $repoDir = shift @ARGV; # original.repo/
-    my $blameDir = shift @ARGV; # blame/
-    my $lineDir = shift @ARGV; # token.line/
-    my $sourceDB = shift @ARGV; # cregitRepoDB: token.db
-    my $authorsDB = shift @ARGV; # authorsDB: persons.db
-    my $outputDir = shift @ARGV; # output directory
-    my $filter = $filter; # filter key
+    $repoDir = shift @ARGV; # original.repo/
+    $blameDir = shift @ARGV; # blame/
+    $lineDir = shift @ARGV; # token.line/
+    $sourceDB = shift @ARGV; # cregitRepoDB: token.db
+    $authorsDB = shift @ARGV; # authorsDB: persons.db
+    $outputDir = shift @ARGV; # output directory
+    # my $filter = $filter; # filter key
 
     # filter for c and cpp programming language
     # TODO: compatible for other languages
@@ -65,14 +77,18 @@ sub print_dir_info {
     my $processCount = 0;
     my $errorCount = 0;
     my $rootDirectoryContent = file_system_object("root", "d", "");
+    get_directory_content($rootDirectoryContent);
+
+    my @parentPath = ();
+    process_directory_content($rootDirectoryContent, \@parentPath);
 
     # update directory contents
-    get_directory_content($rootDirectoryContent, $repoDir, $filter);
+    # get_directory_content($rootDirectoryContent, $repoDir, $filter);
     # update directory statistics
-    print "collecting stats...\n";
-    get_directory_stats($rootDirectoryContent, $repoDir, $blameDir, $lineDir);
-    print "updating directory stats...\n";
-    update_directory_stats($rootDirectoryContent);
+    # print "collecting stats...\n";
+    # get_directory_stats($rootDirectoryContent, $repoDir, $blameDir, $lineDir);
+    # print "updating directory stats...\n";
+    # update_directory_stats($rootDirectoryContent);
 
     # my @printDir = grep {$_->{type} eq "d"} @{$rootDirectoryContent->{content}}; 
     # foreach (@printDir) {
@@ -87,42 +103,230 @@ sub print_dir_info {
     #         print "$author->{id} $author->{name} : $author->{token_percent} $author->{tokens}\n";
     #     }
     # }
-    print Dumper(\$rootDirectoryContent);
+    # print Dumper(\$rootDirectoryContent);
+}
+
+sub process_directory_content {
+    my $directory = shift @_;
+    my @parentPath = @{shift @_}; # breadcrumbs navigation
+    my @dirList = ();
+    my @fileList = ();
+
+    my $currPath = File::Spec->catfile($repoDir, $directory->{path});
+    return PrettyPrint::Error("unable to open [$currPath] directory") unless opendir(my $dh, $currPath);
+    # readdir DIRHANDLE
+    my @contentList = grep {$_ ne '.' and $_ ne '..'} readdir $dh;
+    my @sortedContentList = sort_directory_content(\@contentList, $currPath); # sorted list : [dir...dir][file...file]
+    
+    foreach (@sortedContentList) {
+        my $currContents = $_;
+        # skip hidden file or directory
+        next if substr($currContents, 0, 1) eq ".";
+
+        my $contentPath = File::Spec->catfile($currPath, $currContents);
+        my $path = $directory->{path} ? File::Spec->catfile($directory->{path}, $currContents) : $currContents; # special case for root path
+        my $currObject = undef;
+
+        print "$path\n";
+
+        if (-d $contentPath) {
+            $currObject = file_system_object($currContents, "d", $path);
+            get_directory_content($currObject);
+            # skip empty directory or directory that has unrelated files
+            next if !defined $currObject->{content};
+
+            # create new navigation list for next directory
+            my @newParentPath = ();
+            foreach (@parentPath) {
+                push (@newParentPath, {name => $_->{name}, path => $_->{path} . "../"});
+            }
+            push (@newParentPath, {name => $directory->{name}, path => "../"});
+
+            my @params = process_directory_content($currObject, \@newParentPath);
+
+            push (@dirList, $currObject);
+
+        } elsif (-f $contentPath) {
+            # filter
+            next if ($filter ne "" and $currContents !~ /$filter/); # in Java : if ($filter!="" and !$filePath.contains($filter)) continue; 
+            $currObject = file_system_object($currContents, "f", $path);
+
+            my $sourceFile = File::Spec->catfile($repoDir, $path);
+            my $blameFile = File::Spec->catfile($blameDir, $path . ".blame");
+            my $lineFile = File::Spec->catfile($lineDir, $path . $tokenExtension);
+            my @params = PrettyPrint::get_template_parameters($sourceFile, $lineFile, $blameFile);
+
+            my ($fileStats, $authors, $spans, $commits, $contentGroups, $repos) = @params;
+
+            $currObject->{contentStats}->{commits} = $fileStats->{commits};
+            $currObject->{contentStats}->{tokens} = $fileStats->{tokens};
+            $currObject->{authors} = $authors;
+            $currObject->{commits} = $commits;
+
+            push (@fileList, $currObject);
+        } else {
+            next;
+        }
+
+        # update current directory
+        $directory->{contentStats}->{commits} += $currObject->{contentStats}->{commits};
+        $directory->{contentStats}->{tokens} += $currObject->{contentStats}->{tokens};
+
+        # update directory authors list
+        foreach (@{$currObject->{authors}}) {
+            my $author = $_;
+            my $authorName = $author->{name};
+
+            # look for a matched author
+            my ($matchedAuthor) = grep {$_->{name} eq $authorName} @{$directory->{authors}};
+            if ($matchedAuthor) {
+                # if match found, update the existing author
+                $matchedAuthor->{commits} += $author->{commits};
+                $matchedAuthor->{tokens} += $author->{tokens};
+            } else {
+                # not found, add it
+                $directory->{authors}[scalar @{$directory->{authors}}] = dclone $author;
+            }
+        }
+
+        # update directory commits list
+        foreach (@{$currObject->{commits}}) {
+            my $commit = $_;
+            my $commitId = $commit->{cid};
+
+            # look for a matched commit
+            my ($matchedCommit) = grep {$_->{cid} eq $commitId} @{$directory->{commits}};
+            
+            next if $matchedCommit;
+            # else add it to the diretory
+            $directory->{commits}[scalar @{$directory->{commits}}] = dclone $commit;
+        }
+        
+    }
+
+    update_directory_stats($directory);
+
+    print_directory($directory, \@parentPath, \@dirList, \@fileList);
+    closedir $dh;
+}
+
+sub update_dir_and_file_stats {
+    my $directory = shift @_;
+    my @dirList = @{shift @_};
+    my @fileList = @{shift @_};
+    my $auhtors = $directory->{authors};
+
+    my $tokenLen = 0;
+    foreach (@dirList) {
+        my $dir = $_;
+        $tokenLen = $dir->{contentStats}->{tokens} if $dir->{contentStats}->{tokens} > $tokenLen;
+        my $dirAuthors = $dir->{authors};
+        foreach (@{$dirAuthors}) {
+            my $dirAuthor = $_;
+            die "author $dirAuthor->{name} in directory $dir->{name} not found \n" unless my ($matchedAuthor) = grep {$dirAuthor->{name} eq $_->{name}} @{$auhtors};
+            $dirAuthor->{id} = $matchedAuthor->{id};
+        }
+    }
+    foreach (@fileList) {
+        my $file = $_;
+        $tokenLen = $file->{contentStats}->{tokens} if $file->{contentStats}->{tokens} > $tokenLen;
+        my $fileAuthors = $file->{authors};
+        foreach (@{$fileAuthors}) {
+            my $fileAuthor = $_;
+            die "author $fileAuthor->{name} in file $file->{name} not found \n" unless my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$auhtors};
+            $fileAuthor->{id} = $matchedAuthor->{id};
+        }
+    }
+
+    foreach (@dirList) {
+        $_->{url} = File::Spec->catfile($webRoot, $_->{path});
+        $_->{width} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $tokenLen);
+    }
+    foreach (@fileList) {
+        $_->{url} = File::Spec->catfile($webRoot, $_->{path}.".html");
+        $_->{width} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $tokenLen);
+    }
+}
+
+
+sub print_directory {
+    my $directory = shift @_;
+    my @breadcrumbs_nav = @{shift @_};
+    my @dirList = @{shift @_};
+    my @fileList = @{shift @_};
+
+    my $outputPath = File::Spec->catfile($outputDir, $directory->{path});
+    my $outputFile = File::Spec->catfile($outputPath, "index.html");
+    my ($fileName, $fileDir) = fileparse($outputFile);
+    my $relativePath = File::Spec->abs2rel($outputDir, $fileDir);
+    $webRoot = $relativePath if $webRootRelative;
+    $templateFile = $templateFile ? $templateFile : $defaultTemplate;
+    my @contributorsByName = sort {$a->{name} cmp $b->{name}} @{$directory->{authors}};
+
+    update_dir_and_file_stats($directory, \@dirList, \@fileList);
+	my $template = HTML::Template->new(filename => $templateFile, %$templateParams);
+
+    $template->param(directory_name => $directory->{name});
+    $template->param(web_root => $webRoot);
+    $template->param(breadcrumb_nav => \@breadcrumbs_nav);
+    $template->param(contributors_by_name => \@contributorsByName);
+    $template->param(contributors_count => scalar @contributorsByName);
+    $template->param(contributors => $directory->{authors});
+    $template->param(total_tokens => $directory->{contentStats}->{tokens});
+    $template->param(total_commits => $directory->{contentStats}->{commits});
+    $template->param(has_subdir => scalar @dirList);
+    $template->param(has_file => scalar @fileList);
+    $template->param(directory_list => \@dirList);
+    $template->param(file_list => \@fileList);
+
+    my $file = undef;
+    if ($outputFile ne "") {
+        open($file, ">", $outputFile) or return PrettyPrint::Error("cannot write to [$outputFile]");
+    } else {
+        $file = *STDOUT;
+    }
+    
+    print $file $template->output();
 }
 
 sub update_directory_stats {
     my $directory = shift @_;
-
-    print "====================================================\n";
-    print "$directory->{path} : \n";
-    print "Total token : $directory->{contentStats}->{tokens}\n";
-    print "Total commit : $directory->{contentStats}->{commits}\n";
-
     my $totalToken = $directory->{contentStats}->{tokens};
     my $totalCommit = $directory->{contentStats}->{commits};
 
     # sort authors by their tokens
     my @sortedAuthors = sort {$b->{tokens} <=> $a->{tokens}} @{$directory->{authors}};
-    # update stats for each author
+    # update stats for each author, assign id
     my $index = 0;
     foreach (@sortedAuthors) {
         my $author = $_;
-        print "AUTHOR : $author->{name} \n";
 
         $author->{id} = $index++;
         $author->{commit_proportion} = $author->{commits} / $totalCommit;
         $author->{token_proportion} = $author->{tokens} / $totalToken;
         $author->{commit_percent} = sprintf("%.2f\%", 100.0 * $author->{commit_proportion});
         $author->{token_percent} = sprintf("%.2f\%", 100.0 * $author->{token_proportion});
+
+        # update commits list author_id
+        my @matchedCommits = map {$_->{author_id} = $author->{id}} grep {$_->{author} eq $author->{name}} @{$directory->{commits}};
+        die "no matched commits found on author : $author->{name}. \n" unless @matchedCommits;
     }
     $directory->{authors} = [@sortedAuthors];
 
-    foreach (@{$directory->{content}}) {
-        my $content = $_;
+    # update author id in commits list
+    # foreach (@{$directory->{commits}}) {
+    #     my $commit = $_;
+    #     my $commitAuthor = $commit->{author};
 
-        # update sub-directory if there is any
-        update_directory_stats($content) if $content->{type} eq "d";
-    }
+    #     my ($matchedCommit) = grep {$_->{name} eq $commitAuthor} @{$directory->{authors}};
+    # }
+
+    # foreach (@{$directory->{content}}) {
+    #     my $content = $_;
+
+    #     # update sub-directory if there is any
+    #     update_directory_stats($content) if $content->{type} eq "d";
+    # }
 }
 
 sub get_directory_stats {
@@ -182,8 +386,6 @@ sub get_directory_stats {
 
 sub get_directory_content {
     my $directory = shift @_;
-    my $repoDir = shift @_; # repoDir : /home/zkchen/cregit-data/git/original.repo-v2.17/git
-    my $filter = shift @_;
     my $currPath = File::Spec->catfile($repoDir, $directory->{path});
     
     return PrettyPrint::Error("unable to open [$currPath] directory") unless opendir(my $dh, $currPath);
@@ -201,7 +403,7 @@ sub get_directory_content {
 
         if (-d $contentPath) {
             $currObject = file_system_object($_, "d", $path);
-            get_directory_content($currObject, $repoDir, $filter);
+            get_directory_content($currObject);
             # skip empty directory or directory that has unrelated files
             next if !defined $currObject->{content};
         } elsif (-f $contentPath) {
@@ -220,6 +422,7 @@ sub get_directory_content {
     closedir $dh;
 }
 
+# sort directory content in a format: [directories][files]
 sub sort_directory_content {
     my @list = @{shift @_};
     my $currPath = shift @_;

@@ -239,7 +239,7 @@ h1, pre
 #stats-table
 {
 	width: 100%;
-	border: 1px solid var(--accent1);
+	border: 1px solid #ddd;
 	border-radius: 5px;
 /*	table-layout: fixed;*/
 }
@@ -348,3 +348,79 @@ h1, pre
 {
 	opacity: 0;
 }
+
+/* content list margin space */
+li 
+{
+    margin-top: 6px;
+}
+
+/* content stats graph box */
+.content-stats-box {
+    width: 70%;
+    float: right;
+}
+.content-stats-graph {
+    float: left;
+    border: 1px solid #dddddd;
+    border-radius: 3px;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    white-space: nowrap;
+    display: flex;
+    padding: 0;
+}
+
+.content-color {
+    line-height: 15px;
+    text-indent: -9999px;
+}
+
+.content-color:first-child {
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+}
+
+.content-color:last-child {
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+button {
+    -webkit-appearance: button;
+}
+
+.constent-stats-table-wrapper {
+	width: 100%;
+	float: left;
+	display: none;
+}
+
+.content-stats-table {
+	float: right;
+	width: 70%;
+	padding: 0px;
+	margin-bottom: 10px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+}
+
+a.breadcrumb-nav {
+	color: var(--palette4);
+	text-decoration: none;
+}
+
+a.breadcrumb-nav:hover {
+	color: dodgerblue;
+}
+
+.content-name {
+	max-width: 30%;
+    display: inline-block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+

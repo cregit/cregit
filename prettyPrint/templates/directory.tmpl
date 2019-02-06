@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  
+  <title><TMPL_VAR directory_name> &#183; cregit</title>
+  
+  <!-- Script -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.0/jquery.contextMenu.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.0/jquery.ui.position.js"></script>
+  <script src="<TMPL_VAR web_root>/public/js/cregit.js"></script>
+  <script src="<TMPL_VAR web_root>/public/js/cregit-directory.js"></script>
+
+	
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.0/jquery.contextMenu.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+  <link rel="stylesheet" href="<TMPL_VAR web_root>/public/css/cregit-colors.css">
+  <link rel="stylesheet" href="<TMPL_VAR web_root>/public/css/cregit-directory.css">
+  <!-- <link rel="stylesheet" href="<TMPL_VAR web_root>/public/css/poole.css"> -->
+  <!-- <link rel="stylesheet" href="<TMPL_VAR web_root>/public/css/syntax.css"> -->
+  <!-- <link rel="stylesheet" href="<TMPL_VAR web_root>/public/css/lanyon.css"> -->
+  <!-- <link rel="stylesheet" href="<TMPL_VAR web_root>/public/css/cregit.css"> -->
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+  
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+<body class="flex-columns">
+	<div id="navbar">
+		<div id="navbar-title-box" class="flex-columns">
+      <h1 id="title-text"><TMPL_VAR ESCAPE=HTML directory_name></h1>
+      <span id="origin-text">
+        <TMPL_LOOP breadcrumb_nav>
+            <a class="breadcrumb-nav" href="<TMPL_VAR path>"><TMPL_VAR name></a> &nbsp;&nbsp;
+        </TMPL_LOOP>
+      </span>
+    </div>
+    <div id="navbar-option-box" class="flex-columns flex-vcenter">
+      <span>Highlighting</span>
+      <select id="select-highlighting" class="select-highlighting">
+        <option value="reset">Reset All</option>
+        <option value="author" selected="selected">By Author</option>
+        <option value="age">By Age</option>
+        <option disabled>──────────</option>
+        <TMPL_LOOP contributors_by_name>
+            <option id="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></option>
+        </TMPL_LOOP>
+      </select>
+    </div>	
+    <div id="navbar-date-range" class="flex-columns flex-vcenter">
+      <div><input id="date-from" type="date"><input id="date-to" type="date"></div>
+      <div id="date-slider-range"></div>
+      <div id="date-gradient" class="invisible"></div>
+    </div>
+	</div>
+	
+	<div id="main-content">
+    <div id="minimap" class="minimap layout-minimap">
+      <div id="minimap-view-shade" class="minimap-view-shade"></div>
+      <canvas id="minimap-image" class="minimap-image"></canvas>
+      <div id="minimap-view-frame" class="minimap-view"></div>
+    </div>
+
+    <div id="main-body" class="flex-columns">
+      <div id="stats-view">
+        <TMPL_IF has_subdir>
+        <h2>Subdirectories:</h2>
+        <ul>
+          <TMPL_LOOP directory_list>
+            <li>
+            <a class="content-name" href="<TMPL_VAR url>" title="<TMPL_VAR name>"><TMPL_VAR name></a>
+            <div class="content-stats-box">
+              <button type="button" class="content-stats-graph" style="width: <TMPL_VAR width>;">
+                <TMPL_LOOP authors>
+                  <span class="content-color author<TMPL_VAR id>" style="width: <TMPL_VAR token_percent>; background-color: var(--author-color);" title="<TMPL_VAR name> : <TMPL_VAR token_percent>"><TMPL_VAR name></span>
+                </TMPL_LOOP>
+              </button>
+            </div>
+            <div class="constent-stats-table-wrapper">
+              <div class="content-stats-table">
+              <table id="stats-table">
+                <TMPL_LOOP authors>
+                  <tr>
+                    <td><span class="author<TMPL_VAR id> author-label"><TMPL_VAR name></span></td>
+                    <td><TMPL_VAR token_percent></td>
+                    <td><TMPL_VAR tokens></td>
+                  </tr>
+                </TMPL_LOOP>
+              </table>
+              </div>
+            </div>
+          </li>
+          </TMPL_LOOP>    
+        </ul>
+        </TMPL_IF>
+
+        <TMPL_IF has_subdir>
+          <TMPL_IF has_file>
+            <hr class="flex-ruler">
+          </TMPL_IF>
+        </TMPL_IF>
+
+        <TMPL_IF has_file>
+        <h2>Files:</h2>
+			  <ul>
+          <TMPL_LOOP file_list>
+  				<li>
+            <a class="content-name" href="<TMPL_VAR url>" title="<TMPL_VAR name>"><TMPL_VAR name></a>
+            <div class="content-stats-box">
+              <button type="button" class="content-stats-graph" style="width: <TMPL_VAR width>;">
+                <TMPL_LOOP authors>
+                  <span class="content-color author<TMPL_VAR id>" style="width: <TMPL_VAR token_percent>; background-color: var(--author-color)" title="<TMPL_VAR name> : <TMPL_VAR token_percent>"><TMPL_VAR name></span>
+                </TMPL_LOOP>
+              </button>
+            </div>
+            <div class="constent-stats-table-wrapper">
+              <div class="content-stats-table">
+              <table id="stats-table">
+                <TMPL_LOOP authors>
+                  <tr>
+                    <td><span class="author<TMPL_VAR id> author-label"><TMPL_VAR name></span></td>
+                    <td><TMPL_VAR token_percent></td>
+                    <td><TMPL_VAR tokens></td>
+                  </tr>
+                </TMPL_LOOP>
+              </table>
+              </div>
+            </div>
+          </li>
+          </TMPL_LOOP>
+			  </ul>
+        </TMPL_IF>
+      </div>
+
+      <hr class="flex-ruler">
+
+        <div id="stats-view">
+        <table id="stats-table">
+          <caption>Contributors: <span id="contributor-count"><TMPL_VAR contributors_count></span></caption>
+            <thead>
+              <tr>
+                <th>Author</th>
+                <th>Tokens</th>
+                <th>Token Proportion</th>
+                <th>Commits</th>
+                <th>Commit Proportion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <TMPL_LOOP contributors>
+                <tr class="contributor-row">
+                  <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
+                  <td><TMPL_VAR tokens></td>
+                  <td><TMPL_VAR token_percent></td>
+                  <td><TMPL_VAR commits></td>
+                  <td><TMPL_VAR commit_percent></td>
+                </tr>
+              </TMPL_LOOP>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td><TMPL_VAR total_tokens></td>
+                <td></td>
+                <td><TMPL_VAR total_commits></td>
+                <td></td>
+              </tr>
+            </tfoot>
+        </table>
+      </div>
+      
+    </div>
+  </div>
+
+</body>
+</html>

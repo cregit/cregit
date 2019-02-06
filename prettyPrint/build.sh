@@ -1,7 +1,7 @@
 #!/bin/bash
 
-LOCAL_PREVIEW=no
-OUTPUT_DIR="/home/zkchen/temp"
+LOCAL_PREVIEW=yes
+OUTPUT_DIR="/home/zkchen/public_html"
 HOST_URL="http://o.cs.uvic.ca:20810/~zkchen"
 GIT_URL="http://github.com/git/git"
 
@@ -21,5 +21,5 @@ fi
 
 set -x # activate debugging mode
 perl prettyPrint.pl ${FLAGS} "${ORIGINAL_REPO}" "${BLAME_DIRECTORY}" "${TOKEN_DIRECTORY}" "${TOKEN_DB}" "${PERSONS_DB}" "${OUTPUT_DIR}"
-#cp -r templates/public/. ${OUTPUT_DIR}/public
+cp -r templates/public/. ${OUTPUT_DIR}/public
 

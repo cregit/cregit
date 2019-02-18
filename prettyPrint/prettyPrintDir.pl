@@ -81,29 +81,6 @@ sub print_dir_info {
 
     my @parentPath = ();
     process_directory_content($rootDirectoryContent, \@parentPath);
-
-    # update directory contents
-    # get_directory_content($rootDirectoryContent, $repoDir, $filter);
-    # update directory statistics
-    # print "collecting stats...\n";
-    # get_directory_stats($rootDirectoryContent, $repoDir, $blameDir, $lineDir);
-    # print "updating directory stats...\n";
-    # update_directory_stats($rootDirectoryContent);
-
-    # my @printDir = grep {$_->{type} eq "d"} @{$rootDirectoryContent->{content}}; 
-    # foreach (@printDir) {
-    #     print "====================\n";
-    #     print "directory : $_->{name}\n contentStats : \n";
-    #     print Dumper($_->{contentStats});
-    #     print "authors : \n";
-
-    #     my $authors = $_->{authors};
-    #     foreach (@$authors) {
-    #         my $author = $_;
-    #         print "$author->{id} $author->{name} : $author->{token_percent} $author->{tokens}\n";
-    #     }
-    # }
-    # print Dumper(\$rootDirectoryContent);
 }
 
 sub process_directory_content {
@@ -160,6 +137,8 @@ sub process_directory_content {
 
             $currObject->{contentStats}->{commits} = $fileStats->{commits};
             $currObject->{contentStats}->{tokens} = $fileStats->{tokens};
+            $currObject->{contentStats}->{line_counts} = $fileStats->{line_count};
+            $currObject->{contentStats}->{file_counts}++;
             $currObject->{authors} = $authors;
             $currObject->{commits} = $commits;
 
@@ -171,6 +150,8 @@ sub process_directory_content {
         # update current directory
         $directory->{contentStats}->{commits} += $currObject->{contentStats}->{commits};
         $directory->{contentStats}->{tokens} += $currObject->{contentStats}->{tokens};
+        $directory->{contentStats}->{line_counts} += $currObject->{contentStats}->{line_counts};
+        $directory->{contentStats}->{file_counts} += $currObject->{contentStats}->{file_counts};
 
         # update directory authors list
         foreach (@{$currObject->{authors}}) {
@@ -217,6 +198,7 @@ sub update_dir_and_file_stats {
     my $auhtors = $directory->{authors};
 
     my $tokenLen = 0;
+    my $fileTokenLen = 0; # for the use of scale between files within the directory
     foreach (@dirList) {
         my $dir = $_;
         $tokenLen = $dir->{contentStats}->{tokens} if $dir->{contentStats}->{tokens} > $tokenLen;
@@ -225,26 +207,40 @@ sub update_dir_and_file_stats {
             my $dirAuthor = $_;
             die "author $dirAuthor->{name} in directory $dir->{name} not found \n" unless my ($matchedAuthor) = grep {$dirAuthor->{name} eq $_->{name}} @{$auhtors};
             $dirAuthor->{id} = $matchedAuthor->{id};
+            $dirAuthor->{color_id} = ($dirAuthor->{id} > 60 ? "Grey" : $dirAuthor->{id});
         }
+        $dir->{contentStats}->{authors} = scalar @{$dirAuthors};
     }
     foreach (@fileList) {
         my $file = $_;
         $tokenLen = $file->{contentStats}->{tokens} if $file->{contentStats}->{tokens} > $tokenLen;
+        $fileTokenLen = $file->{contentStats}->{tokens} if $file->{contentStats}->{tokens} > $fileTokenLen;
         my $fileAuthors = $file->{authors};
         foreach (@{$fileAuthors}) {
             my $fileAuthor = $_;
             die "author $fileAuthor->{name} in file $file->{name} not found \n" unless my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$auhtors};
             $fileAuthor->{id} = $matchedAuthor->{id};
+            $fileAuthor->{color_id} = ($fileAuthor->{id} > 60 ? "Grey" : $fileAuthor->{id}); # assign grey color to authors ranked below 60
         }
+        $file->{contentStats}->{authors} = scalar @{$fileAuthors};
     }
 
     foreach (@dirList) {
+        $_->{line_counts} = $_->{contentStats}->{line_counts};
+        $_->{file_counts} = $_->{contentStats}->{file_counts};
+        $_->{author_counts} = $_->{contentStats}->{authors};
+        $_->{total_tokens} = $_->{contentStats}->{tokens};
         $_->{url} = File::Spec->catfile($webRoot, $_->{path});
         $_->{width} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $tokenLen);
     }
     foreach (@fileList) {
+        $_->{line_counts} = $_->{contentStats}->{line_counts};
+        $_->{file_counts} = "-";
+        $_->{author_counts} = $_->{contentStats}->{authors};
+        $_->{total_tokens} = $_->{contentStats}->{tokens};
         $_->{url} = File::Spec->catfile($webRoot, $_->{path}.".html");
         $_->{width} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $tokenLen);
+        $_->{width_in_files} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $fileTokenLen);
     }
 }
 
@@ -278,6 +274,8 @@ sub print_directory {
     $template->param(has_file => scalar @fileList);
     $template->param(directory_list => \@dirList);
     $template->param(file_list => \@fileList);
+    $template->param(commits => $directory->{commits});
+    $template->param(has_hidden => (scalar @contributorsByName)>20);
 
     my $file = undef;
     if ($outputFile ne "") {
@@ -302,6 +300,7 @@ sub update_directory_stats {
         my $author = $_;
 
         $author->{id} = $index++;
+        $author->{hidden} = $author->{id} > 20; # hide authors ranked below 20
         $author->{commit_proportion} = $author->{commits} / $totalCommit;
         $author->{token_proportion} = $author->{tokens} / $totalToken;
         $author->{commit_percent} = sprintf("%.2f\%", 100.0 * $author->{commit_proportion});
@@ -312,21 +311,6 @@ sub update_directory_stats {
         die "no matched commits found on author : $author->{name}. \n" unless @matchedCommits;
     }
     $directory->{authors} = [@sortedAuthors];
-
-    # update author id in commits list
-    # foreach (@{$directory->{commits}}) {
-    #     my $commit = $_;
-    #     my $commitAuthor = $commit->{author};
-
-    #     my ($matchedCommit) = grep {$_->{name} eq $commitAuthor} @{$directory->{authors}};
-    # }
-
-    # foreach (@{$directory->{content}}) {
-    #     my $content = $_;
-
-    #     # update sub-directory if there is any
-    #     update_directory_stats($content) if $content->{type} eq "d";
-    # }
 }
 
 sub get_directory_stats {
@@ -452,7 +436,13 @@ sub file_system_object {
         type => $fsType,
         path => $fsPath,
         content => undef,
-        contentStats => {commits => 0, tokens => 0},
+        contentStats => {
+            commits => 0, 
+            tokens => 0,
+            line_counts => 0,
+            file_counts => 0,
+            authors => 0
+            },
         authors => undef,
         commits => undef
     };

@@ -76,33 +76,81 @@
     <div id="main-body" class="flex-columns">
       <div id="stats-view">
         <TMPL_IF has_subdir>
-        <h2>Subdirectories:</h2>
+        <h2>
+        <TMPL_IF has_file>
+        <button id="hide-subdirectory-btn" class="toggle-btn" title="hide subdirectories to see relationship between each file">&minus;</button>&nbsp;
+        </TMPL_IF>
+        Subdirectories:</h2>
         <ul>
+          <table id="content-list">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Lines</th>
+                <th>Files</th>
+                <th>Authors</th>
+                <th>
+                <button id="abs-rel-toggle" class="toggle-btn" title="click to see the absolute scale for each content">change scale</button> &nbsp;
+                Color Graph By Token Proportion</th>
+              </tr>
+            </thead>
+          </table>
+          <span id="subdirectory-list">
           <TMPL_LOOP directory_list>
-            <li>
-            <a class="content-name" href="<TMPL_VAR url>" title="<TMPL_VAR name>"><TMPL_VAR name></a>
-            <div class="content-stats-box">
-              <button type="button" class="content-stats-graph" style="width: <TMPL_VAR width>;">
-                <TMPL_LOOP authors>
-                  <span class="content-color author<TMPL_VAR id>" style="width: <TMPL_VAR token_percent>; background-color: var(--author-color);" title="<TMPL_VAR name> : <TMPL_VAR token_percent>"><TMPL_VAR name></span>
-                </TMPL_LOOP>
-              </button>
-            </div>
+            <table id="content-list">
+              <tbody>
+                <tr>
+                  <td>
+                    <a class="content-name" href="<TMPL_VAR url>" title="<TMPL_VAR name>"><TMPL_VAR name></a>
+                  </td>
+                  <td>
+                    <TMPL_VAR line_counts>
+                  </td>
+                  <td>
+                    <TMPL_VAR file_counts>
+                  </td>
+                  <td>
+                    <TMPL_VAR author_counts>
+                  </td>
+                  <td class="graph-table-data">
+                    <button class="content-stats-graph" style="width: <TMPL_VAR width>;">
+                      <TMPL_LOOP authors>
+                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>"><TMPL_VAR name></span>
+                      </TMPL_LOOP>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <div class="constent-stats-table-wrapper">
               <div class="content-stats-table">
               <table id="stats-table">
+                <thead>
+                  <tr>
+                    <th>Author Name</th>
+                    <th>Token</th>
+                    <th>Token Proportion</th>
+                  </tr>
+                </thead>
                 <TMPL_LOOP authors>
                   <tr>
-                    <td><span class="author<TMPL_VAR id> author-label"><TMPL_VAR name></span></td>
-                    <td><TMPL_VAR token_percent></td>
+                    <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
                     <td><TMPL_VAR tokens></td>
+                    <td><TMPL_VAR token_percent></td>
                   </tr>
                 </TMPL_LOOP>
+                <tfoot>
+                    <tr>
+                      <td><b>Total Tokens</b></td>
+                      <td><TMPL_VAR total_tokens></td>
+                      <td>100%</td>
+                    </tr>
+                  </tfoot>
               </table>
               </div>
             </div>
-          </li>
-          </TMPL_LOOP>    
+          </TMPL_LOOP>
+          </span>    
         </ul>
         </TMPL_IF>
 
@@ -115,30 +163,74 @@
         <TMPL_IF has_file>
         <h2>Files:</h2>
 			  <ul>
+          <TMPL_UNLESS has_subdir>
+            <table id="content-list">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Lines</th>
+                <th>Files</th>
+                <th>Authors</th>
+                <th>
+                <button id="abs-rel-toggle" class="toggle-btn">change scale</button> &nbsp;
+                Color Graph By Token Proportion</th>
+              </tr>
+            </thead>
+          </table>
+          </TMPL_UNLESS>
           <TMPL_LOOP file_list>
-  				<li>
-            <a class="content-name" href="<TMPL_VAR url>" title="<TMPL_VAR name>"><TMPL_VAR name></a>
-            <div class="content-stats-box">
-              <button type="button" class="content-stats-graph" style="width: <TMPL_VAR width>;">
-                <TMPL_LOOP authors>
-                  <span class="content-color author<TMPL_VAR id>" style="width: <TMPL_VAR token_percent>; background-color: var(--author-color)" title="<TMPL_VAR name> : <TMPL_VAR token_percent>"><TMPL_VAR name></span>
-                </TMPL_LOOP>
-              </button>
-            </div>
+            <table id="content-list">
+              <tbody>
+                <tr>
+                  <td>
+                    <a class="content-name" href="<TMPL_VAR url>" title="<TMPL_VAR name>"><TMPL_VAR name></a>
+                  </td>
+                  <td>
+                    <TMPL_VAR line_counts>
+                  </td>
+                  <td>
+                    <TMPL_VAR file_counts>
+                  </td>
+                  <td>
+                    <TMPL_VAR author_counts>
+                  </td>
+                  <td class="graph-table-data">
+                    <button class="content-stats-graph file-list" style="width: <TMPL_VAR width>;" data-content-width="<TMPL_VAR width>" data-file-width="<TMPL_VAR width_in_files>">
+                      <TMPL_LOOP authors>
+                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>"><TMPL_VAR name></span>
+                      </TMPL_LOOP>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <div class="constent-stats-table-wrapper">
               <div class="content-stats-table">
               <table id="stats-table">
+                <thead>
+                  <tr>
+                    <th>Author Name</th>
+                    <th>Token</th>
+                    <th>Token Proportion</th>
+                  </tr>
+                </thead>
                 <TMPL_LOOP authors>
                   <tr>
-                    <td><span class="author<TMPL_VAR id> author-label"><TMPL_VAR name></span></td>
-                    <td><TMPL_VAR token_percent></td>
+                    <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
                     <td><TMPL_VAR tokens></td>
+                    <td><TMPL_VAR token_percent></td>
                   </tr>
                 </TMPL_LOOP>
+                <tfoot>
+                    <tr>
+                      <td><b>Total Tokens</b></td>
+                      <td><TMPL_VAR total_tokens></td>
+                      <td>100%</td>
+                    </tr>
+                  </tfoot>
               </table>
               </div>
             </div>
-          </li>
           </TMPL_LOOP>
 			  </ul>
         </TMPL_IF>
@@ -160,7 +252,7 @@
             </thead>
             <tbody>
               <TMPL_LOOP contributors>
-                <tr class="contributor-row">
+                <tr class="contributor-row <TMPL_IF hidden>hidden</TMPL_IF>">
                   <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
                   <td><TMPL_VAR tokens></td>
                   <td><TMPL_VAR token_percent></td>
@@ -168,6 +260,15 @@
                   <td><TMPL_VAR commit_percent></td>
                 </tr>
               </TMPL_LOOP>
+            </tbody>
+            <tbody>
+              <tr>
+                <td colspan="5" class="expand-stats-table <TMPL_UNLESS has_hidden>hidden</TMPL_UNLESS>">
+                  <button id="expand-stats-table-btn" class="toggle-btn">
+                  click to expand table&#x25BC;
+                  </button>
+                </td>
+              </tr>
             </tbody>
             <tfoot>
               <tr>
@@ -183,6 +284,20 @@
       
     </div>
   </div>
+
+  <!-- Data Records -->
+  <script>
+    var authors = [
+      <TMPL_LOOP contributors_by_name>
+      { "authorId":"<TMPL_VAR id>", "name":"<TMPL_VAR ESCAPE=JS name>" },
+      </TMPL_LOOP>
+      ];
+    var commits = [
+      <TMPL_LOOP commits>
+      { "cid":"<TMPL_VAR cid>", "timestamp":<TMPL_VAR epoch>, "authorId":<TMPL_VAR author_id>, "summary":"<TMPL_VAR ESCAPE=JS summary>", "repoUrl":"<TMPL_VAR ESCAPE=JS repoUrl>" },
+      </TMPL_LOOP>
+      ];
+  </script>
 
 </body>
 </html>

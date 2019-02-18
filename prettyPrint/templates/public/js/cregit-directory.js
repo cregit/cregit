@@ -1,11 +1,71 @@
 $(document).ready(function() {
 
-	$(".content-stats-box").on("click", ".content-stats-graph", function() {
-		$contentGraph = $(this);
-		$contentDetail = $contentGraph.parent().next("div");
-		$contentDetail.slideToggle();
+	$(".content-stats-graph").click(function() {
+		var contentGraph = $(this);
+		contentDetail = contentGraph.parents("#content-list").next("div");
+		contentDetail.slideToggle();
+		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
 	});
-	
+
+	$("#abs-rel-toggle").click(function() {
+		if ($(this).text() == "change scale") { $(this).removeAttr("title"); }
+		if ($(this).hasClass("active")) {
+			$(this).text("proportional scale");
+			$("button.content-stats-graph").each(function() {
+				$(this).removeClass("abs-toggle");
+			});
+		} else {
+			$(this).text("absolute scale");
+			$("button.content-stats-graph").each(function() {
+				$(this).addClass("abs-toggle");
+			});
+		}
+
+		$(this).toggleClass("active");
+		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
+	});
+
+	$(".graph-table-data").mouseenter(function() {
+		if ($("#abs-rel-toggle").hasClass("active")) { return; }
+		$(this).children().addClass("full-scale");
+	}); 
+
+	$(".graph-table-data").mouseleave(function() {
+		if ($("#abs-rel-toggle").hasClass("active")) { return; }
+		$(this).children().removeClass("full-scale");
+	}); 
+
+	$("#hide-subdirectory-btn").click(function() {
+		$("#subdirectory-list").slideToggle();
+		var statsGraphInFileList = $(".content-stats-graph.file-list");
+		var close = $(this).text() == "\u2212";
+
+		if (close) {
+			statsGraphInFileList.each(function() {
+				var width = $(this).data("fileWidth");
+				$(this).css("width", width);
+			});	
+			$(this).text("+");
+			$(this).prop("title", "show subdirectories to see relationship between the files and subdirectories");
+		} else {
+			statsGraphInFileList.each(function() {
+				var width = $(this).data("contentWidth");
+				$(this).css("width", width);
+			});	
+			$(this).text("\u2212");
+			$(this).prop("title", "hide subdirectories to see relationship between each file");
+		}
+		
+		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
+	});
+
+	$("button#expand-stats-table-btn").click(function() {
+		$("tr.contributor-row.hidden").each(function() {
+			$(this).removeClass("hidden");
+		});
+		$(this).parent().addClass("hidden");
+	});
+
 	var timeMin = commits[0].timestamp;
 	var timeMax = commits[commits.length - 1].timestamp;
 	var timeRange = timeMax - timeMin;
@@ -25,7 +85,7 @@ $(document).ready(function() {
 	var $window = $(window);
 	var $document = $(document);
 	var $minimap = $('#minimap');
-	var $spans = $('.cregit-span');
+	var $spans = $('.content-stats-graph');
 	var $minimapView = $('#minimap-view-shade,#minimap-view-frame');
 	var $navbar = $('#navbar');
 	var $contributor_rows = $("#stats-table > tbody > tr");
@@ -37,13 +97,27 @@ $(document).ready(function() {
 	var $statSelect = $('#select-stats');
 	var $content_groups = $(".content-group");
 	var $sourceView = $('#source-view');
-	var $content = $('#source-content');
+	var $content = $($('#stats-view').get(0));
 	var $lineNumbers = $("#line-numbers");
 	var $lineAnchors = undefined;
 	var $mainContent = $("#main-content");
 	var $dateGradient = $("#date-gradient");
 	var $dateSliderRange = $("#date-slider-range");
-	
+
+
+
+	function RepeatFunctionInTimeN(fn, interval, freq) {
+		interval = interval < 0 ? 1000 : interval;
+		freq = freq < 0 ? 500 : freq;
+
+		var timerId = setInterval(fn, freq);
+
+		setTimeout(function() {
+			clearInterval(timerId);
+		}, interval);
+
+	}	
+
 	// Processes large jquery objects in slices of N=length at rest intervals of I=interval (ms)
 	function ProcessSlices(jquery, length, interval, fn)
 	{
@@ -76,30 +150,22 @@ $(document).ready(function() {
 		};
 	}
 	
-	function ApplyHighlight()
-	{
-		var commitInfo = commits[this.dataset.cidx];
-		var date = new Date(commitInfo.timestamp * 1000);
-		var authorId = commitInfo.authorId;
-		var commitId = commitInfo.cid;
-		var highlightedCommitId = (highlightedCommit != undefined ? highlightedCommit.cid : undefined)
-		var groupId = this.parentElement.dataset.groupid;
-		
-		var dateOkay = highlightMode == 'commit' || date >= dateFrom && date <= dateTo;
-		var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
-		var commitOkay = highlightMode != 'commit' || commitId == highlightedCommitId;
-		var allOkay = dateOkay && authorOkay && commitOkay;
-		
-		$(this).removeClass('color-fade color-highlight color-age color-year color-pretty');
-		if (!allOkay)
-			$(this).addClass('color-fade');
-		if (highlightMode == 'age')
-			$(this).addClass('color-age')
+	function ApplyHighlight() {
+		var spanGroup = $(this).children();
+		spanGroup.each(function() {
+			var authorId = $(this).data("aid");
+			var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
+			var allOkay = authorOkay;
+
+			$(this).removeClass('color-graph-fade color-highlight color-age color-year color-pretty authorBlack');
+			if (authorId > 60 && selectedAuthorId) { $(this).removeClass(".authorGrey").addClass("authorBlack"); }
+			if (!allOkay) { $(this).addClass("color-graph-fade"); }
+		});
 	}
 	
 	function SetupAgeColors() {
-		var oldest = commits.reduce(function(x, y) { return (x.timestamp < y.timestamp ? x : y) });
-		var newest = commits.reduce(function(x, y) { return (x.timestamp > y.timestamp ? x : y) });
+		var oldest = commits.reduce(function(x, y) { return (x.timestamp < y.timestamp ? x : y); });
+		var newest = commits.reduce(function(x, y) { return (x.timestamp > y.timestamp ? x : y); });
 		var base = oldest.timestamp;
 		var range = newest.timestamp - oldest.timestamp;
 		
@@ -123,12 +189,12 @@ $(document).ready(function() {
 		var ageNew = convert(root.css("--age-new"));
 		
 		$spans.each(function() {
-			var commitInfo = commits[this.dataset.cidx]
-			var t = (commitInfo.timestamp - base) / range;
-			var color = (t < 0.5 ? lerp(ageOld, ageMid, 0) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
-			var htmlColor = "#" + ("000000" + color.toString(16)).substr(-6);
+			// var commitInfo = commits[this.dataset.cidx];
+			// var t = (commitInfo.timestamp - base) / range;
+			// var color = (t < 0.5 ? lerp(ageOld, ageMid, 0) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
+			// var htmlColor = "#" + ("000000" + color.toString(16)).substr(-6);
 
-			this.style.setProperty('--age-color', htmlColor);
+			// this.style.setProperty('--age-color', htmlColor);
 		});
 		
 		ageSetupDone = true;
@@ -137,7 +203,7 @@ $(document).ready(function() {
 	function UpdateHighlight() {
 		$spans.each(ApplyHighlight);
 		
-		RenderMinimap();
+		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
 	}
 	
 	function UpdateVisibility(groupId, lineStart, lineEnd) {
@@ -169,11 +235,11 @@ $(document).ready(function() {
 	function ResetHighlightMode() {
 		var highlightSelect = $highlightSelect.get(0);
 		var statSelect = $statSelect.get(0);
-		var date_from = $("#date-from").get(0)
+		var date_from = $("#date-from").get(0);
 		var date_to = $("#date-to").get(0);
 		
 		// Reset highlighting parameters
-		highlightMode = 'author'
+		highlightMode = 'author';
 		selectedAuthorId = undefined;
 		selectedCommit = undefined;
 		highlightedCommit = undefined;
@@ -190,7 +256,6 @@ $(document).ready(function() {
 		$dateGradient.addClass("invisible");
 		
 		// Update visuals
-		HideCommitInfo();
 		UpdateHighlight();
 	}
 	
@@ -203,7 +268,7 @@ $(document).ready(function() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.setTransform(canvas.width / $content.width(), 0, 0, canvas.height / $content.height(), 0, 0);
 		
-		
+		// check if current page needs minimap
 		var scrollVisible = $mainContent.get(0).scrollHeight > $mainContent.get(0).clientHeight;
 		if (!scrollVisible) {
 			$minimapView.addClass("hidden");
@@ -214,38 +279,28 @@ $(document).ready(function() {
 		var unitX = $content.width() / canvas.width;
 		var tabSize = $content.css("tab-size");
 		var content = $content.get(0);
-		var baseTop = content.offsetTop;
-		var baseLeft = content.offsetLeft;
+		var base = $(content).offset();
+		var baseTop = base.top;
+		var baseLeft = base.left;
 		ProcessSlices($spans, 500, 50, function(i, span) {
 			var s = $(span);
 			if (s.is(":hidden"))
 				return;
 			
-			var startTop = span.offsetTop - baseTop;
-			var startLeft = span.offsetLeft - baseLeft;
-			var text = s.text();
-			var lines = text.split("\n");
+			var x = s.offset();
+			var startTop = x.top - baseTop;
+			var startLeft = 0;
 			var lineHeight = 15;
 			var left = startLeft;
 			
 			ctx.font = $content.css("font-size") + " " + $content.css("font-family");
-			ctx.fillStyle = s.css("color");
-			for (var j = 0; j < lines.length; ++j) {
-				var line = lines[j].replace("\t", " ".repeat(tabSize));
-				var top = startTop + j * lineHeight;
-				var left = (j == 0 ? startLeft : 0);
-				var parts = line.split(/(\s{4,})/);
-				for (var k = 0; k < parts.length; ++k)
-				{
-					var txt = parts[k];
-					var width = Math.max(ctx.measureText(txt).width, unitX);
-					if (parts[k].trim() != "")
-						ctx.fillRect(left, top, width, lineHeight);
-					
-					if (txt != "")
-						left += width;
-				}
-			}
+			var childrenSpan = s.children();
+			childrenSpan.each(function() {
+				ctx.fillStyle = $(this).css("background-color");
+				var width = $(this).width();
+				ctx.fillRect(left, startTop, 1.5*width, lineHeight);
+				left += 1.5*width;
+			});
 		});
 		
 		UpdateMinimapViewPosition();
@@ -268,25 +323,10 @@ $(document).ready(function() {
 		var viewHeight = $mainContent.innerHeight();
 		var docHeight = $content.height();
 		var mapHeight = $minimap.height();
-		var mapViewHeightMax = $minimap.height()
+		var mapViewHeightMax = $minimap.height();
 		var mapViewHeight = (viewHeight / docHeight) * mapHeight;
 		
 		$minimapView.css('height', Math.min(mapViewHeight, mapViewHeightMax));
-	}
-	
-	function ShowCommitInfo(commitInfo, clicked) {
-		var authorId = commitInfo.authorId;
-		var authorName = authors[authorId].name;
-		var cid = commitInfo.cid;
-		var date = new Date(commitInfo.timestamp * 1000);
-		var summary = commitInfo.summary;
-		var styleClass = "author-label author" + authorId;
-    	        var repoUrl = commitInfo.repoUrl;
-	    show_commit_popup(cid, authorName, date, summary, repoUrl, styleClass, clicked);
-	}
-	
-	function HideCommitInfo() {
-		hide_commit_popup();
 	}
 	
 	function SortContributors(column, reverse)
@@ -325,7 +365,7 @@ $(document).ready(function() {
 		footers.get(3).innerHTML = stat.commits;
 		
 		var active_authors = 0;
-		var rows = $contributor_rows.get();
+		rows = $contributor_rows.get();
 		for (var i = 0; i < authors.length; ++i) {
 			var id = authors[i].authorId;
 			var row = $(rows[id]);
@@ -347,23 +387,6 @@ $(document).ready(function() {
 		countHeader.text(active_authors);
 		
 		SortContributors(sortColumn, sortReverse);
-	}
-	
-	function GenerateLineNumbers()
-	{
-		// Prevent reflow while adding line anchors
-		$lineNumbers.detach();
-		var lineNumbers = $lineNumbers.get(0);
-		for (var i = 1; i <= line_count; ++i) {
-			var a = document.createElement("a");
-			a.innerHTML = i;
-			a.href = ("#" + i);
-			a.className = "line-number";
-			lineNumbers.appendChild(a);
-		}
-		$content.before($lineNumbers);
-
-		$lineAnchors = $lineNumbers.children("a");
 	}
 	
 	function ParseFragmentString()
@@ -403,6 +426,7 @@ $(document).ready(function() {
 		var elem = $highlightSelect.get(0);
 		var option = elem.options[elem.selectedIndex];
 		highlightMode = option.value;
+
 		if (highlightMode == 'reset') {
 			ResetHighlightMode();
 			return;
@@ -443,7 +467,7 @@ $(document).ready(function() {
 		
 		dateFrom = document.getElementById("date-from").valueAsDate;
 		dateTo = document.getElementById("date-to").valueAsDate;
-		dateTo.setDate(dateTo.getDate() + 1)
+		dateTo.setDate(dateTo.getDate() + 1);
 		var timeStart = dateFrom.getTime() / 1000 - timeMin;
 		var timeEnd = dateTo.getTime() / 1000 - timeMin;
 		
@@ -539,58 +563,6 @@ $(document).ready(function() {
 			ResetHighlightMode();
 	}
 	
-	function CregitSpan_MouseOver(event)
-	{
-		event.stopPropagation();
-		if (selectedCommit != undefined)
-			return;
-		
-		highlightedCommit = commits[this.dataset.cidx]
-		ShowCommitInfo(highlightedCommit, false);
-		
-		if (line_count > 5000)
-			return; // Disable hot tracking on large source files.
-		if (highlightMode == 'commit')
-			UpdateHighlight();
-	}
-	
-	function CregitSpan_Click(event)
-	{
-		event.stopPropagation();
-		if (selectedCommit == commits[this.dataset.cidx])
-			return;
-		
-		selectedCommit = commits[this.dataset.cidx];
-		highlightedCommit = commits[this.dataset.cidx];
-		ShowCommitInfo(selectedCommit, true);
-		
-		if (highlightMode == 'commit')
-			UpdateHighlight();
-	}
-	
-	function SourceContent_MouseOver()
-	{
-		if (selectedCommit != undefined)
-			return;
-		
-		highlightedCommit = undefined;
-		HideCommitInfo();
-		
-		if (highlightMode == 'commit')
-			UpdateHighlight();
-	}
-	
-	function SourceContent_MouseLeave()
-	{
-		if (selectedCommit != undefined)
-			return;
-		
-		HideCommitInfo();
-			
-		if (highlightMode == 'commit')
-			UpdateHighlight();
-	}
-	
 	function MainContent_Click()
 	{
 		if (selectedCommit == undefined)
@@ -602,24 +574,6 @@ $(document).ready(function() {
 		
 		if (highlightMode == 'commit')
 			UpdateHighlight();
-	}
-	
-	function ContextMenuCopy_Click(itemKey, opt)
-	{
-		var cid = selectedCommit.cid
-		var $temp =  $("<textarea>");
-        $("body").append($temp);
-        $temp.val(cid).select();
-        document.execCommand("copy");
-        $temp.remove();
-	}
-	
-	function ContextMenuGithub_Click(itemKey, opt)
-	{
-		var location = new URL(git_url)
-		var url = location.toString() + "/commit/" + selectedCommit.cid;
-		
-		window.open(url, "cregit-window");
 	}
 	
 	function Window_Scroll()
@@ -638,12 +592,6 @@ $(document).ready(function() {
 	}
 	
 	$contributor_headers.click(ColumnHeader_Click);
-	
-	$spans.mouseover(CregitSpan_MouseOver);
-	$spans.click(CregitSpan_Click);
-	
-	$content.mouseover(SourceContent_MouseOver);
-	$content.mouseleave(SourceContent_MouseLeave);
 	
 	$("#main-content").click(MainContent_Click);
 
@@ -674,10 +622,11 @@ $(document).ready(function() {
 	$(window).bind("hashchange", Window_HashChange);
 	
 	UpdateMinimapViewSize();
+	RenderMinimap();
+
 	SetupAgeColors();
 	
-	GenerateLineNumbers();
 	ParseFragmentString();
 	
-	initialize_commit_popup(git_url);
+	// initialize_commit_popup(git_url);
 });

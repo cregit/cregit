@@ -66,10 +66,7 @@ $(document).ready(function() {
 		$(this).parent().addClass("hidden");
 	});
 
-	// var timeMin = commits[0].timestamp;
-	// var timeMax = commits[commits.length - 1].timestamp;
 	var timeRange;
-	
 	var highlightMode = 'author';
 	var selectedAuthorId = undefined;
 	var selectedCommit = undefined;
@@ -156,14 +153,6 @@ $(document).ready(function() {
 		var authorId;
 		var tokenCount;
 		
-		// var yearFrom = dateFrom.getFullYear();
-		// var monthFrom = dateFrom.getMonth();
-		// var newDateFrom = new Date(yearFrom, monthFrom, 1, 0, 0, 0);
-
-		// var yearTo = dateTo.getFullYear();
-		// var monthTo = dateTo.getMonth();
-		// var newDateTo = new Date(yearTo, monthTo, 1, 0, 0, 0);
-
 		function groupMatch(dateGroup) {
 			var timestamp = dateGroup.timestamp;
 			var group = dateGroup.group;
@@ -444,29 +433,15 @@ $(document).ready(function() {
 			return;
 		
 		dateFrom = document.getElementById("date-from").valueAsDate;
+		dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1, 0, 0, 0);
 		dateTo = document.getElementById("date-to").valueAsDate;
-
-		// boundary case handling
-		var newMonth, newFullYear;
-		if (dateFrom.getTime()/1000 < timeMin) {
-			dateFrom.setTime(timeMin * 1000);
-		} else if (dateFrom.getTime() > dateTo.getTime()) {
-			dateFrom = dateTo;
-		}
-
-		if (dateTo.getTime()/1000 > timeMax) {
-			dateTo.setTime(timeMax * 1000);
-		} else if (dateTo.getTime() < dateFrom.getTime()) {
-			dateTo = dateFrom;
-		}
+		dateTo = new Date(dateTo.getFullYear(), dateTo.getMonth(), 1, 0, 0, 0);
 
 		var timeStart = dateFrom.getTime() / 1000 - timeMin;
 		var timeEnd = dateTo.getTime() / 1000 - timeMin;
 		
 		guiUpdate = true;
 		$dateSliderRange.slider("values", [timeStart, timeEnd]);
-		$("#date-from").get(0).valueAsDate = dateFrom;
-		$("#date-to").get(0).valueAsDate = dateTo;
 		guiUpdate = false;
 		
 		UpdateHighlight();
@@ -486,14 +461,14 @@ $(document).ready(function() {
 		// reformat the dateFrom and dateTo to only allows user to change month and year
 		var yearFrom = dateFrom.getFullYear();
 		var monthFrom = dateFrom.getMonth();
-		var newDateFrom = new Date(yearFrom, monthFrom, 1, 0, 0, 0);
+		dateFrom = new Date(yearFrom, monthFrom, 1, 0, 0, 0);
 
 		var yearTo = dateTo.getFullYear();
 		var monthTo = dateTo.getMonth();
-		var newDateTo = new Date(yearTo, monthTo, 1, 0, 0, 0);
+		dateTo = new Date(yearTo, monthTo, 1, 0, 0, 0);
 
-		$("#date-from").get(0).valueAsDate = newDateFrom;
-		$("#date-to").get(0).valueAsDate = newDateTo;
+		$("#date-from").get(0).valueAsDate = dateFrom;
+		$("#date-to").get(0).valueAsDate = dateTo;
 		guiUpdate = false;
 		
 		this.UpdateHighlight();

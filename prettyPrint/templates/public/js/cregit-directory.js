@@ -4,10 +4,10 @@ $(document).ready(function() {
 		var contentGraph = $(this);
 		contentDetail = contentGraph.parents("#content-list").next("div");
 		contentDetail.slideToggle();
-		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
+		RepeatFunctionInTimeN(RenderMinimap, 500, 500);
 	});
 
-	$("#abs-rel-toggle").click(function() {
+	$("#abs-prop-toggle").click(function() {
 		if ($(this).text() == "change scale") { $(this).removeAttr("title"); }
 		if ($(this).hasClass("active")) {
 			$(this).text("proportional scale");
@@ -22,16 +22,16 @@ $(document).ready(function() {
 		}
 
 		$(this).toggleClass("active");
-		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
+		RepeatFunctionInTimeN(RenderMinimap, 500, 500);
 	});
 
 	$(".graph-table-data").mouseenter(function() {
-		if ($("#abs-rel-toggle").hasClass("active")) { return; }
+		if ($("#abs-prop-toggle").hasClass("active")) { return; }
 		$(this).children().addClass("full-scale");
 	}); 
 
 	$(".graph-table-data").mouseleave(function() {
-		if ($("#abs-rel-toggle").hasClass("active")) { return; }
+		if ($("#abs-prop-toggle").hasClass("active")) { return; }
 		$(this).children().removeClass("full-scale");
 	}); 
 
@@ -56,7 +56,7 @@ $(document).ready(function() {
 			$(this).prop("title", "hide subdirectories to see relationship between each file");
 		}
 		
-		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
+		RepeatFunctionInTimeN(RenderMinimap, 500, 500);
 	});
 
 	$("button#expand-stats-table-btn").click(function() {
@@ -66,9 +66,9 @@ $(document).ready(function() {
 		$(this).parent().addClass("hidden");
 	});
 
-	var timeMin = commits[0].timestamp;
-	var timeMax = commits[commits.length - 1].timestamp;
-	var timeRange = timeMax - timeMin;
+	// var timeMin = commits[0].timestamp;
+	// var timeMax = commits[commits.length - 1].timestamp;
+	var timeRange;
 	
 	var highlightMode = 'author';
 	var selectedAuthorId = undefined;
@@ -76,6 +76,7 @@ $(document).ready(function() {
 	var highlightedCommit = undefined;
 	var dateFrom = new Date(timeMin * 1000);
 	var dateTo = new Date(timeMax * 1000);
+	var spanGroupData = undefined;
 	
 	var guiUpdate = false;
 	var sortColumn = 1;
@@ -94,7 +95,6 @@ $(document).ready(function() {
 	var $contributor_footers = $("#stats-table > tfoot > tr > td");
 	var $contributor_row_container = $("#stats-table > tbody");
 	var $highlightSelect = $('#select-highlighting');
-	var $statSelect = $('#select-stats');
 	var $content_groups = $(".content-group");
 	var $sourceView = $('#source-view');
 	var $content = $($('#stats-view').get(0));
@@ -151,15 +151,65 @@ $(document).ready(function() {
 	}
 	
 	function ApplyHighlight() {
+		var dataScript = $(this).children("#data-script");
+		eval(dataScript.html());
+		var authorId;
+		var tokenCount;
+		
+		// var yearFrom = dateFrom.getFullYear();
+		// var monthFrom = dateFrom.getMonth();
+		// var newDateFrom = new Date(yearFrom, monthFrom, 1, 0, 0, 0);
+
+		// var yearTo = dateTo.getFullYear();
+		// var monthTo = dateTo.getMonth();
+		// var newDateTo = new Date(yearTo, monthTo, 1, 0, 0, 0);
+
+		function groupMatch(dateGroup) {
+			var timestamp = dateGroup.timestamp;
+			var group = dateGroup.group;
+			var date = new Date(timestamp * 1000);
+			var dateOkay = date >= dateFrom && date <= dateTo;
+			var authorOkay = group.find(function(authorToken) {
+				return authorToken.author_id == authorId;
+			});
+			return dateOkay && (undefined != authorOkay);
+		}
+
+		function getSpanLengthInPercentage(jquery) {
+			var authorId = jquery.data("aid");
+			var totalTokens = jquery.data("totalTokens");
+
+			var matchedGroup = spanGroupData.filter(groupMatch);
+
+			tokenCount = 0;
+			matchedGroup.forEach(function(dateGroup) {
+				var authorToken = dateGroup.group.find(function(authorToken) {
+					return authorToken.author_id == authorId;
+				});
+				tokenCount += authorToken.token_count;
+			});
+			
+			return tokenCount/totalTokens; 
+		}
+
 		var spanGroup = $(this).children();
 		spanGroup.each(function() {
-			var authorId = $(this).data("aid");
+			var colorSpan = $(this);
+			if (colorSpan.hasClass("hidden")) { return; }
+
+			authorId = colorSpan.data("aid");
+			var spanLenPercentage = parseFloat(colorSpan.data("widthPercent"));
+			var newLenPercentage = getSpanLengthInPercentage(colorSpan);
+			spanLenPercentage = spanLenPercentage * newLenPercentage;
+			colorSpan.css("width", spanLenPercentage+"%");
+			var authorName = colorSpan.text();
+			colorSpan.prop("title", authorName+" : "+tokenCount+" token(s)");
+
 			var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
 			var allOkay = authorOkay;
 
-			$(this).removeClass('color-graph-fade color-highlight color-age color-year color-pretty authorBlack');
-			if (authorId > 60 && selectedAuthorId) { $(this).removeClass(".authorGrey").addClass("authorBlack"); }
-			if (!allOkay) { $(this).addClass("color-graph-fade"); }
+			colorSpan.removeClass('color-graph-fade color-highlight color-age color-year color-pretty');
+			if (!allOkay) { colorSpan.addClass("color-graph-fade"); }
 		});
 	}
 	
@@ -203,38 +253,12 @@ $(document).ready(function() {
 	function UpdateHighlight() {
 		$spans.each(ApplyHighlight);
 		
-		RepeatFunctionInTimeN(RenderMinimap, 500, 100);
-	}
-	
-	function UpdateVisibility(groupId, lineStart, lineEnd) {
-		 // Prevent reflows.
-		$content.detach();
-		$lineNumbers.detach();
-		
-		$content_groups.each(function() {
-			if (groupId == "overall" || groupId == this.dataset.groupid)
-				$(this).removeClass("hidden");
-			else
-				$(this).addClass("hidden");
-		});
-		
-		$lineAnchors.each(function(i) {
-			var number = i + 1;
-			if (number >= lineStart && number <= lineEnd)
-				$(this).removeClass("hidden");
-			else
-				$(this).addClass("hidden");
-		});
-		
-		$sourceView.append($lineNumbers);
-		$sourceView.append($content);
-		
+		// RepeatFunctionInTimeN(RenderMinimap, 500, 50);
 		RenderMinimap();
 	}
 	
 	function ResetHighlightMode() {
 		var highlightSelect = $highlightSelect.get(0);
-		var statSelect = $statSelect.get(0);
 		var date_from = $("#date-from").get(0);
 		var date_to = $("#date-to").get(0);
 		
@@ -296,6 +320,8 @@ $(document).ready(function() {
 			ctx.font = $content.css("font-size") + " " + $content.css("font-family");
 			var childrenSpan = s.children();
 			childrenSpan.each(function() {
+				if ($(this).hasClass("hidden") == true)	{ return; }
+
 				ctx.fillStyle = $(this).css("background-color");
 				var width = $(this).width();
 				ctx.fillRect(left, startTop, 1.5*width, lineHeight);
@@ -356,39 +382,6 @@ $(document).ready(function() {
 		$contributor_row_container.append(rows);
 	}
 	
-	function UpdateContributionStats(stat)
-	{
-		var countHeader = $('#contributor-count');
-		var footers = $contributor_footers;
-		var rows = $contributor_rows;
-		footers.get(1).innerHTML = stat.tokens;
-		footers.get(3).innerHTML = stat.commits;
-		
-		var active_authors = 0;
-		rows = $contributor_rows.get();
-		for (var i = 0; i < authors.length; ++i) {
-			var id = authors[i].authorId;
-			var row = $(rows[id]);
-			var cells = row.find("td");
-			cells.get(0).childNodes[0].innerHTML = authors[i].name;
-			cells.get(1).innerHTML = stat.tokens_by_author[i];
-			cells.get(2).innerHTML = (stat.tokens_by_author[i] / stat.tokens * 100).toFixed(2) + '%';
-			cells.get(3).innerHTML = stat.commits_by_author[i];
-			cells.get(4).innerHTML = (stat.commits_by_author[i] / stat.commits * 100).toFixed(2) + '%';
-			
-			if (stat.tokens_by_author[i] > 0) {
-				row.removeClass("innactive-row");
-				active_authors++;
-			} else {
-				row.addClass("innactive-row");
-			}
-		}
-		
-		countHeader.text(active_authors);
-		
-		SortContributors(sortColumn, sortReverse);
-	}
-	
 	function ParseFragmentString()
 	{
 		var frag = location.hash.substr(1);
@@ -445,21 +438,6 @@ $(document).ready(function() {
 		UpdateHighlight();
 	}
 	
-	function StatSelect_Changed()
-	{
-		var elem = $statSelect.get(0);
-		var index = elem.selectedIndex;
-		UpdateContributionStats(stats[index]);
-		
-		var option = elem.options[elem.selectedIndex];
-		var groupId = option.value;
-		var lineStart = option.dataset.start;
-		var lineEnd = option.dataset.end;
-		UpdateVisibility(groupId, lineStart, lineEnd);
-		UpdateMinimapViewPosition();
-		UpdateMinimapViewSize();
-	}
-	
 	function DateInput_Changed()
 	{
 		if (guiUpdate)
@@ -467,12 +445,28 @@ $(document).ready(function() {
 		
 		dateFrom = document.getElementById("date-from").valueAsDate;
 		dateTo = document.getElementById("date-to").valueAsDate;
-		dateTo.setDate(dateTo.getDate() + 1);
+
+		// boundary case handling
+		var newMonth, newFullYear;
+		if (dateFrom.getTime()/1000 < timeMin) {
+			dateFrom.setTime(timeMin * 1000);
+		} else if (dateFrom.getTime() > dateTo.getTime()) {
+			dateFrom = dateTo;
+		}
+
+		if (dateTo.getTime()/1000 > timeMax) {
+			dateTo.setTime(timeMax * 1000);
+		} else if (dateTo.getTime() < dateFrom.getTime()) {
+			dateTo = dateFrom;
+		}
+
 		var timeStart = dateFrom.getTime() / 1000 - timeMin;
 		var timeEnd = dateTo.getTime() / 1000 - timeMin;
 		
 		guiUpdate = true;
 		$dateSliderRange.slider("values", [timeStart, timeEnd]);
+		$("#date-from").get(0).valueAsDate = dateFrom;
+		$("#date-to").get(0).valueAsDate = dateTo;
 		guiUpdate = false;
 		
 		UpdateHighlight();
@@ -489,8 +483,17 @@ $(document).ready(function() {
 		dateTo = new Date(timeEnd * 1000);
 		
 		guiUpdate = true;
-		$("#date-from").get(0).valueAsDate = dateFrom;
-		$("#date-to").get(0).valueAsDate = dateTo;
+		// reformat the dateFrom and dateTo to only allows user to change month and year
+		var yearFrom = dateFrom.getFullYear();
+		var monthFrom = dateFrom.getMonth();
+		var newDateFrom = new Date(yearFrom, monthFrom, 1, 0, 0, 0);
+
+		var yearTo = dateTo.getFullYear();
+		var monthTo = dateTo.getMonth();
+		var newDateTo = new Date(yearTo, monthTo, 1, 0, 0, 0);
+
+		$("#date-from").get(0).valueAsDate = newDateFrom;
+		$("#date-to").get(0).valueAsDate = newDateTo;
 		guiUpdate = false;
 		
 		this.UpdateHighlight();
@@ -563,19 +566,6 @@ $(document).ready(function() {
 			ResetHighlightMode();
 	}
 	
-	function MainContent_Click()
-	{
-		if (selectedCommit == undefined)
-			return;
-		
-		selectedCommit = undefined;
-		highlightedCommit = undefined;
-		HideCommitInfo();
-		
-		if (highlightMode == 'commit')
-			UpdateHighlight();
-	}
-	
 	function Window_Scroll()
 	{
 		UpdateMinimapViewPosition();
@@ -590,18 +580,30 @@ $(document).ready(function() {
 	{
 		ParseFragmentString();
 	}
+
+	function UpdateDate() {
+		var yearFrom = dateFrom.getFullYear();
+		var monthFrom = dateFrom.getMonth();
+		dateFrom = new Date(yearFrom, monthFrom, 1, 0, 0, 0);
+		timeMin = Math.round(dateFrom.getTime()/1000);
+
+		var yearTo = dateTo.getFullYear();
+		var monthTo = dateTo.getMonth();
+		dateTo = new Date(yearTo, monthTo+1, 1, 0, 0, 0);
+		timeMax = Math.round(dateTo.getTime()/1000);
+
+		timeRange = timeMax - timeMin; 
+	}
 	
 	$contributor_headers.click(ColumnHeader_Click);
 	
-	$("#main-content").click(MainContent_Click);
-
 	$highlightSelect.change(HighlightSelect_Changed);
 	$highlightSelect.ready(HighlightSelect_Changed);
 	
-	$statSelect.change(StatSelect_Changed);
-	
 	$("#date-from").change(DateInput_Changed);
 	$("#date-to").change(DateInput_Changed);
+
+	UpdateDate();
 	
 	$("#date-from").get(0).valueAsDate = dateFrom;
 	$("#date-to").get(0).valueAsDate = dateTo;
@@ -624,9 +626,7 @@ $(document).ready(function() {
 	UpdateMinimapViewSize();
 	RenderMinimap();
 
-	SetupAgeColors();
+	// SetupAgeColors();
 	
 	ParseFragmentString();
-	
-	// initialize_commit_popup(git_url);
 });

@@ -90,7 +90,7 @@
                 <th>Files</th>
                 <th>Authors</th>
                 <th>
-                <button id="abs-rel-toggle" class="toggle-btn" title="click to see the absolute scale for each content">change scale</button> &nbsp;
+                <button id="abs-prop-toggle" class="toggle-btn" title="click to see the absolute scale for each content">change scale</button> &nbsp;
                 Color Graph By Token Proportion</th>
               </tr>
             </thead>
@@ -115,8 +115,22 @@
                   <td class="graph-table-data">
                     <button class="content-stats-graph" style="width: <TMPL_VAR width>;">
                       <TMPL_LOOP authors>
-                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>"><TMPL_VAR name></span>
+                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>" data-total-tokens="<TMPL_VAR tokens>"  data-width-percent="<TMPL_VAR token_percent>"><TMPL_VAR name></span>
                       </TMPL_LOOP>
+                      <div id="data-script" class="hidden">
+                        var spanGroupData = [
+                          <TMPL_LOOP dateGroups>
+                          {
+                            "timestamp": <TMPL_VAR timestamp>,
+                            "group": [
+                              <TMPL_LOOP group>
+                                {"author_id": <TMPL_VAR author_id>, "token_count": <TMPL_VAR token_count>},
+                              </TMPL_LOOP>
+                            ]
+                          },
+                          </TMPL_LOOP>
+                        ]
+                      </div>
                     </button>
                   </td>
                 </tr>
@@ -134,7 +148,7 @@
                 </thead>
                 <TMPL_LOOP authors>
                   <tr>
-                    <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
+                    <td><span class="table-author author<TMPL_VAR color_id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
                     <td><TMPL_VAR tokens></td>
                     <td><TMPL_VAR token_percent></td>
                   </tr>
@@ -172,7 +186,7 @@
                 <th>Files</th>
                 <th>Authors</th>
                 <th>
-                <button id="abs-rel-toggle" class="toggle-btn">change scale</button> &nbsp;
+                <button id="abs-prop-toggle" class="toggle-btn">change scale</button> &nbsp;
                 Color Graph By Token Proportion</th>
               </tr>
             </thead>
@@ -197,8 +211,22 @@
                   <td class="graph-table-data">
                     <button class="content-stats-graph file-list" style="width: <TMPL_VAR width>;" data-content-width="<TMPL_VAR width>" data-file-width="<TMPL_VAR width_in_files>">
                       <TMPL_LOOP authors>
-                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>"><TMPL_VAR name></span>
+                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>" data-total-tokens="<TMPL_VAR tokens>" data-width-percent="<TMPL_VAR token_percent>"><TMPL_VAR name></span>
                       </TMPL_LOOP>
+                      <div id="data-script" class="hidden">
+                        var spanGroupData = [
+                          <TMPL_LOOP dateGroups>
+                          {
+                            "timestamp": <TMPL_VAR timestamp>,
+                            "group": [
+                              <TMPL_LOOP group>
+                                {"author_id": <TMPL_VAR author_id>, "token_count": <TMPL_VAR token_count>},
+                              </TMPL_LOOP>
+                            ]
+                          },
+                          </TMPL_LOOP>
+                        ]
+                      </div>
                     </button>
                   </td>
                 </tr>
@@ -216,7 +244,7 @@
                 </thead>
                 <TMPL_LOOP authors>
                   <tr>
-                    <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
+                    <td><span class="table-author author<TMPL_VAR color_id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
                     <td><TMPL_VAR tokens></td>
                     <td><TMPL_VAR token_percent></td>
                   </tr>
@@ -253,7 +281,7 @@
             <tbody>
               <TMPL_LOOP contributors>
                 <tr class="contributor-row <TMPL_IF hidden>hidden</TMPL_IF>">
-                  <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
+                  <td><span class="table-author author<TMPL_VAR color_id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
                   <td><TMPL_VAR tokens></td>
                   <td><TMPL_VAR token_percent></td>
                   <td><TMPL_VAR commits></td>
@@ -287,16 +315,8 @@
 
   <!-- Data Records -->
   <script>
-    var authors = [
-      <TMPL_LOOP contributors_by_name>
-      { "authorId":"<TMPL_VAR id>", "name":"<TMPL_VAR ESCAPE=JS name>" },
-      </TMPL_LOOP>
-      ];
-    var commits = [
-      <TMPL_LOOP commits>
-      { "cid":"<TMPL_VAR cid>", "timestamp":<TMPL_VAR epoch>, "authorId":<TMPL_VAR author_id>, "summary":"<TMPL_VAR ESCAPE=JS summary>", "repoUrl":"<TMPL_VAR ESCAPE=JS repoUrl>" },
-      </TMPL_LOOP>
-      ];
+    var timeMin = <TMPL_VAR time_min>;
+    var timeMax = <TMPL_VAR time_max>;
   </script>
 
 </body>

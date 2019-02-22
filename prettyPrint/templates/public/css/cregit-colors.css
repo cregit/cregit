@@ -98,5 +98,4 @@
 .author58 { --author-color: hsl(112, 052%, 031%); }
 .author59 { --author-color: hsl(151, 071%, 039%); }
 .author60 { --author-color: hsl(078, 058%, 049%); }
-.authorGrey { --author-color: #dddddd; } /* added for authors ranked below 60 */
 .authorBlack { --author-color: #4f4f4f; } /* selected authors ranked below 60 */

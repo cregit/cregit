@@ -257,6 +257,9 @@ sub get_template_parameters {
 				
 				$spanBreak = 0;
 			}
+
+			# update token counts for commit
+			$commits->{$cid}->{token_count}++;
 			
 			$contentGroup->{tokens}++;
 			$contentGroupAuthorStat->{tokens}++;
@@ -408,6 +411,7 @@ sub get_commit_stat {
 			epoch => str2time($date),
                         summary => $summary,
                         repoUrl => ($repoUrl || ""),
+						token_count => 0
 		};
 	}
 

@@ -357,7 +357,8 @@ ul {
 /* content stats graph box */
 .content-stats-graph {
     float: left;
-    border: 1px solid #dddddd;
+	border: 1px solid var(--highlight4);
+	background-color: var(--highlight4);
     border-radius: 3px;
     cursor: pointer;
     overflow: hidden;
@@ -380,7 +381,7 @@ ul {
 .content-color {
     line-height: 15px;
 	text-indent: -9999px;
-	transition: background-color 0.2s ease-in-out;
+	/* transition: background-color 0.2s ease-in-out;*/
 	background-color: var(--author-color);
 }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use Data::Dumper; # print stringified data
+use Date::Format;
 use Date::Parse;
 use File::Path;
 use File::Basename;
@@ -178,6 +179,7 @@ sub process_directory_content {
             # look for a matched commit
             my ($matchedCommit) = grep {$_->{cid} eq $commitId} @{$directory->{commits}};
             
+            $matchedCommit->{token_count} += $commit->{token_count} if $matchedCommit;
             next if $matchedCommit;
             # else add it to the diretory
             $directory->{commits}[scalar @{$directory->{commits}}] = dclone $commit;
@@ -191,11 +193,46 @@ sub process_directory_content {
     closedir $dh;
 }
 
+sub commits_to_dategroup {
+    my @commits = @{shift @_};
+    my @authors = @{shift @_};
+
+    my @dateGroups = ();
+    foreach (@commits) {
+        my $commit = $_;
+        my $commitAuthor = $commit->{author};
+        my $commitTokenCount = $commit->{token_count};
+        die "author $commitAuthor not found. \n" unless my ($matchedAuthor) = grep {$commitAuthor eq $_->{name}} @authors;
+        my $commitAuthorId = $matchedAuthor->{id};
+        my $commitDate = time2str("%Y-%m-01 00:00:00", $commit->{epoch});
+        my $dateGroupIndex = str2time($commitDate);
+
+        my ($dateGroup) = grep {$dateGroupIndex eq $_->{timestamp}} @dateGroups;
+
+        # create this date group if not defined
+        push (@dateGroups, {timestamp => $dateGroupIndex, group => ()}) if ! defined $dateGroup;
+
+        my ($targetDateGroup) = grep {$dateGroupIndex eq $_->{timestamp}} @dateGroups;
+        my ($groupWithAuthorId) = grep {$commitAuthorId eq $_->{author_id}} @{$targetDateGroup->{group}};
+
+        if (! defined $groupWithAuthorId) {
+            push (@{$targetDateGroup->{group}}, {
+                author_id => $commitAuthorId, 
+                token_count => $commitTokenCount
+            });
+        } else {
+            $groupWithAuthorId->{token_count} += $commitTokenCount;
+        }
+    }
+
+    return \@dateGroups;
+}
+
 sub update_dir_and_file_stats {
     my $directory = shift @_;
     my @dirList = @{shift @_};
     my @fileList = @{shift @_};
-    my $auhtors = $directory->{authors};
+    my $authors = $directory->{authors};
 
     my $tokenLen = 0;
     my $fileTokenLen = 0; # for the use of scale between files within the directory
@@ -205,12 +242,16 @@ sub update_dir_and_file_stats {
         my $dirAuthors = $dir->{authors};
         foreach (@{$dirAuthors}) {
             my $dirAuthor = $_;
-            die "author $dirAuthor->{name} in directory $dir->{name} not found \n" unless my ($matchedAuthor) = grep {$dirAuthor->{name} eq $_->{name}} @{$auhtors};
+            die "author $dirAuthor->{name} in directory $dir->{name} not found \n" unless my ($matchedAuthor) = grep {$dirAuthor->{name} eq $_->{name}} @{$authors};
             $dirAuthor->{id} = $matchedAuthor->{id};
-            $dirAuthor->{color_id} = ($dirAuthor->{id} > 60 ? "Grey" : $dirAuthor->{id});
+            # $dirAuthor->{color_id} = ($dirAuthor->{id} > 60 ? "Black" : $dirAuthor->{id});
+            $dirAuthor->{color_id} = $matchedAuthor->{color_id};
         }
         $dir->{contentStats}->{authors} = scalar @{$dirAuthors};
+        my @dateGroups = commits_to_dategroup(\@{$dir->{commits}}, \@{$dirAuthors});
+        $dir->{dateGroups} = @dateGroups[0];
     }
+
     foreach (@fileList) {
         my $file = $_;
         $tokenLen = $file->{contentStats}->{tokens} if $file->{contentStats}->{tokens} > $tokenLen;
@@ -218,11 +259,14 @@ sub update_dir_and_file_stats {
         my $fileAuthors = $file->{authors};
         foreach (@{$fileAuthors}) {
             my $fileAuthor = $_;
-            die "author $fileAuthor->{name} in file $file->{name} not found \n" unless my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$auhtors};
+            die "author $fileAuthor->{name} in file $file->{name} not found \n" unless my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$authors};
             $fileAuthor->{id} = $matchedAuthor->{id};
-            $fileAuthor->{color_id} = ($fileAuthor->{id} > 60 ? "Grey" : $fileAuthor->{id}); # assign grey color to authors ranked below 60
+            $fileAuthor->{color_id} = $matchedAuthor->{color_id};
+            # $fileAuthor->{color_id} = ($fileAuthor->{id} > 60 ? "Black" : $fileAuthor->{id}); # assign grey color to authors ranked below 60
         }
         $file->{contentStats}->{authors} = scalar @{$fileAuthors};
+        my @dateGroups = commits_to_dategroup(\@{$file->{commits}}, \@{$fileAuthors});
+        $file->{dateGroups} = @dateGroups[0];
     }
 
     foreach (@dirList) {
@@ -274,8 +318,10 @@ sub print_directory {
     $template->param(has_file => scalar @fileList);
     $template->param(directory_list => \@dirList);
     $template->param(file_list => \@fileList);
-    $template->param(commits => $directory->{commits});
+    # $template->param(commits => $directory->{commits});
     $template->param(has_hidden => (scalar @contributorsByName)>20);
+    $template->param(time_min => $directory->{commits}[0]->{epoch});
+    $template->param(time_max => $directory->{commits}[(scalar @{$directory->{commits}})-1]->{epoch});
 
     my $file = undef;
     if ($outputFile ne "") {
@@ -300,6 +346,7 @@ sub update_directory_stats {
         my $author = $_;
 
         $author->{id} = $index++;
+        $author->{color_id} = $author->{id} > 60 ? "Black" : $author->{id};
         $author->{hidden} = $author->{id} > 20; # hide authors ranked below 20
         $author->{commit_proportion} = $author->{commits} / $totalCommit;
         $author->{token_proportion} = $author->{tokens} / $totalToken;
@@ -311,6 +358,10 @@ sub update_directory_stats {
         die "no matched commits found on author : $author->{name}. \n" unless @matchedCommits;
     }
     $directory->{authors} = [@sortedAuthors];
+
+    # sort commits by timestamp
+	my @commits = sort { $a->{epoch} <=> $b->{epoch} } @{$directory->{commits}};
+    $directory->{commits} = [@commits];
 }
 
 sub get_directory_stats {

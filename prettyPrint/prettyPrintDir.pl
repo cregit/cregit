@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 use strict;
-use Data::Dumper; # print stringified data
 use Date::Format;
 use Date::Parse;
 use File::Path;
@@ -27,8 +26,8 @@ my $dryrun = 0;
 my $filter = "";
 my $filter_lang = 0;
 my $overwrite = 0;
-my @userVars; # array
-my %userVars; # hashref
+my @userVars;
+my %userVars;
 my $tokenExtension = ".token.line";
 
 my $repoDir;
@@ -51,10 +50,8 @@ sub print_dir_info {
     $sourceDB = shift @ARGV; # cregitRepoDB: token.db
     $authorsDB = shift @ARGV; # authorsDB: persons.db
     $outputDir = shift @ARGV; # output directory
-    # my $filter = $filter; # filter key
 
     # filter for c and cpp programming language
-    # TODO: compatible for other languages
     if ($filter_lang eq "c") {
 	    $filter = "\\.(h|c)\$";
     } elsif ($filter_lang eq "cpp") {
@@ -210,7 +207,7 @@ sub commits_to_dategroup {
         my ($dateGroup) = grep {$dateGroupIndex eq $_->{timestamp}} @dateGroups;
 
         # create this date group if not defined
-        push (@dateGroups, {timestamp => $dateGroupIndex, group => ()}) if ! defined $dateGroup;
+        push (@dateGroups, {timestr => time2str("%B %Y", $dateGroupIndex), timestamp => $dateGroupIndex, group => undef, total_tokens => 0}) if ! defined $dateGroup;
 
         my ($targetDateGroup) = grep {$dateGroupIndex eq $_->{timestamp}} @dateGroups;
         my ($groupWithAuthorId) = grep {$commitAuthorId eq $_->{author_id}} @{$targetDateGroup->{group}};
@@ -223,6 +220,7 @@ sub commits_to_dategroup {
         } else {
             $groupWithAuthorId->{token_count} += $commitTokenCount;
         }
+        $targetDateGroup->{total_tokens} += $commitTokenCount;
     }
 
     return \@dateGroups;
@@ -235,7 +233,7 @@ sub update_dir_and_file_stats {
     my $authors = $directory->{authors};
 
     my $tokenLen = 0;
-    my $fileTokenLen = 0; # for the use of scale between files within the directory
+    my $fileTokenLen = 0; # scale between files within the directory
     foreach (@dirList) {
         my $dir = $_;
         $tokenLen = $dir->{contentStats}->{tokens} if $dir->{contentStats}->{tokens} > $tokenLen;
@@ -249,7 +247,8 @@ sub update_dir_and_file_stats {
         }
         $dir->{contentStats}->{authors} = scalar @{$dirAuthors};
         my @dateGroups = commits_to_dategroup(\@{$dir->{commits}}, \@{$dirAuthors});
-        $dir->{dateGroups} = @dateGroups[0];
+        my @sortedDateGroup = sort { $a->{timestamp} <=> $b->{timestamp} } @dateGroups[0];
+        $dir->{dateGroups} = @{dclone(\@sortedDateGroup)}[0];
     }
 
     foreach (@fileList) {
@@ -262,29 +261,37 @@ sub update_dir_and_file_stats {
             die "author $fileAuthor->{name} in file $file->{name} not found \n" unless my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$authors};
             $fileAuthor->{id} = $matchedAuthor->{id};
             $fileAuthor->{color_id} = $matchedAuthor->{color_id};
-            # $fileAuthor->{color_id} = ($fileAuthor->{id} > 60 ? "Black" : $fileAuthor->{id}); # assign grey color to authors ranked below 60
         }
         $file->{contentStats}->{authors} = scalar @{$fileAuthors};
         my @dateGroups = commits_to_dategroup(\@{$file->{commits}}, \@{$fileAuthors});
-        $file->{dateGroups} = @dateGroups[0];
+        my @sortedDateGroup = sort { $a->{timestamp} <=> $b->{timestamp} } @dateGroups[0];
+        $file->{dateGroups} = @{dclone(\@sortedDateGroup)}[0];
     }
 
     foreach (@dirList) {
-        $_->{line_counts} = $_->{contentStats}->{line_counts};
-        $_->{file_counts} = $_->{contentStats}->{file_counts};
-        $_->{author_counts} = $_->{contentStats}->{authors};
-        $_->{total_tokens} = $_->{contentStats}->{tokens};
-        $_->{url} = File::Spec->catfile($webRoot, $_->{path});
-        $_->{width} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $tokenLen);
+        my $dir = $_;
+        $dir->{line_counts} = $dir->{contentStats}->{line_counts};
+        $dir->{file_counts} = $dir->{contentStats}->{file_counts};
+        $dir->{author_counts} = $dir->{contentStats}->{authors};
+        $dir->{total_tokens} = $dir->{contentStats}->{tokens};
+        $dir->{url} = File::Spec->catfile($webRoot, $dir->{path});
+        $dir->{width} = sprintf("%.2f\%", 100.0 * $dir->{contentStats}->{tokens} / $tokenLen);
+        foreach (@{$_->{dateGroups}}) {
+            $_->{width} = sprintf("%.2f\%", 100.0 * $_->{total_tokens} / $dir->{total_tokens});
+        }
     }
     foreach (@fileList) {
-        $_->{line_counts} = $_->{contentStats}->{line_counts};
-        $_->{file_counts} = "-";
-        $_->{author_counts} = $_->{contentStats}->{authors};
-        $_->{total_tokens} = $_->{contentStats}->{tokens};
-        $_->{url} = File::Spec->catfile($webRoot, $_->{path}.".html");
-        $_->{width} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $tokenLen);
-        $_->{width_in_files} = sprintf("%.2f\%", 100.0 * $_->{contentStats}->{tokens} / $fileTokenLen);
+        my $file = $_;
+        $file->{line_counts} = $file->{contentStats}->{line_counts};
+        $file->{file_counts} = "-";
+        $file->{author_counts} = $file->{contentStats}->{authors};
+        $file->{total_tokens} = $file->{contentStats}->{tokens};
+        $file->{url} = File::Spec->catfile($webRoot, $file->{path}.".html");
+        $file->{width} = sprintf("%.2f\%", 100.0 * $file->{contentStats}->{tokens} / $tokenLen);
+        $file->{width_in_files} = sprintf("%.2f\%", 100.0 * $file->{contentStats}->{tokens} / $fileTokenLen);
+        foreach (@{$_->{dateGroups}}) {
+            $_->{width} = sprintf("%.2f\%", 100.0 * $_->{total_tokens} / $file->{total_tokens});
+        }
     }
 }
 

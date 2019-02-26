@@ -1,76 +1,7 @@
 $(document).ready(function() {
-
-	$(".content-stats-graph").click(function() {
-		var contentGraph = $(this);
-		contentDetail = contentGraph.parents("#content-list").next("div");
-		contentDetail.slideToggle();
-		RepeatFunctionInTimeN(RenderMinimap, 500, 500);
-	});
-
-	$("#abs-prop-toggle").click(function() {
-		if ($(this).text() == "change scale") { $(this).removeAttr("title"); }
-		if ($(this).hasClass("active")) {
-			$(this).text("proportional scale");
-			$("button.content-stats-graph").each(function() {
-				$(this).removeClass("abs-toggle");
-			});
-		} else {
-			$(this).text("absolute scale");
-			$("button.content-stats-graph").each(function() {
-				$(this).addClass("abs-toggle");
-			});
-		}
-
-		$(this).toggleClass("active");
-		RepeatFunctionInTimeN(RenderMinimap, 500, 500);
-	});
-
-	$(".graph-table-data").mouseenter(function() {
-		if ($("#abs-prop-toggle").hasClass("active")) { return; }
-		$(this).children().addClass("full-scale");
-	}); 
-
-	$(".graph-table-data").mouseleave(function() {
-		if ($("#abs-prop-toggle").hasClass("active")) { return; }
-		$(this).children().removeClass("full-scale");
-	}); 
-
-	$("#hide-subdirectory-btn").click(function() {
-		$("#subdirectory-list").slideToggle();
-		var statsGraphInFileList = $(".content-stats-graph.file-list");
-		var close = $(this).text() == "\u2212";
-
-		if (close) {
-			statsGraphInFileList.each(function() {
-				var width = $(this).data("fileWidth");
-				$(this).css("width", width);
-			});	
-			$(this).text("+");
-			$(this).prop("title", "show subdirectories to see relationship between the files and subdirectories");
-		} else {
-			statsGraphInFileList.each(function() {
-				var width = $(this).data("contentWidth");
-				$(this).css("width", width);
-			});	
-			$(this).text("\u2212");
-			$(this).prop("title", "hide subdirectories to see relationship between each file");
-		}
-		
-		RepeatFunctionInTimeN(RenderMinimap, 500, 500);
-	});
-
-	$("button#expand-stats-table-btn").click(function() {
-		$("tr.contributor-row.hidden").each(function() {
-			$(this).removeClass("hidden");
-		});
-		$(this).parent().addClass("hidden");
-	});
-
 	var timeRange;
 	var highlightMode = 'author';
 	var selectedAuthorId = undefined;
-	var selectedCommit = undefined;
-	var highlightedCommit = undefined;
 	var dateFrom = new Date(timeMin * 1000);
 	var dateTo = new Date(timeMax * 1000);
 	var spanGroupData = undefined;
@@ -79,41 +10,32 @@ $(document).ready(function() {
 	var sortColumn = 1;
 	var sortReverse = false;
 	var scrollDrag = false;
+	var dateChanged = true;
 	
 	var $window = $(window);
 	var $document = $(document);
 	var $minimap = $('#minimap');
 	var $spans = $('.content-stats-graph');
 	var $minimapView = $('#minimap-view-shade,#minimap-view-frame');
-	var $navbar = $('#navbar');
-	var $contributor_rows = $("#stats-table > tbody > tr");
-	var $contributor_header_row = $("#stats-table > thead > tr");
-	var $contributor_headers = $("#stats-table > thead > tr > th");
-	var $contributor_footers = $("#stats-table > tfoot > tr > td");
-	var $contributor_row_container = $("#stats-table > tbody");
+	var $contributor_rows = $("#overall-stats-table > tbody > tr.contributor-row");
+	var $contributor_header_row = $("#overall-tats-table > thead > tr");
+	var $contributor_headers = $("#overall-stats-table > thead > tr > th");
+	var $contributor_footers = $("#overall-stats-table > tfoot > tr > td");
+	var $contributor_row_container = $("#overall-stats-table > tbody");
 	var $highlightSelect = $('#select-highlighting');
-	var $content_groups = $(".content-group");
-	var $sourceView = $('#source-view');
 	var $content = $($('#stats-view').get(0));
-	var $lineNumbers = $("#line-numbers");
-	var $lineAnchors = undefined;
 	var $mainContent = $("#main-content");
 	var $dateGradient = $("#date-gradient");
 	var $dateSliderRange = $("#date-slider-range");
+	var $statsGraphButton = $("button.content-stats-graph");
+	var $absPropToggle = $("#abs-prop-toggle");
+	var $hideSubDirButton = $("#hide-subdirectory-btn");
+	var $graphTableData = $(".graph-table-data");
+	var $ageHighlighting = $(".age-highlighting");
+	var $authorHighlighting = $(".author-highlighting");
+	var $expandableTables = $("table.expandable");
+	var $statsTableExpandableButton = $("button.expand-collapse-table-btn");
 
-
-
-	function RepeatFunctionInTimeN(fn, interval, freq) {
-		interval = interval < 0 ? 1000 : interval;
-		freq = freq < 0 ? 500 : freq;
-
-		var timerId = setInterval(fn, freq);
-
-		setTimeout(function() {
-			clearInterval(timerId);
-		}, interval);
-
-	}	
 
 	// Processes large jquery objects in slices of N=length at rest intervals of I=interval (ms)
 	function ProcessSlices(jquery, length, interval, fn)
@@ -148,11 +70,6 @@ $(document).ready(function() {
 	}
 	
 	function ApplyHighlight() {
-		var dataScript = $(this).children("#data-script");
-		eval(dataScript.html());
-		var authorId;
-		var tokenCount;
-		
 		function groupMatch(dateGroup) {
 			var timestamp = dateGroup.timestamp;
 			var group = dateGroup.group;
@@ -181,32 +98,52 @@ $(document).ready(function() {
 			return tokenCount/totalTokens; 
 		}
 
-		var spanGroup = $(this).children();
-		spanGroup.each(function() {
-			var colorSpan = $(this);
-			if (colorSpan.hasClass("hidden")) { return; }
+		if (highlightMode == "age") {
+			var spanGroup = $(this).children(".age-highlighting");
+			spanGroup.each(function() {
+				var colorSpan = $(this);
+				var spanTimestamp = colorSpan.data("timestamp");
+				var date = new Date(spanTimestamp * 1000);
 
-			authorId = colorSpan.data("aid");
-			var spanLenPercentage = parseFloat(colorSpan.data("widthPercent"));
-			var newLenPercentage = getSpanLengthInPercentage(colorSpan);
-			spanLenPercentage = spanLenPercentage * newLenPercentage;
-			colorSpan.css("width", spanLenPercentage+"%");
-			var authorName = colorSpan.text();
-			colorSpan.prop("title", authorName+" : "+tokenCount+" token(s)");
+				var dateOkay = date >= dateFrom && date <= dateTo;
+				var allOkay = dateOkay;
 
-			var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
-			var allOkay = authorOkay;
+				colorSpan.removeClass("hideen");
+				if (!allOkay) { colorSpan.addClass("hidden"); }
+			});
+		} else if (highlightMode == "author" || undefined != selectedAuthorId) {
+			var dataScript = $(this).children("#data-script");
+			if (dateChanged) { eval(dataScript.html()); }
+		
+			var authorId;
+			var tokenCount;
 
-			colorSpan.removeClass('color-graph-fade color-highlight color-age color-year color-pretty');
-			if (!allOkay) { colorSpan.addClass("color-graph-fade"); }
-		});
+			var spanGroup = $(this).children(".author-highlighting");
+			spanGroup.each(function() {
+				var colorSpan = $(this);
+				authorId = colorSpan.data("aid");
+
+				if (dateChanged) {
+					var spanLenPercentage = parseFloat(colorSpan.data("widthPercent"));
+					var newLenPercentage = getSpanLengthInPercentage(colorSpan);
+					spanLenPercentage = spanLenPercentage * newLenPercentage;
+					colorSpan.css("width", spanLenPercentage+"%");
+					var authorName = colorSpan.text();
+					colorSpan.prop("title", authorName+" : "+tokenCount+" token(s)");
+				}
+			
+				var authorOkay = selectedAuthorId == undefined || authorId == selectedAuthorId;
+				var allOkay = authorOkay;
+
+				colorSpan.removeClass("color-graph-fade");
+				if (!allOkay) { colorSpan.addClass("color-graph-fade"); }
+			});
+		}
 	}
 	
 	function SetupAgeColors() {
-		var oldest = commits.reduce(function(x, y) { return (x.timestamp < y.timestamp ? x : y); });
-		var newest = commits.reduce(function(x, y) { return (x.timestamp > y.timestamp ? x : y); });
-		var base = oldest.timestamp;
-		var range = newest.timestamp - oldest.timestamp;
+		var base = timeMin;
+		var range = timeRange;
 		
 		function convert(color) {
 			var canvas = document.createElement("canvas");
@@ -227,22 +164,58 @@ $(document).ready(function() {
 		var ageMid = convert(root.css("--age-mid"));
 		var ageNew = convert(root.css("--age-new"));
 		
-		$spans.each(function() {
-			// var commitInfo = commits[this.dataset.cidx];
-			// var t = (commitInfo.timestamp - base) / range;
-			// var color = (t < 0.5 ? lerp(ageOld, ageMid, 0) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
-			// var htmlColor = "#" + ("000000" + color.toString(16)).substr(-6);
+		$spans.children(".age-highlighting").each(function() {
+			var ageSpan = $(this);
+			var t = (ageSpan.data("timestamp")-base) / range;
+			var color = (t < 0.5 ? lerp(ageOld, ageMid, t/0.5) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
+			var htmlColor = "#" + ("000000" + color.toString(16)).substr(-6);
 
-			// this.style.setProperty('--age-color', htmlColor);
+			this.style.setProperty('--age-color', htmlColor);
 		});
 		
 		ageSetupDone = true;
 	}
-	
+
+	var lastMode = "author";
 	function UpdateHighlight() {
+		if (highlightMode == "age") { 
+			$ageHighlighting.each(function() {
+				$(this).removeClass("hidden");
+			});
+			$authorHighlighting.each(function() {
+				$(this).addClass("hidden");
+			});
+
+			if(lastMode != "age") {
+				dateChanged = true;
+			}
+		}
+		else if (highlightMode == "author") {
+			$ageHighlighting.each(function() {
+				$(this).addClass("hidden");
+			});
+			$authorHighlighting.each(function() {
+				$(this).removeClass("hidden");
+			});
+
+			if (lastMode != "author") {
+				dateChanged = true;
+			}
+		}
+		else if (highlightMode == "author-single") {
+			$ageHighlighting.each(function() {
+				$(this).addClass("hidden");
+			});
+			$authorHighlighting.each(function() {
+				$(this).removeClass("hidden");
+			});
+		}
+
+		lastMode = highlightMode;
+
 		$spans.each(ApplyHighlight);
+		dateChanged = false;
 		
-		// RepeatFunctionInTimeN(RenderMinimap, 500, 50);
 		RenderMinimap();
 	}
 	
@@ -267,6 +240,7 @@ $(document).ready(function() {
 		$dateSliderRange.slider("values", [0, timeRange]);
 		guiUpdate = false;
 		$dateGradient.addClass("invisible");
+		dateChanged = true;
 		
 		// Update visuals
 		UpdateHighlight();
@@ -347,13 +321,18 @@ $(document).ready(function() {
 	function SortContributors(column, reverse)
 	{
 		var cmp = function(a, b) { if (a < b) return -1; if (a > b) return 1; return 0; };
-		var lexical = function (a, b) { return a.children[0].firstChild.innerHTML.localeCompare(b.children[0].firstChild.innerHTML); };
+		var lexical = function (a, b) { 
+			console.log(a);
+			console.log(b);
+			return a.children[0].firstChild.innerText.localeCompare(b.children[0].firstChild.innerText); 
+		};
 		var numeric = function (a, b) { return cmp(parseFloat(b.children[column].innerHTML), parseFloat(a.children[column].innerHTML)); };
 		var numericThenLex = function (a, b) { return numeric(a, b) || lexical(a, b); };
 		
+
 		var $rows = $contributor_rows;
 		var rows = $contributor_rows.get();
-		rows = rows.filter(function(x, i) { return !$(x).hasClass("innactive-row"); });
+		rows.forEach(function(x, i) { $(x).removeClass("hidden"); });
 		
 		if (column == 0)
 			rows.sort(lexical);
@@ -367,26 +346,21 @@ $(document).ready(function() {
 			rows.push($("<tr class='contributor-row'><td>&nbsp</td><td/><td/><td/><td/></tr>").get(0));
 		
 		$rows.detach(); // Detach before empty so rows don't get deleted
-		$contributor_row_container.empty();
-		$contributor_row_container.append(rows);
+		$contributor_row_container.children("tr.contributor-row").empty();
+		$contributor_row_container.prepend(rows);
 	}
-	
-	function ParseFragmentString()
-	{
-		var frag = location.hash.substr(1);
-		if (frag == "")
-			return;
-		
-		var parts = frag.split(",");
-		var line = parseInt(parts[0]);
-		var index = Math.min(line, $lineAnchors.length) - 1;
-		
-		var lineAnchor = $lineAnchors.get(index);
-		if(lineAnchor != undefined) {
-			var top = lineAnchor.offsetTop - $mainContent.height() / 2;
-			$mainContent.stop();
-			$mainContent.animate({scrollTop: top}, 200, function(){});
-		}
+
+	function CollapseTables(jquery, number) {
+		var $rows = jquery.children("tbody").children("tr.contributor-row");
+		if ($rows.length <= number) { return; }
+
+		$rows.each(function(i) {
+			if (number > i) { return; }
+			$(this).addClass("hidden");
+		});
+
+		var colspan = $rows.get(0).childElementCount;
+		$rows.parent().append("<tr><td colspan=\""+colspan+"\" class=\"expand-stats-table\"><button class=\"expand-collapse-table-btn toggle-btn expand\">click to expand&#x25BC;</button></td></tr>");
 	}
 	
 	function DoMinimapScroll(event)
@@ -444,6 +418,7 @@ $(document).ready(function() {
 		$dateSliderRange.slider("values", [timeStart, timeEnd]);
 		guiUpdate = false;
 		
+		dateChanged = true;
 		UpdateHighlight();
 	}
 	
@@ -471,6 +446,7 @@ $(document).ready(function() {
 		$("#date-to").get(0).valueAsDate = dateTo;
 		guiUpdate = false;
 		
+		dateChanged = true;
 		this.UpdateHighlight();
 	}
 	
@@ -503,7 +479,10 @@ $(document).ready(function() {
 		sortReverse = !sortReverse && (column == sortColumn);
 		sortColumn = column;
 		
+		var expandCollapseButton = $(this).parents("table.expandable").find("button.expand-collapse-table-btn");
+		expandCollapseButton.trigger("click");
 		SortContributors(sortColumn, sortReverse);
+		expandCollapseButton.trigger("click");
 	}
 	
 	function Minimap_MouseDown(event)
@@ -550,11 +529,6 @@ $(document).ready(function() {
 	{
 		RenderMinimap();
 	}
-	
-	function Window_HashChange()
-	{
-		ParseFragmentString();
-	}
 
 	function UpdateDate() {
 		var yearFrom = dateFrom.getFullYear();
@@ -569,7 +543,111 @@ $(document).ready(function() {
 
 		timeRange = timeMax - timeMin; 
 	}
-	
+
+	function StatsGraph_Click() {
+		var contentGraph = $(this);
+		contentDetail = contentGraph.parents("#content-list").next("div");
+		contentDetail.slideToggle(400, RenderMinimap);
+	}
+
+	function AbsPropToggle_Click() {
+		if ($(this).text() == "change scale") { $(this).removeAttr("title"); }
+
+		var length = $statsGraphButton.length;
+		if ($(this).hasClass("active")) {
+			$(this).text("proportional scale");
+			$statsGraphButton.each(function(index, e) {
+				$(this).removeClass("abs-toggle");
+				if (index === length-1) {
+					$(this).one("webkitTransitionEnd", function(e) {
+						RenderMinimap();
+					});					
+				}
+			});
+		} else {
+			$(this).text("absolute scale");
+			$statsGraphButton.each(function(index, e) {
+				$(this).addClass("abs-toggle");
+				if(index === length-1) {
+					$(this).one("webkitTransitionEnd", function(e) {
+						RenderMinimap();
+					});
+				}
+			});
+		}
+
+		$(this).toggleClass("active");
+	}
+
+	function Hide_Subdir_Click() {
+		$("#subdirectory-list").slideToggle(500, function() {
+			RenderMinimap();
+		});
+		var statsGraphInFileList = $(".content-stats-graph.file-list");
+		var close = $(this).text() == "\u2212";
+
+		if (close) {
+			statsGraphInFileList.each(function() {
+				var width = $(this).data("fileWidth");
+				$(this).css("width", width);
+			});	
+			$(this).text("+");
+			$(this).prop("title", "show subdirectories to see relationship between the files and subdirectories");
+		} else {
+			statsGraphInFileList.each(function() {
+				var width = $(this).data("contentWidth");
+				$(this).css("width", width);
+			});	
+			$(this).text("\u2212");
+			$(this).prop("title", "hide subdirectories to see relationship between each file");
+		}
+	}
+
+	function BindExpandButton() {
+		$statsTableExpandableButton = $("button.expand-collapse-table-btn");
+
+		$statsTableExpandableButton.click(function() {
+			var isExpandBtn = $(this).hasClass("expand");
+			if (isExpandBtn) {
+				$(this).parents("tr").siblings(".hidden").each(function() {
+					$(this).removeClass("hidden");
+				});
+				$(this).html("click to collapse&#x25b2;");
+			} else {
+				$(this).parents("tbody").children("tr.contributor-row").each(function(i){
+					if (20 > i) { return; }
+					
+					$(this).addClass("hidden");
+				});
+				$(this).html("click to expand&#x25bc;");
+			}
+			$(this).toggleClass("expand collapse");
+			RenderMinimap();
+		});
+	}
+
+	$statsGraphButton.click(StatsGraph_Click);
+
+	$absPropToggle.click(AbsPropToggle_Click);
+
+	$hideSubDirButton.click(Hide_Subdir_Click);
+
+	$graphTableData.mouseenter(function() {
+		if ($absPropToggle.hasClass("active")) { return; }
+		$(this).children().addClass("full-scale");
+	}); 
+
+	$graphTableData.mouseleave(function() {
+		if ($absPropToggle.hasClass("active")) { return; }
+		$(this).children().removeClass("full-scale");
+	}); 
+
+	$expandableTables.each(function() {
+		CollapseTables($(this), 20);
+	});
+
+	BindExpandButton();
+
 	$contributor_headers.click(ColumnHeader_Click);
 	
 	$highlightSelect.change(HighlightSelect_Changed);
@@ -589,19 +667,16 @@ $(document).ready(function() {
 	$dateSliderRange.slider({range: true, min: 0, max: timeRange, values: [ 0, timeRange ], slide: DateSlider_Changed });
 	
 	$minimap.mousedown(Minimap_MouseDown);
-	$(document).mousemove(Document_MouseMove);
-	$(document).mouseup(Document_MouseUp);
-	$(document).bind("selectstart", null, Document_SelectStart);
-	$(document).keydown(Document_KeyDown);
+	$document.mousemove(Document_MouseMove);
+	$document.mouseup(Document_MouseUp);
+	$document.bind("selectstart", null, Document_SelectStart);
+	$document.keydown(Document_KeyDown);
 	
 	$mainContent.scroll(Window_Scroll);
-	$(window).resize(Debounce(Window_Resize, 250));
-	$(window).bind("hashchange", Window_HashChange);
+	$window.resize(Debounce(Window_Resize, 250));
 	
 	UpdateMinimapViewSize();
 	RenderMinimap();
 
-	// SetupAgeColors();
-	
-	ParseFragmentString();
+	SetupAgeColors();
 });

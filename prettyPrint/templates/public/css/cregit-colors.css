@@ -37,6 +37,14 @@
 	background-color: #dddddd !important;
 }
 
+.color-graph-age {
+	background-color: var(--age-color);
+}
+
+.color-graph-author {
+	background-color: var(--author-color);
+}
+
 .author0 { --author-color: hsl(017, 097%, 044%); }
 .author1 { --author-color: hsl(169, 049%, 031%); }
 .author2 { --author-color: hsl(208, 068%, 052%); }

@@ -114,20 +114,16 @@
                   </td>
                   <td class="graph-table-data">
                     <button class="content-stats-graph" style="width: <TMPL_VAR width>;">
-                      <TMPL_LOOP authors>
-                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>" data-total-tokens="<TMPL_VAR tokens>"  data-width-percent="<TMPL_VAR token_percent>"><TMPL_VAR name></span>
-                      </TMPL_LOOP>
+                      <TMPL_LOOP authors><span class="author-highlighting content-span color-graph-author author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>" data-total-tokens="<TMPL_VAR tokens>"  data-width-percent="<TMPL_VAR token_percent>"><TMPL_VAR name></span></TMPL_LOOP>
+                      <TMPL_LOOP dateGroups><span class="age-highlighting content-span color-graph-age hidden" style="width: <TMPL_VAR width>" title="<TMPL_VAR timestr> : <TMPL_VAR total_tokens> token(s)" data-timestamp="<TMPL_VAR timestamp>"><TMPL_VAR timestr></span></TMPL_LOOP>
                       <div id="data-script" class="hidden">
                         var spanGroupData = [
                           <TMPL_LOOP dateGroups>
-                          {
-                            "timestamp": <TMPL_VAR timestamp>,
-                            "group": [
-                              <TMPL_LOOP group>
-                                {"author_id": <TMPL_VAR author_id>, "token_count": <TMPL_VAR token_count>},
-                              </TMPL_LOOP>
-                            ]
-                          },
+                          {"timestamp": <TMPL_VAR timestamp>, "group": [
+                            <TMPL_LOOP group>
+                              {"author_id": <TMPL_VAR author_id>, "token_count": <TMPL_VAR token_count>},
+                            </TMPL_LOOP>
+                            ]},
                           </TMPL_LOOP>
                         ]
                       </div>
@@ -138,7 +134,7 @@
             </table>
             <div class="constent-stats-table-wrapper">
               <div class="content-stats-table">
-              <table id="stats-table">
+              <table class="stats-table expandable">
                 <thead>
                   <tr>
                     <th>Author Name</th>
@@ -147,7 +143,7 @@
                   </tr>
                 </thead>
                 <TMPL_LOOP authors>
-                  <tr>
+                  <tr class="contributor-row">
                     <td><span class="table-author author<TMPL_VAR color_id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
                     <td><TMPL_VAR tokens></td>
                     <td><TMPL_VAR token_percent></td>
@@ -210,20 +206,16 @@
                   </td>
                   <td class="graph-table-data">
                     <button class="content-stats-graph file-list" style="width: <TMPL_VAR width>;" data-content-width="<TMPL_VAR width>" data-file-width="<TMPL_VAR width_in_files>">
-                      <TMPL_LOOP authors>
-                        <span class="content-color author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>" data-total-tokens="<TMPL_VAR tokens>" data-width-percent="<TMPL_VAR token_percent>"><TMPL_VAR name></span>
-                      </TMPL_LOOP>
+                      <TMPL_LOOP authors><span  class="author-highlighting content-span color-graph-author author<TMPL_VAR color_id>" style="width: <TMPL_VAR token_percent>;" title="<TMPL_VAR name> : <TMPL_VAR tokens> token(s)" data-aid="<TMPL_VAR id>" data-total-tokens="<TMPL_VAR tokens>" data-width-percent="<TMPL_VAR token_percent>"><TMPL_VAR name></span></TMPL_LOOP>
+                      <TMPL_LOOP dateGroups><span  class="age-highlighting content-span color-graph-age hidden" style="width: <TMPL_VAR width>" title="<TMPL_VAR timestr> : <TMPL_VAR total_tokens> token(s)" data-timestamp="<TMPL_VAR timestamp>"><TMPL_VAR timestr></span></TMPL_LOOP>
                       <div id="data-script" class="hidden">
                         var spanGroupData = [
                           <TMPL_LOOP dateGroups>
-                          {
-                            "timestamp": <TMPL_VAR timestamp>,
-                            "group": [
-                              <TMPL_LOOP group>
-                                {"author_id": <TMPL_VAR author_id>, "token_count": <TMPL_VAR token_count>},
-                              </TMPL_LOOP>
-                            ]
-                          },
+                          {"timestamp": <TMPL_VAR timestamp>, "group": [
+                            <TMPL_LOOP group>
+                              {"author_id": <TMPL_VAR author_id>, "token_count": <TMPL_VAR token_count>},
+                            </TMPL_LOOP>
+                            ]},
                           </TMPL_LOOP>
                         ]
                       </div>
@@ -234,7 +226,7 @@
             </table>
             <div class="constent-stats-table-wrapper">
               <div class="content-stats-table">
-              <table id="stats-table">
+              <table class="stats-table expandable">
                 <thead>
                   <tr>
                     <th>Author Name</th>
@@ -243,7 +235,7 @@
                   </tr>
                 </thead>
                 <TMPL_LOOP authors>
-                  <tr>
+                  <tr class="contributor-row">
                     <td><span class="table-author author<TMPL_VAR color_id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR name></span></td>
                     <td><TMPL_VAR tokens></td>
                     <td><TMPL_VAR token_percent></td>
@@ -267,7 +259,7 @@
       <hr class="flex-ruler">
 
         <div id="stats-view">
-        <table id="stats-table">
+        <table id="overall-stats-table" class="stats-table expandable">
           <caption>Contributors: <span id="contributor-count"><TMPL_VAR contributors_count></span></caption>
             <thead>
               <tr>
@@ -280,7 +272,7 @@
             </thead>
             <tbody>
               <TMPL_LOOP contributors>
-                <tr class="contributor-row <TMPL_IF hidden>hidden</TMPL_IF>">
+                <tr class="contributor-row">
                   <td><span class="table-author author<TMPL_VAR color_id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
                   <td><TMPL_VAR tokens></td>
                   <td><TMPL_VAR token_percent></td>
@@ -288,15 +280,6 @@
                   <td><TMPL_VAR commit_percent></td>
                 </tr>
               </TMPL_LOOP>
-            </tbody>
-            <tbody>
-              <tr>
-                <td colspan="5" class="expand-stats-table <TMPL_UNLESS has_hidden>hidden</TMPL_UNLESS>">
-                  <button id="expand-stats-table-btn" class="toggle-btn">
-                  click to expand table&#x25BC;
-                  </button>
-                </td>
-              </tr>
             </tbody>
             <tfoot>
               <tr>

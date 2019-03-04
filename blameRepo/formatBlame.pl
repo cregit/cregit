@@ -58,7 +58,7 @@ if ($verbose) {
 }
 
 #open(IN, "git -C '$repo' blame  -C100 --line-porcelain '$file'|" ) or "unable to execute git ";
-open(IN, "git -C '$repo' blame --line-porcelain '$file'|" ) or "unable to execute git ";
+open(IN, "git -C '$repo' blame -M50 -C50 --line-porcelain '$file'|" ) or "unable to execute git ";
 while (my $l = Read_Record()) {
     print $fh $l;
     print $fh "\n";

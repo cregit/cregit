@@ -42,7 +42,7 @@ my $overwrite = 0;
 my @userVars;
 my %userVars;
 
-my $tokenExtension = ".token.line";
+my $tokenExtension = ".token";
 
 sub print_one {
 	my $sourceFile = shift @ARGV;
@@ -105,8 +105,11 @@ sub print_many {
 		my $outputFile = File::Spec->catfile($outputDir, $filePath . ".html");
 		my ($fileName, $fileDir) = fileparse($outputFile);
 		my $relative = File::Spec->abs2rel($outputDir, $fileDir);
+
 		my $options = { "outputFile" => $outputFile };
-		
+
+                $options->{directory} = dirname($filePath);
+                $options->{relative} = $relative;
 		if ($webRootRelative) {
 			$options->{webRoot} = $relative;
 		};

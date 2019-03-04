@@ -48,6 +48,9 @@ sub print_file {
 	$options->{outputFile}		//= "";
 	$options->{webRoot}			//= "";
 	$options->{gitURL}			//= "";
+	$options->{directory}			//= "";
+	$options->{relative}			//= ".";
+
 
 	$warningCount = 0;
 
@@ -81,6 +84,9 @@ sub print_file {
 	$template->param(cregit_version => $options->{cregitVersion});
 	$template->param(web_root => $options->{webRoot});
 	$template->param(git_url => $options->{gitURL});
+	$template->param(directory => $options->{directory});
+	$template->param(root_relative => $options->{relative});
+
 	$template->param($options->{userVars});
 
         $defaultGitUrl = $options->{gitURL};

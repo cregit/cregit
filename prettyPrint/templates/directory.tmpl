@@ -74,7 +74,7 @@
     </div>
 
     <div id="main-body" class="flex-columns">
-      <div id="stats-view">
+      <div id="content-view" class="stats-view">
         <TMPL_IF has_subdir>
         <h2>
         <TMPL_IF has_file>
@@ -82,7 +82,7 @@
         </TMPL_IF>
         Subdirectories:</h2>
         <ul>
-          <table id="content-list">
+          <table id="content-list-header" class="content-list">
             <thead>
               <tr>
                 <th>Name</th>
@@ -97,7 +97,7 @@
           </table>
           <span id="subdirectory-list">
           <TMPL_LOOP directory_list>
-            <table id="content-list">
+            <table class="content-list">
               <tbody>
                 <tr>
                   <td>
@@ -174,7 +174,7 @@
         <h2>Files:</h2>
 			  <ul>
           <TMPL_UNLESS has_subdir>
-            <table id="content-list">
+            <table id="content-list-header" class="content-list">
             <thead>
               <tr>
                 <th>Name</th>
@@ -189,7 +189,7 @@
           </table>
           </TMPL_UNLESS>
           <TMPL_LOOP file_list>
-            <table id="content-list">
+            <table class="content-list">
               <tbody>
                 <tr>
                   <td>
@@ -258,7 +258,7 @@
 
       <hr class="flex-ruler">
 
-        <div id="stats-view">
+      <div class="stats-view">
         <table id="overall-stats-table" class="stats-table expandable">
           <caption>Contributors: <span id="contributor-count"><TMPL_VAR contributors_count></span></caption>
             <thead>
@@ -292,6 +292,12 @@
             </tfoot>
         </table>
       </div>
+
+      <hr class="flex-ruler">
+      <div id="footer">
+        <div class="credits">Created with Cregit <a href="http://cregit.turingmachine.org">http://cregit.turingmachine.org</a></div>
+        <div>Version <TMPL_VAR cregit_version></div>
+        </div>
       
     </div>
   </div>

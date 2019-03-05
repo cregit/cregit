@@ -218,7 +218,7 @@ h1, pre
 
 /* Contributors Table CSS */
 
-#stats-view
+.stats-view
 {
 	width: 80%;
 	padding: 5px 5px;
@@ -445,44 +445,44 @@ button {
 	text-decoration: underline;
 }
 
-#content-list {
+.content-list {
 	width: 100%;
 	table-layout: fixed;
 }
 
-#content-list > thead > tr > th {
+.content-list > thead > tr > th {
 	width: 10%;
 	text-align: right;
 }
 
-#content-list > thead > tr > th:first-child {
+.content-list > thead > tr > th:first-child {
 	width: 20%;
 	text-align: left;
 }
 
-#content-list > thead > tr > th:nth-child(3) {
+.content-list > thead > tr > th:nth-child(3) {
 	width: 5%;
 }
 
-#content-list > thead > tr > th:last-child {
+.content-list > thead > tr > th:last-child {
 	width: 55%;
 }
 
-#content-list > tbody > tr >td {
+.content-list > tbody > tr >td {
 	width: 10%;
 	text-align: right;
 }
 
-#content-list > tbody > tr > td:first-child {
+.content-list > tbody > tr > td:first-child {
 	width: 20%;
 	text-align: left;
 }
 
-#content-list > tbody > tr > td:nth-child(3) {
+.content-list > tbody > tr > td:nth-child(3) {
 	width: 5%;
 }
 
-#content-list > tbody > tr > td:last-child {
+.content-list > tbody > tr > td:last-child {
 	width: 55%;
 }
 
@@ -528,4 +528,14 @@ button {
 .expand-collapse-table-btn {
 	border-radius: 2px;
 	width: 100%;
+}
+
+#content-list-header {
+	background-color: white;
+}
+
+.content-list-header-fixed {
+	top: 5em;
+	z-index: 100;
+	position: fixed;
 }

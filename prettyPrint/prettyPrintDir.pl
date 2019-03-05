@@ -7,8 +7,7 @@ use File::Basename;
 use Getopt::Long;
 use HTML::Template;
 use Pod::Usage;
-use Storable qw(dclone); # for deep clone reference object
-# potentially could reuse some of the functions in previous prettyPrint
+use Storable qw(dclone);
 use lib dirname(__FILE__);
 use prettyPrint;
 
@@ -51,7 +50,7 @@ sub print_dir_info {
     $authorsDB = shift @ARGV; # authorsDB: persons.db
     $outputDir = shift @ARGV; # output directory
 
-    # filter for c and cpp programming language
+    # filter for c and c++ programming language
     if ($filter_lang eq "c") {
 	    $filter = "\\.(h|c)\$";
     } elsif ($filter_lang eq "cpp") {
@@ -66,7 +65,7 @@ sub print_dir_info {
     Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
 
     # end program if directory cannot be created
-    die "Unable to create output directory: $outputDir\n" unless (-e $outputDir or mkdir $outputDir);
+    exit PrettyPrint::Error("Unable to create output directory: $outputDir\n") unless (-e $outputDir or mkdir $outputDir);
 
     # prepare metaQuery
     PrettyPrint::setup_dbi($sourceDB, $authorsDB);
@@ -79,6 +78,8 @@ sub print_dir_info {
 
     my @parentPath = ();
     process_directory_content($rootDirectoryContent, \@parentPath);
+
+    return 0;
 }
 
 sub process_directory_content {
@@ -102,13 +103,16 @@ sub process_directory_content {
         my $path = $directory->{path} ? File::Spec->catfile($directory->{path}, $currContents) : $currContents; # special case for root path
         my $currObject = undef;
 
-        print "$path\n";
+        # print "Directory : $contentpath\n" if -d $contentPath;
 
         if (-d $contentPath) {
             $currObject = file_system_object($currContents, "d", $path);
             get_directory_content($currObject);
             # skip empty directory or directory that has unrelated files
             next if !defined $currObject->{content};
+
+            print "\nDirectory : $path\n";
+            print "===== \n" if $verbose;
 
             # create new navigation list for next directory
             my @newParentPath = ();
@@ -124,12 +128,16 @@ sub process_directory_content {
         } elsif (-f $contentPath) {
             # filter
             next if ($filter ne "" and $currContents !~ /$filter/); # in Java : if ($filter!="" and !$filePath.contains($filter)) continue; 
+            
+            print "$path\n" if $verbose;
+
             $currObject = file_system_object($currContents, "f", $path);
 
             my $sourceFile = File::Spec->catfile($repoDir, $path);
             my $blameFile = File::Spec->catfile($blameDir, $path . ".blame");
             my $lineFile = File::Spec->catfile($lineDir, $path . $tokenExtension);
             my @params = PrettyPrint::get_template_parameters($sourceFile, $lineFile, $blameFile);
+            return 1 unless $params[0] != 1;
 
             my ($fileStats, $authors, $spans, $commits, $contentGroups, $repos) = @params;
 
@@ -188,6 +196,8 @@ sub process_directory_content {
 
     print_directory($directory, \@parentPath, \@dirList, \@fileList);
     closedir $dh;
+
+    return 0;
 }
 
 sub commits_to_dategroup {
@@ -199,7 +209,13 @@ sub commits_to_dategroup {
         my $commit = $_;
         my $commitAuthor = $commit->{author};
         my $commitTokenCount = $commit->{token_count};
-        die "author $commitAuthor not found. \n" unless my ($matchedAuthor) = grep {$commitAuthor eq $_->{name}} @authors;
+        my ($matchedAuthor) = grep {$commitAuthor eq $_->{name}} @authors;
+
+        if (! defined $matchedAuthor) {
+            PrettyPrint::Error("author $commitAuthor not found. \n");
+            return {};
+        }
+
         my $commitAuthorId = $matchedAuthor->{id};
         my $commitDate = time2str("%Y-%m-01 00:00:00", $commit->{epoch});
         my $dateGroupIndex = str2time($commitDate);
@@ -240,7 +256,13 @@ sub update_dir_and_file_stats {
         my $dirAuthors = $dir->{authors};
         foreach (@{$dirAuthors}) {
             my $dirAuthor = $_;
-            die "author $dirAuthor->{name} in directory $dir->{name} not found \n" unless my ($matchedAuthor) = grep {$dirAuthor->{name} eq $_->{name}} @{$authors};
+            my ($matchedAuthor) = grep {$dirAuthor->{name} eq $_->{name}} @{$authors};
+            
+            if (! defined $matchedAuthor) {
+                PrettyPrint::Error("author $dirAuthor->{name} in directory $dir->{name} not found \n");
+                return 1;
+            }
+            
             $dirAuthor->{id} = $matchedAuthor->{id};
             # $dirAuthor->{color_id} = ($dirAuthor->{id} > 60 ? "Black" : $dirAuthor->{id});
             $dirAuthor->{color_id} = $matchedAuthor->{color_id};
@@ -258,7 +280,13 @@ sub update_dir_and_file_stats {
         my $fileAuthors = $file->{authors};
         foreach (@{$fileAuthors}) {
             my $fileAuthor = $_;
-            die "author $fileAuthor->{name} in file $file->{name} not found \n" unless my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$authors};
+            my ($matchedAuthor) = grep {$fileAuthor->{name} eq $_->{name}} @{$authors};
+            
+            if (! defined $matchedAuthor) {
+                PrettyPrint::Error("author $fileAuthor->{name} in file $file->{name} not found \n");
+                return 1;
+            }
+            
             $fileAuthor->{id} = $matchedAuthor->{id};
             $fileAuthor->{color_id} = $matchedAuthor->{color_id};
         }
@@ -325,12 +353,18 @@ sub print_directory {
     $template->param(has_file => scalar @fileList);
     $template->param(directory_list => \@dirList);
     $template->param(file_list => \@fileList);
-    # $template->param(commits => $directory->{commits});
+    $template->param(cregit_version => $cregitVersion);
     $template->param(has_hidden => (scalar @contributorsByName)>20);
     $template->param(time_min => $directory->{commits}[0]->{epoch});
     $template->param(time_max => $directory->{commits}[(scalar @{$directory->{commits}})-1]->{epoch});
 
     my $file = undef;
+
+    if (-f $outputFile and !$overwrite) {
+        print("output file already exists. Skipping.\n") if $verbose; 
+        return;
+    }
+
     if ($outputFile ne "") {
         open($file, ">", $outputFile) or return PrettyPrint::Error("cannot write to [$outputFile]");
     } else {
@@ -362,7 +396,7 @@ sub update_directory_stats {
 
         # update commits list author_id
         my @matchedCommits = map {$_->{author_id} = $author->{id}} grep {$_->{author} eq $author->{name}} @{$directory->{commits}};
-        die "no matched commits found on author : $author->{name}. \n" unless @matchedCommits;
+        return PrettyPrint::Error("no matched commits found on author : $author->{name}. \n") unless @matchedCommits;
     }
     $directory->{authors} = [@sortedAuthors];
 

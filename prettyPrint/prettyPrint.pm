@@ -51,8 +51,6 @@ sub print_file {
 	$options->{webRoot}			//= "";
 	$options->{gitURL}			//= "";
 
-	# print Dumper(\$options) if $options->{verbose};
-
 	$warningCount = 0;
 
 	return Error("Source file does not exist [$sourceFile]") unless -f $sourceFile;
@@ -223,7 +221,7 @@ sub get_template_parameters {
 			if ($cid ne %$span{cid}) {
 				$spanBreak = 1;
 			}
-		
+
 			if ($spanBreak) {
 				my $commitStat = get_commit_stat($cid, $commits);
 				my $authorName = $commitStat->{author};

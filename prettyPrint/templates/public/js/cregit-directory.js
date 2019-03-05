@@ -23,7 +23,7 @@ $(document).ready(function() {
 	var $contributor_footers = $("#overall-stats-table > tfoot > tr > td");
 	var $contributor_row_container = $("#overall-stats-table > tbody");
 	var $highlightSelect = $('#select-highlighting');
-	var $content = $($('#stats-view').get(0));
+	var $content = $('#content-view');
 	var $mainContent = $("#main-content");
 	var $dateGradient = $("#date-gradient");
 	var $dateSliderRange = $("#date-slider-range");
@@ -35,6 +35,11 @@ $(document).ready(function() {
 	var $authorHighlighting = $(".author-highlighting");
 	var $expandableTables = $("table.expandable");
 	var $statsTableExpandableButton = $("button.expand-collapse-table-btn");
+	var $contentListHeader = $("#content-list-header");
+	var $fixedHeader = $contentListHeader.clone();
+	$fixedHeader.addClass("content-list-header-fixed");
+	$fixedHeader.hide();
+	$contentListHeader.after($fixedHeader);
 
 
 	// Processes large jquery objects in slices of N=length at rest intervals of I=interval (ms)
@@ -322,8 +327,6 @@ $(document).ready(function() {
 	{
 		var cmp = function(a, b) { if (a < b) return -1; if (a > b) return 1; return 0; };
 		var lexical = function (a, b) { 
-			console.log(a);
-			console.log(b);
 			return a.children[0].firstChild.innerText.localeCompare(b.children[0].firstChild.innerText); 
 		};
 		var numeric = function (a, b) { return cmp(parseFloat(b.children[column].innerHTML), parseFloat(a.children[column].innerHTML)); };
@@ -519,15 +522,33 @@ $(document).ready(function() {
 		if (event.key == "Escape")
 			ResetHighlightMode();
 	}
+
+	function UpdateContentListHeaderWidth() {
+		var height = $("#navbar").height();
+		var width = $(".content-list").last().width();
+
+		if ($mainContent.scrollTop() > height) {	
+			$fixedHeader.css("width", width*100/$mainContent.innerWidth()+"%");
+			$fixedHeader.find("button").text($absPropToggle.text());
+			var text = $absPropToggle.attr("title") ? $absPropToggle.attr("title") : ""; 
+			$fixedHeader.find("button").prop("title", text);
+			$fixedHeader.show();	
+		}
+		if ($mainContent.scrollTop() < height || $mainContent.scrollTop() > $content.height()) {
+			$fixedHeader.hide();
+		}
+	}
 	
 	function Window_Scroll()
 	{
 		UpdateMinimapViewPosition();
+		UpdateContentListHeaderWidth();
 	}
 	
 	function Window_Resize()
 	{
 		RenderMinimap();
+		UpdateContentListHeaderWidth();
 	}
 
 	function UpdateDate() {
@@ -546,7 +567,7 @@ $(document).ready(function() {
 
 	function StatsGraph_Click() {
 		var contentGraph = $(this);
-		contentDetail = contentGraph.parents("#content-list").next("div");
+		contentDetail = contentGraph.parents(".content-list").next("div");
 		contentDetail.slideToggle(400, RenderMinimap);
 	}
 
@@ -629,6 +650,11 @@ $(document).ready(function() {
 	$statsGraphButton.click(StatsGraph_Click);
 
 	$absPropToggle.click(AbsPropToggle_Click);
+	$fixedHeader.find("button").click(function() { 
+		$absPropToggle.trigger("click");
+		$fixedHeader.find("button").text($absPropToggle.text());
+		$fixedHeader.find("button").prop("title", $absPropToggle.attr("title"));
+	 });
 
 	$hideSubDirButton.click(Hide_Subdir_Click);
 

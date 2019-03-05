@@ -117,9 +117,9 @@ $(document).ready(function() {
 		var ageNew = convert(root.css("--age-new"));
 		
 		$spans.each(function() {
-			var commitInfo = commits[this.dataset.cidx]
+			var commitInfo = commits[this.dataset.cidx];
 			var t = (commitInfo.timestamp - base) / range;
-			var color = (t < 0.5 ? lerp(ageOld, ageMid, 0) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
+			var color = (t < 0.5 ? lerp(ageOld, ageMid, t/0.5) : lerp(ageMid, ageNew, (t - 0.5) / 0.5));
 			var htmlColor = "#" + ("000000" + color.toString(16)).substr(-6);
 
 			this.style.setProperty('--age-color', htmlColor);

@@ -12,7 +12,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 */
 
 import slick.driver.SQLiteDriver.api._
@@ -136,7 +136,7 @@ class Footers(tag:Tag) extends Table[(String, Int, String, String)](tag, "footer
 object gitLogToDB extends ProgramInfo {
 
   // number of commits that we insert in one transaction...
-  
+
   def commitsPerOp = 10000
 
   def git_commits_iterator(git:Git) = {
@@ -144,7 +144,7 @@ object gitLogToDB extends ProgramInfo {
     val logs = git.log.all.call()
 
     val logsIt = logs.asScala.toIterator
-    
+
     val mapped = logsIt.map { l =>
       val dt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       val aWhen: String = dt.format(l.getAuthorIdent().getWhen)
@@ -186,6 +186,9 @@ object gitLogToDB extends ProgramInfo {
         footersSeq
       )
     }
+    // process only a commitsPerop at a time
+    // this returns an iterator on the commits,
+    // each element is a list of commitsPerOp commits
     mapped.sliding(commitsPerOp,commitsPerOp)
 
   }
@@ -225,7 +228,7 @@ object gitLogToDB extends ProgramInfo {
 
   // the iterator lazily loads one window (commitsPerOp) at a time
   // when we request it
-  // 
+  //
   // so we don't run out of memory with large repos (e.g. linux)
 
 
@@ -307,7 +310,7 @@ object gitLogToDB extends ProgramInfo {
 
       Await.result(db.run(insertGr), Duration.Inf)
     }
-    
+
 
     println("Finished creating database")
 

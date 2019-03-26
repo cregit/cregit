@@ -396,11 +396,13 @@ $(document).ready(function() {
 		else
 			$dateGradient.addClass("invisible");
 
-		if (option.id != '')
+		if (option.id != '') {
 			selectedAuthorId = option.id;
-		else
+			highlightMode = "author-single";
+		} else {
 			selectedAuthorId = undefined;
-			
+		}
+
 		UpdateHighlight();
 	}
 	

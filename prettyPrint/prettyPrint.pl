@@ -42,7 +42,8 @@ my $overwrite = 0;
 my @userVars; # array
 my %userVars; # hashref
 
-my $tokenExtension = ".token.line";
+# my $tokenExtension = ".token.line";
+my $tokenExtension = ".token";
 
 sub print_one {
 	my $sourceFile = shift @ARGV;
@@ -73,7 +74,6 @@ sub print_many {
 	my $filter = $filter;
 
 	# filter for c and cpp programming language
-	# TODO
 	if ($filter_lang eq "c") {
 		$filter = "\\.(h|c)\$";
 	} elsif ($filter_lang eq "cpp") {
@@ -100,7 +100,7 @@ sub print_many {
 	my $errorCount = 0;
 	while (my $filePath = <$FILES>) {
 		chomp $filePath;
-		next if ($filter ne "" and $filePath !~ /$filter/); # if ($filter != "" and !$filePath.contains($filter)) continue; 
+		next if ($filter ne "" and $filePath !~ /$filter/);
 		print(++$index . ": $filePath\n") if $verbose;
 		
 		my $originalFile = File::Spec->catfile($repoDir, $filePath);

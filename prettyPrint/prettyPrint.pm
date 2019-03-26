@@ -26,9 +26,9 @@ use Pod::Usage;
 
 my $dbh;
 my $metaQuery;
-my $metaCache = { }; # perl hash reference
+my $metaCache = { };
 my $metaCacheEnabled = 1;
-my $defaultTemplate = dirname(__FILE__) . "/templates/page.tmpl"; # perl html template file
+my $defaultTemplate = dirname(__FILE__) . "/templates/page.tmpl";
 my $warningCount = 0;
 my $templateParams = {
 	loop_context_vars => 1,
@@ -39,12 +39,10 @@ my $defaultGitUrl;
 
 
 sub print_file {
-	# PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
-	# @_: Within a subroutine the array @_ contains the parameters passed to that subroutine.
-	my $sourceFile = shift @_; # files in original.repo/git/
+	my $sourceFile = shift @_;
 	my $blameFile = shift @_;
 	my $lineFile =  shift @_;
-	my $options = shift @_		// { }; # // does same thing as ||. if the $options(last shift) is undefined, it becomes {}
+	my $options = shift @_		// { };
 	$options->{cregitVersion}	//= "0.0";
 	$options->{templateFile}	//= $defaultTemplate;
 	$options->{outputFile}		//= "";
@@ -438,7 +436,7 @@ sub get_cid_meta {
 }
 
 sub setup_dbi {
-	my ($sourceDB, $authorsDB) = @_;
+	my ($sourceDB, $authorsDB, $queryKey) = @_;
 	my $dsn = "dbi:SQLite:dbname=$sourceDB";
 	my $user = "";
 	my $password = "";

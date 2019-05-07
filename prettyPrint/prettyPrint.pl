@@ -42,7 +42,7 @@ my $overwrite = 0;
 my @userVars;
 my %userVars;
 
-my $tokenExtension = ".token";
+my $tokenExtension = ".line";
 
 sub print_one {
 	my $sourceFile = shift @ARGV;
@@ -50,16 +50,16 @@ sub print_one {
 	my $lineFile =  shift @ARGV;
 	my $sourceDB = shift @ARGV;
 	my $authorsDB = shift @ARGV;
-	
+
 	Usage("Source file does not exist [$sourceFile]", 0) unless -f $sourceFile;
 	Usage("Tokenized blame file does not exist [$blameFile]", 0) unless -f $blameFile;
 	Usage("Tokenized line file does not exist [$lineFile]", 0) unless -f $lineFile;
 	Usage("Database of tokenized repository does not exist [$sourceDB]", 0) unless -f $sourceDB;
 	Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
-	
+
 	PrettyPrint::setup_dbi($sourceDB, $authorsDB);
 	print_with_options($sourceFile, $blameFile, $lineFile);
-	
+
 	return 0;
 }
 
@@ -76,21 +76,21 @@ sub print_many {
 	} elsif ($filter_lang eq "cpp") {
 		$filter = "\\.(h(pp)?|cpp)\$";
 	}
-	
+
 	Usage("Source directory does not exist [$repoDir]", 0) unless -d $repoDir;
 	Usage("Tokenized blame file directory does not exist [$blameDir]", 0) unless -d $blameDir;
 	Usage("Tokenized line file directory does not exist [$lineDir]", 0) unless -d $lineDir;
 	Usage("Database of tokenized repository does not exist [$sourceDB]", 0) unless -f $sourceDB;
 	Usage("Database of authors does not exist [$authorsDB]", 0) unless -f $authorsDB;
-	
+
 	unless(-e $outputDir or mkdir $outputDir) {
         die "Unable to create output directory: $outputDir\n";
     }
-	
+
 	PrettyPrint::setup_dbi($sourceDB, $authorsDB);
-	
+
 	open(my $FILES, "git -C '$repoDir' ls-files |") or die "unable to traverse git repo [$repoDir] $!";
-	
+
 	my $index = 0;
 	my $count = 0;
 	my $errorCount = 0;
@@ -98,7 +98,7 @@ sub print_many {
 		chomp $filePath;
 		next if ($filter ne "" and $filePath !~ /$filter/);
 		print(++$index . ": $filePath\n") if $verbose;
-		
+
 		my $originalFile = File::Spec->catfile($repoDir, $filePath);
 		my $blameFile = File::Spec->catfile($blameDir, $filePath . ".blame");
 		my $lineFile = File::Spec->catfile($lineDir, $filePath . $tokenExtension);
@@ -113,31 +113,31 @@ sub print_many {
 		if ($webRootRelative) {
 			$options->{webRoot} = $relative;
 		};
-		
+
 		goto EXISTS if (-f $outputFile and !$overwrite);
 		goto NOSOURCE if (! -f $originalFile);
 		goto NOBLAME if (! -f $blameFile);
 		goto NOLINE if (! -f $lineFile);
-		
+
 		print("$filePath\n") if !$verbose;
 		if (!$dryrun) {
 			File::Path::make_path($fileDir);
 			my $errorCode = print_with_options($originalFile, $blameFile, $lineFile, $options);
-			
+
 			if ($errorCode != 0) {
 				print "Error: $filePath\n";
 				$errorCount++;
 			}
 		}
 		$count++;
-		
+
 		next;
 		EXISTS:		print("output file already exists. Skipping.\n") if $verbose; next;
 		NOSOURCE:	print("file does not exist in local repo [$originalFile]. Skipping.\n") if $verbose; next;
 		NOBLAME:	print("blame file [$blameFile] does not exist. Skipping.\n") if $verbose; next;
 		NOLINE:		print("line file [$lineFile] does not exist. skipping.\n") if $verbose; next;
 	}
-	
+
 	print "Processed: [$count]\n";
 	print "Errors: [$errorCount]\n";
 	return $errorCount > 0;
@@ -154,7 +154,7 @@ sub print_with_options {
 	$options->{webRoot} //= $webRoot;
 	$options->{gitURL} //= $gitURL;
 	$options->{userVars} //= {%userVars};
-	
+
 	return PrettyPrint::print_file($sourceFile, $blameFile, $lineFile, $options);
 }
 
@@ -209,7 +209,7 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
         --verbose          Enable verbose output
         --template         The template file to use.
                            Defaults to templates/page.tmpl
-    
+
      Options: (single)
         --output           The output file. Defaults to STDOUT.
         --webroot          The web_root template parameter value.
@@ -218,7 +218,7 @@ prettyPrint-main.pl: create the "pretty" output of files in a git repository
                            Defaults to empty
         --template-var     Defines additional template variables.
                            Usage: --template-var [variable]=[value]
-    
+
      Options: (multi)
         --overwrite        Overwrite existing files that have previously been generated.
         --webroot          The web_root template parameter value.

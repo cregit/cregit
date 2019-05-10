@@ -6,7 +6,7 @@
 
 * Preliminaries
 
-- Code is written in scala, C++ and perl. 
+- Code is written in scala, C++ and perl.
 - For scala code, use sbt to build and run programs. It is the easiest
 - This code has only being tested under Linux, but it should run under MacOS
 
@@ -34,11 +34,13 @@ For each module, its dependencies are documented in their corresponding readme.o
 
 * How to build
 
-- compile slickGitLog, persons, remapCommits with sbt in their directories
+- compile slickGitLog, persons, remapCommits with sbt in their directories (sbt can be found at
+https://www.scala-sbt.org/download.html repo)
+
 #+BEGIN_SRC sh
-sbt
-one-jar
+sbt one-jar
 #+END_SRC
+
 - use make to compile [[./tokenize/srcMLtoken][srcMLtoken]]
 - perl scripts can be run without compilation
 
@@ -49,7 +51,7 @@ This is the workflow to process a git repository with cregit, and to generate th
 - It assumes that the cregit-repository will be created in /tmp/xournal
 - The original repository is located at /home/dmg/git.hacking.mine/xournal
 
-a. Create the view repository. 
+a. Create the view repository.
 
 To tokenize the files we require to create some environment variables to communicate with the tokenizing script
 
@@ -59,7 +61,7 @@ To tokenize the files we require to create some environment variables to communi
 Example:
 
 - use the tokenizeByBlobId/tokenBySha.pl to do the tokenization
-- tokenBySha.pl will execute 
+- tokenBySha.pl will execute
 
 #+BEGIN_SRC sh
 ./tokenizeSrcMl.pl --srcml2token=<path to srcml2token> --srcml=<path to srcml> --ctags=<path to ctags>
@@ -76,7 +78,7 @@ java -jar bfg-cregit.jar '--blob-exec:/home/dmg/git.dmg/cregit-scala/tokenizeByB
 b. Create the history database for the original repo
 
 #+BEGIN_SRC sh
-java -jar slickGitLog.jar /tmp/xournal-original.db /home/dmg/git.hacking.mine/xournal 
+java -jar slickGitLog.jar /tmp/xournal-original.db /home/dmg/git.hacking.mine/xournal
 #+END_SRC
 
 c. Create the history database for the cregit repo
@@ -87,7 +89,7 @@ java -jar slickGitLog.jar /tmp/xournal-cregit.db /tmp/xournal
 
 d. Create the persons database
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 java -jar persons.jar /home/dmg/git.hacking.mine/xournal /tmp/xournal.xls /tmp/xournal-persons.db
 #+END_SRC
 
@@ -108,7 +110,7 @@ g. Create html version of the files
 Example:
 
 #+BEGIN_SRC sh
-perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-persons.db ~/git.hacking.mine/xournal /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$' 
+perl ./prettyPrintFiles.pl --verbose /tmp/xournal-cregit.db /tmp/xournal-persons.db ~/git.hacking.mine/xournal /tmp/blame /tmp/html https://github.com/dmgerman/xournal-next/commit/ '\.[ch]$'
 #+END_SRC
 
 * License

@@ -1,4 +1,3 @@
 jars
-*/project/build.properties
-*/project/
-*/target
+*project/project
+*target

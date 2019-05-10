@@ -12,14 +12,22 @@
 
 * Prerequisites
 
-| srcml | http://www.srcml.org/                      | Make sure srcml is in the path    |
-| bfg   | https://github.com/rtyley/bfg-repo-cleaner | It needs to be patched. see below |
+| srcml | https://www.srcml.org/              | Make sure srcml is in path |
+| ctags | https://github.com/universal-ctags  | Make sure ctags is in path |
+| bfg   | https://github.com/dmgerman/bfg-repo-cleaner/tree/paul-blob-exec | 
 
 ** bfg
 
-1. you must fork bfg
-2. apply the patch found in the directory [[./bfg/readme.org][bfg]].
-3. build
+1. obtain above bfg branch
+#+BEGIN_SRC sh
+git clone https://github.com/dmgerman/bfg-repo-cleaner.git --branch paul-blob-exec
+#+END_SRC
+
+2. build in bfg root dir using
+#+BEGIN_SRC sh
+sbt
+> bfg/assembly
+#+END_SRC
 
 ** Dependencies:
 
@@ -27,8 +35,13 @@ For each module, its dependencies are documented in their corresponding readme.o
 
 * How to build
 
-- use sbt to compile the scala code
-- use make to compile the C++ code
+- compile slickGitLog, persons, remapCommits with sbt from their directories
+#+BEGIN_SRC sh
+sbt
+> one-jar
+#+END_SRC
+
+- use make to compile [[./tokenize/srcMLtoken][srcMLtoken]]
 - perl scripts can be run without compilation
 
 * How to use
@@ -51,14 +64,14 @@ Example:
 - tokenBySha.pl will execute 
 
 #+BEGIN_SRC sh
-./tokenizeSrcMl.pl --srcml2token=<path to srcml2token> --srcml=<path to srcml> --ctags=<path to ctags-exuberant>
+./tokenizeSrcMl.pl --srcml2token=<path to srcml2token> --srcml=<path to srcml> --ctags=<path to ctags>
 #+END_SRC
 
 Run it as:
 
 #+BEGIN_SRC sh
 export BFG_MEMO_DIR=/tmp/memo
-export BFG_TOKENIZE_CMD=/home/dmg/git.dmg/cregit-scala/tokenize/tokenizeSrcMl.pl --srcml2token=/home/dmg/git.dmg/cregit-scala/tokenize/srcMLtoken/srcml2token --srcml=srcml --ctags=ctags-exuberant
+export BFG_TOKENIZE_CMD=/home/dmg/git.dmg/cregit-scala/tokenize/tokenizeSrcMl.pl --srcml2token=/home/dmg/git.dmg/cregit-scala/tokenize/srcMLtoken/srcml2token --srcml=srcml --ctags=/usr/local/bin/ctags
 java -jar bfg-cregit.jar '--blob-exec:/home/dmg/git.dmg/cregit-scala/tokenizeByBlobId/tokenBySha.pl=.[ch]$' --no-blob-protection /path/repo
 #+END_SRC
 

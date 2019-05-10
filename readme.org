@@ -18,11 +18,11 @@
 
 ** bfg
 
-- obtain above bfg branch
+- obtain the above bfg branch
 #+BEGIN_SRC sh
 git clone https://github.com/dmgerman/bfg-repo-cleaner.git --branch paul-blob-exec
 #+END_SRC
-- build in bfg root dir using
+- build in the bfg root directory
 #+BEGIN_SRC sh
 sbt
 bfg/assembly
@@ -34,7 +34,7 @@ For each module, its dependencies are documented in their corresponding readme.o
 
 * How to build
 
-- compile slickGitLog, persons, remapCommits with sbt from their directories
+- compile slickGitLog, persons, remapCommits with sbt in their directories
 #+BEGIN_SRC sh
 sbt
 one-jar

@@ -14,19 +14,18 @@
 
 | srcml | https://www.srcml.org/              | Make sure srcml is in path |
 | ctags | https://github.com/universal-ctags  | Make sure ctags is in path |
-| bfg   | https://github.com/dmgerman/bfg-repo-cleaner/tree/paul-blob-exec | 
+| bfg   | https://github.com/dmgerman/bfg-repo-cleaner/tree/paul-blob-exec | Download this branch |
 
 ** bfg
 
-1. obtain above bfg branch
+- obtain above bfg branch
 #+BEGIN_SRC sh
 git clone https://github.com/dmgerman/bfg-repo-cleaner.git --branch paul-blob-exec
 #+END_SRC
-
-2. build in bfg root dir using
+- build in bfg root dir using
 #+BEGIN_SRC sh
 sbt
-> bfg/assembly
+bfg/assembly
 #+END_SRC
 
 ** Dependencies:
@@ -38,9 +37,8 @@ For each module, its dependencies are documented in their corresponding readme.o
 - compile slickGitLog, persons, remapCommits with sbt from their directories
 #+BEGIN_SRC sh
 sbt
-> one-jar
+one-jar
 #+END_SRC
-
 - use make to compile [[./tokenize/srcMLtoken][srcMLtoken]]
 - perl scripts can be run without compilation
 

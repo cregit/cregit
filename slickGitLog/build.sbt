@@ -1,3 +1,7 @@
+import com.github.retronym.SbtOneJar._
+
+oneJarSettings
+
 
 libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % "3.0.0",

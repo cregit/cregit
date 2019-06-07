@@ -14,13 +14,13 @@
 
 | srcml | https://www.srcml.org/              | Make sure srcml is in path |
 | ctags | https://github.com/universal-ctags  | Make sure ctags is in path |
-| bfg   | https://github.com/dmgerman/bfg-repo-cleaner/tree/paul-blob-exec | Download this branch |
+| bfg   | https://github.com/dmgerman/bfg-repo-cleaner/tree/blobexec | Download this branch |
 
 ** bfg
 
 - obtain the above bfg branch
 #+BEGIN_SRC sh
-git clone https://github.com/dmgerman/bfg-repo-cleaner.git --branch paul-blob-exec
+git clone https://github.com/dmgerman/bfg-repo-cleaner.git --branch blobexec
 #+END_SRC
 - build in the bfg root directory
 #+BEGIN_SRC sh

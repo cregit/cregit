@@ -1,0 +1,348 @@
+html, body, div, pre, p, img
+{
+	box-sizing: border-box;
+}
+
+html, body
+{
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	font-family: sans-serif;
+}
+
+h1, pre
+{
+	margin: 0px 0px;
+}
+
+/* Navbar CSS */
+
+#navbar
+{
+	position: relative;
+	left: 0;
+    top: 0;
+    width: 100%;	
+	height: 5em;
+	overflow: hidden;
+	display: flex;
+	flex-direction: row;
+	flex-shrink: 0;
+	background-color: var(--highlight4);
+}
+
+#navbar-title-box
+{
+	padding: 8px 16px;
+	background-color: var(--palette3);
+}
+
+#navbar-option-box
+{
+	padding: 8px 16px;
+}
+
+#navbar-date-range
+{
+	padding: 8px 16px;
+}
+
+#date-slider-range
+{
+	height: 10.8px;
+}
+
+#date-gradient
+{
+	height: 8px;
+	border-radius: 2px;
+	background-image: linear-gradient(to right, var(--age-old), var(--age-mid), var(--age-new));
+	
+	-moz-transition:opacity 0.2s ease-in;
+    -o-transition:opacity 0.2s ease-in;
+    -webkit-transition:opacity 0.2s ease-in;
+}
+
+#navbar-pad-box
+{
+	
+}
+
+#title-text
+{
+	color: var(--palette5);
+}
+
+#origin-text
+{
+	color: var(--palette4);
+}
+
+/* Minimap CSS */
+
+#minimap
+{
+	position: sticky;
+	float: right;
+	top: 0px;
+	bottom: 1px;
+	left: 95%;
+	width: 5%;
+	height: 99.9%;
+	min-width: 16px;
+	background-color: var(--highlight4);
+}
+
+#minimap-view-frame
+{
+	position: absolute;
+	height: 5%;
+	width: 100%;
+	border: 1px solid black;
+}
+
+#minimap-view-shade
+{
+	position: absolute;
+	height: 5%;
+	width: 100%;
+	background-color: var(--highlight2);
+}
+
+#minimap-image
+{
+	position: absolute;
+	width: 80%;
+	height: 100%;
+	margin-left: 20%;
+}
+
+/* Infobox CSS */
+
+.layout-infobox
+{
+	position: fixed;
+	top: 6em;
+	right: 8%;
+	width: 21em;
+	height: 10em;
+	overflow: hidden;
+}
+
+.commit-info
+{
+	padding-top: 8px;
+	overflow: hidden;
+	background-color: var(--highlight4);
+	display: flex;
+	flex-direction: column;
+}
+
+.infotext
+{
+	margin-left: 8px;
+}
+
+.summaryBox
+{
+	max-width: 100%;
+	padding: 8px;
+	margin-bottom: 0px;
+	white-space:normal;
+	word-wrap: break-word;
+	
+	background-color: var(--highlight3);
+	flex: 100;
+}
+
+#commit-hash
+{
+	font-family: monospace;
+}
+
+/* Main Area CSS */
+
+#main-content
+{
+	position: relative;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	padding-right: 0.5px; /* Prevent redundant scrollbar on Chrome */
+	overflow-y: scroll;
+	overflow-x: auto;
+}
+
+#main-body
+{
+	min-height: 100%;
+}
+
+#source-view
+{
+	display: flex;
+	flex-direction: row;
+}
+
+#source-content
+{
+	width: 100%;
+}
+
+#line-numbers
+{
+	padding-left: 24px;
+	padding-right: 24px;
+	margin-botom: 0px;
+	text-align: right;
+	min-width: 6em;
+	
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+}
+
+.line-number
+{
+	display: block;
+	text-decoration: none;
+	color: black;
+}
+
+#footer
+{
+	padding-left: 12px;
+	padding-bottom: 4px;
+}
+
+/* Contributors Table CSS */
+
+#stats-view
+{
+	width: 60%;
+	padding: 16px 16px;
+	margin-left: auto;
+    margin-right: auto;
+}
+
+#select-stats
+{
+	width: 100%;
+}
+
+#stats-table
+{
+	width: 100%;
+	border: 1px solid var(--accent1);
+	border-radius: 5px;
+	table-layout: fixed;
+}
+
+#stats-table > caption
+{
+	margin-top: 2em;
+	text-align: left;
+	font-weight: bold;
+	font-family: monospace;
+}
+
+#stats-table > thead > tr
+{
+	border: solid;
+	border-width: 1px 0;
+	cursor: pointer;
+}
+
+#stats-table > tbody > tr > td > span
+{
+	cursor: pointer;
+}
+
+#stats-table > tfoot > tr
+{
+	border: solid;
+	border-width: 1px 0;
+}
+
+#stats-table th
+{
+	padding: 8px 0px;
+	padding-left: 8px;
+	text-align: right;
+	font-family: monospace;
+	
+	overflow: hidden;
+}
+
+#stats-table td
+{
+	text-align: right;
+	padding: 2px 0px;
+	padding-left: 8px;
+	font-family: monospace;
+	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#stats-table tr:nth-child(even)
+{
+	background-color: var(--highlight4);
+}
+
+#stats-table th:first-child, #stats-table td:first-child
+{
+	padding-left: 16px;
+	text-align: left;
+	width: 25%;
+}
+
+#stats-table th:last-child, #stats-table td:last-child
+{
+	padding-right: 16px;
+}
+
+.flex-columns
+{
+	display: flex;
+	flex-direction: column;
+}
+
+.flex-vcenter
+{
+	justify-content: center;
+}
+
+.flex-expand
+{
+	flex-grow: 100;
+}
+
+.flex-ruler
+{
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+.text-middle
+{
+	width: 100%;
+	text-align: center;
+	box-sizing: border-box;
+}
+
+.hidden
+{
+	display: none;
+}
+
+.invisible
+{
+	opacity: 0;
+}

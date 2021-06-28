@@ -42,7 +42,7 @@ my $overwrite = 0;
 my @userVars;
 my %userVars;
 
-my $tokenExtension = ".line";
+my $tokenExtension = ".token";
 
 sub print_one {
 	my $sourceFile = shift @ARGV;

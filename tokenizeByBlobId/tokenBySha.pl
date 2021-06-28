@@ -29,7 +29,7 @@
 
 # it should  get all its parameters from the environment
 
- 
+
 use Digest::SHA qw(sha1_hex);
 use DBI;
 use File::Temp qw/ tempfile tempdir mkstemp/;
@@ -115,16 +115,18 @@ if (-f $filename) {
     my $contents = join( "", <IN> );
     print $contents;
     close(IN);
-    
+
 } else {
 
   my ($fh, $file) = mkstemp( "tmpfile-in-XXXXX" );
   my ($fout, $outfile) = mkstemp( "tmpfile-out-XXXXX" );
 
+  my $langOp = "--language=" . $mapLang{$fileExt};
+
+  print STDERR "[$tokenizeCmd $langOp $file]\n";
+
   print $fh $contents;
   close $fh;
-
-  my $langOp = "--language=" . $mapLang{$fileExt};
 
   open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
 

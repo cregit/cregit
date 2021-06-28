@@ -54,7 +54,7 @@ use Getopt::Long;
 
 my $usage = "
 Usage $0 [options] <sourcefilename> <outputfile>*
-        
+
 Options:
    --language=<C/C++/Java/m4>
    --position
@@ -128,7 +128,7 @@ sub Tokenize {
     }
 
     my $status = execute_command(@command);
-    die "Unable to execute command " if $status != 0;
+    die "Unable to execute command [@command]" if $status != 0;
 }
 
 sub execute_command {

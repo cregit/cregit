@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<TMPL_INCLUDE Name="headerLinux.tmpl">
+
+<body class="flex-columns">
+
+
+
+
+<div id="navbar">
+  <div id="navbar-title-box" class="flex-columns">
+    <span id="origin-text">
+      Linux Source Code
+    </span>
+    <span id="origin-text">
+      <a class="breadcrumb-nav" href="/">Home</a>
+    </span>
+    <span id="origin-text">
+      Release: <a class="breadcrumb-nav" href="<TMPL_VAR root_relative />"><TMPL_VAR linux_release /></a>
+    </span>
+  </div>
+  <div id="navbar-title-box" class="flex-columns">
+    <h1 id="title-text"><TMPL_VAR ESCAPE=HTML file_name></h1>
+  </div>
+  <div id="navbar-title-box" class="flex-columns">
+    <span id="origin-text">Directory: <a href="."><TMPL_VAR directory /></a></span>
+    <span id="origin-text">Added: <TMPL_VAR creation_date /></span>
+    <span id="origin-text">By: <TMPL_VAR ESCAPE=HTML creation_author /></span>
+  </div>
+  <div id="navbar-option-box" class="flex-columns flex-vcenter">
+    <span>Highlighting</span>
+    <select id="select-highlighting" class="select-highlighting">
+	  <option value="reset">Reset All</option>
+      <option value="author" selected="selected">By Author</option>
+	  <option value="age">By Age</option>
+      <option value="commit">By Commit</option>
+      <option disabled>──────────</option>
+      <TMPL_LOOP contributors_by_name><option id="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></option>
+      </TMPL_LOOP>
+    </select>
+  </div>
+  <div id="navbar-date-range" class="flex-columns flex-vcenter">
+	<div><input id="date-from" type="date"><input id="date-to" type="date"></div>
+	<div id="date-slider-range"></div>
+	<div id="date-gradient" class="invisible"></div>
+  </div>
+</div>
+
+<div id="main-content">
+<div id="minimap" class="minimap layout-minimap">
+  <div id="minimap-view-shade" class="minimap-view-shade"></div>
+  <canvas id="minimap-image" class="minimap-image"></canvas>
+  <div id="minimap-view-frame" class="minimap-view"></div>
+</div>
+
+<div id="main-body" class="flex-columns">
+<!-- Contributors -->
+<div id="stats-view">
+  <select id="select-stats">
+    <option value="overall" data-start="1" data-end="<TMPL_VAR line_count>">Overall</option>
+    <TMPL_LOOP function_stats><option value="<TMPL_VAR id>" data-start="<TMPL_VAR line_start>" data-end="<TMPL_VAR line_end>"><TMPL_VAR ESCAPE=HTML declaration></option>
+    </TMPL_LOOP>
+  </select>
+    <table id="stats-table">
+	  <caption>Contributors: <span id="contributor-count"><TMPL_VAR contributors_count></span></caption>
+	  <thead>
+        <tr>
+          <th>Author</th>
+          <th>Tokens</th>
+          <th>Token Proportion</th>
+          <th>Commits</th>
+          <th>Commit Proportion</th>
+        </tr>
+	  </thead>
+	  <tbody>
+        <TMPL_LOOP contributors>
+        <tr class="contributor-row">
+          <td><span class="table-author author<TMPL_VAR id> author-label" data-authorId="<TMPL_VAR id>"><TMPL_VAR ESCAPE=HTML name></span></td>
+          <td><TMPL_VAR tokens></td>
+          <td><TMPL_VAR token_percent></td>
+          <td><TMPL_VAR commits></td>
+          <td><TMPL_VAR commit_percent></td>
+        </tr></TMPL_LOOP>
+	  </tbody>
+	  <tfoot>
+        <tr>
+          <td>Total</td>
+          <td><TMPL_VAR total_tokens></td>
+          <td></td>
+          <td><TMPL_VAR total_commits></td>
+          <td></td>
+	    </tr>
+	  </tfoot>
+    </table>
+</div>
+
+<hr class="flex-ruler">
+
+<!-- Source Content -->
+<div id="source-view" class="flex-expand">
+<pre id="line-numbers"></pre>
+<pre id="source-content">
+<TMPL_LOOP content_groups><span class="content-group" data-groupid="<TMPL_VAR id>"><TMPL_LOOP spans><a class="cregit-span author<TMPL_VAR author_id>" data-cidx="<TMPL_VAR cidx>"><TMPL_VAR ESCAPE=HTML body></a></TMPL_LOOP></span></TMPL_LOOP>
+</pre>
+</div>
+
+<hr class="flex-ruler">
+
+
+
+<div id="footer">
+
+  <div class="disclaimer">Information contained on this website is for historical information purposes only and does not indicate or represent copyright ownership.</div>
+
+  <div class="credits">Created with Cregit <a href="http://github.com/cregit/cregit">http://github.com/cregit/cregit</a></div>
+  <div>Version <TMPL_VAR cregit_version></div>
+</div>
+</div>
+</div>
+
+<!-- Data Records -->
+<script>
+var authors = [
+<TMPL_LOOP contributors>{ "authorId":"<TMPL_VAR id>", "name":"<TMPL_VAR ESCAPE=JS name>" },
+</TMPL_LOOP>];
+
+var commits = [
+        <TMPL_LOOP commits>{ "cid":"<TMPL_VAR cid>", "timestamp":<TMPL_VAR epoch>, "authorId":<TMPL_VAR author_id>, "summary":"<TMPL_VAR ESCAPE=JS summary>", "repoUrl":"<TMPL_VAR ESCAPE=JS repoUrl>" },
+</TMPL_LOOP>];
+
+var stats = [
+{
+  "name": "overall",
+  "commits": <TMPL_VAR total_commits>,
+  "tokens": <TMPL_VAR total_tokens>,
+  "commits_by_author": [<TMPL_LOOP contributors><TMPL_VAR commits>, </TMPL_LOOP>],
+  "tokens_by_author": [<TMPL_LOOP contributors><TMPL_VAR tokens>, </TMPL_LOOP>],
+},
+<TMPL_LOOP function_stats>{
+  "name": "<TMPL_VAR ESCAPE=JS declaration>",
+  "commits": <TMPL_VAR commits>,
+  "tokens": <TMPL_VAR tokens>,
+  "commits_by_author": [<TMPL_LOOP contributors><TMPL_VAR commits>, </TMPL_LOOP>],
+  "tokens_by_author": [<TMPL_LOOP contributors><TMPL_VAR tokens>, </TMPL_LOOP>],
+},
+</TMPL_LOOP>
+];
+
+var line_count = <TMPL_VAR line_count>;
+var git_url = "<TMPL_VAR ESCAPE=JS git_url>";
+</script>
+</body>
+</html>

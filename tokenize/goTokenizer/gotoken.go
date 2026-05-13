@@ -11,22 +11,23 @@
 package main
   
 import (
-   "fmt"
-   "go/scanner"
-   "go/token"
-   "io/ioutil"
-   "os"
+	"fmt"
+	"go/scanner"
+	"go/token"
+	"io/ioutil"
+	//	"os"
+	"flag"
 )
 
-  
-    func Scanner_Scan(src []byte) {
+
+func Scanner_Scan(src []byte, printPositions bool) {
 
   	// Initialize the scanner.
   	var s scanner.Scanner
   	fset := token.NewFileSet()                      // positions are relative to fset
   	file := fset.AddFile("", fset.Base(), len(src)) // register input "file"
   	s.Init(file, src, nil /* no error handler */, scanner.ScanComments)
-
+	
         fmt.Printf("-:-\tbegin_unit\n");
 
   	// Repeated calls to Scan yield the token sequence found in the input.
@@ -35,15 +36,33 @@ import (
   		if tok == token.EOF {
   			break
   		}
-                if (lit == "") {
-                   fmt.Printf("%s\t%s\n", fset.Position(pos), tok)
-                } else {
-                   fmt.Printf("%s\t%s|%q\n", fset.Position(pos), tok, lit)
-                }
+		var position = ""
+		var tokenVal = ""
 
+		if (printPositions) {
+			position = fmt.Sprintf("%s\t", fset.Position(pos))
+		}
+		if (lit == "\n") {
+			lit = "<newline>"
+		}
+		if (lit == "\r") {
+			lit = "<return>"
+		}
+
+		if (lit == "" ) {
+			tokenVal = fmt.Sprintf("%s", tok)
+		} else {
+			tokenVal = fmt.Sprintf("%s|%s", tok, lit)	
+		}
+			
+
+		fmt.Printf("%s%s\n", position, tokenVal)
         }
-        
-        fmt.Printf("-:-\tend_unit\n");
+        if (printPositions) {
+		fmt.Printf("-:-\tend_unit\n");
+	} else {
+		fmt.Printf("end_unit\n");
+	}
   
   	// output:
   	// 1:1	IDENT	"cos"
@@ -68,10 +87,23 @@ func check(e error) {
 }
 
 func main() {
+	var filename string
+	
+	printPositions := flag.Bool("p", false, "print positions")
 
-    dat, err := ioutil.ReadFile(os.Args[1])
+	flag.Parse()
 
-    check(err)
+	filename = flag.Arg(0);
 
-    Scanner_Scan(dat)
+
+        fmt.Print(*printPositions, "\n");
+        fmt.Print(filename);
+
+
+	dat, err := ioutil.ReadFile(filename)
+
+	check(err)
+
+	Scanner_Scan(dat, *printPositions)
 }
+

@@ -33,6 +33,7 @@ my %extensions = (
                   ".java" => "Java",
                   ".am" => "M4",
                   ".ac" => "M4",
+                  ".rs" => "rust",
                  );
 
 my $basedir = dirname($0);
@@ -41,12 +42,13 @@ $basedir = "." if ($basedir eq "");
 
 my $srcMlparser = "$basedir/tokenizeSrcMl.pl";
 my $m4Parser    = "$basedir/m4Tokenizer/m4.py";
-
+my $rustParser = "/home/dmg/bin/rust-tokenizer";
 
 my %parsers = ("C" => $srcMlparser,
                "C++" => $srcMlparser,
                "Java" => $srcMlparser,
                "M4" => $m4Parser,
+	       "rust" => $rustParser,
               );
 
 
@@ -56,8 +58,9 @@ my $usage = "
 Usage $0 [options] <sourcefilename> <outputfile>*
 
 Options:
-   --language=<C/C++/Java/m4>
+   --language=<C/C++/Java/m4/rust>
    --position
+   --verbose
 ";
 
 
@@ -68,7 +71,7 @@ my $position = 0;
 GetOptions (
             "language=s"      => \$language,
             "position"        => \$position,
-            "verbose"  => \$verbose)   # flag
+            "verbose"          => \$verbose) # flag
   or die($usage);
 
 
@@ -108,13 +111,17 @@ exit;
 
 sub Tokenize {
     my ($language, $input, $output) = @_;
+    my $parser = $parsers{$language};
 
     print "Tokenizing [$language] [$input][$output]\n" if $verbose;
 
     my @command;
+    
+    push @command, $parser;
 
-    push @command, $parsers{$language}, "--language=$language";
-
+    if ($parser eq $srcMlparser) {
+	push @command, "--language=$language", "--srcml=srcml", "--ctags=/usr/bin/ctags-universal";
+    }
     if ($verbose) {
         push @command, "--verbose";
     }

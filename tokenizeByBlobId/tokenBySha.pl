@@ -26,7 +26,6 @@
 
 # this program must not have any parameters
 
-
 # it should  get all its parameters from the environment
 
 
@@ -38,9 +37,12 @@ use File::Path qw(make_path);
 use File::Copy;
 
 
+
 #my $shaDir = '/home/replay/git/token.sha1/';
 #my $shaDir = '/home/replay/linux/token.sha/';
 #my $shaDir = '/tmp/token.sha/';
+
+# map extension to language
 
 my %mapLang = (
                "c" => 'C',
@@ -49,7 +51,7 @@ my %mapLang = (
                "cp" => 'C++',
                "cpp" => 'C++',
                "cxx" => 'C++',
-               "go"  => 'Go',
+               "go"  => 'go',
                "h" => 'C',
                "h++" => 'C++',
                "hh" => 'C++',
@@ -57,8 +59,9 @@ my %mapLang = (
                "java" => 'Java',
                "md" => "Markdown",
                "yaml" => "Yaml",
-               "ac" => "M4",
-               "am" => "M4",
+    "ac" => "M4",
+    "am" => "M4",
+    "rs" => "rust",
               );
 
 
@@ -79,13 +82,12 @@ if ($tokenizeCmd eq "") {
 }
 
 
-my $contents;
-
 die "Sha dir [$shaDir] does not exist" if not -d $shaDir;
 
 my $contents = join( "", <> );
 
 my $sha1 = sha1_hex($contents);
+
 
 #`printf "--------------\n"`;
 #`printf "$sha1\n" >> /speed/tmp/output.txt`;
@@ -97,21 +99,38 @@ my $filename = $shaDir . '/' . substr($sha1, 0,2) . '/' . substr($sha1, 2,2) . '
 
 my $blob = $ENV{BFG_BLOB};
 my $blobFN = $ENV{BFG_FILENAME};
+my $fileExt;
 
 die "BFG_FILENAME environment variable not set " if $blobFN eq "";
 
-my $fileExt;
+sub my_die {
+    my $msg = $_[0]; 
+
+    my $filename = "/tmp/error-tokenizer-${sha1}.err";
+
+    open(my $fh, ">>", $filename) or die "Could not open file '$filename' $!";
+
+    # Append lines to the file
+    print $fh "Error processing command [${tokenizeCmd}]\n";
+    print $fh "filename [${blobFN}\n";
+    print $fh "blob     [${blob}]\n";
+    print $fh "fileExt  [${fileExt}]\n";
+    print $fh "error    [${msg}]\n";
+    print $fh "--------------------\n${contents}";
+    close $fh;
+    die $msg;
+}
 
 if ($blobFN =~ /\.([^.]+)$/) {
     $fileExt = lc($1);
 }
 
 if (not defined($mapLang{$fileExt})) {
-    die "unknown file extension [$fileExt]";
+    my_die("unknown file extension [$fileExt]");
 }
 
 if (-f $filename) {
-    open(IN, $filename) || die "unable to open memoized file [$filename]";
+    open(IN, $filename) || my_die ("unable to open memoized file [$filename]");
     my $contents = join( "", <IN> );
     print $contents;
     close(IN);
@@ -125,23 +144,32 @@ if (-f $filename) {
 
   print STDERR "[$tokenizeCmd $langOp $file]\n";
 
-  print $fh $contents;
-  close $fh;
+  print $fh $contents or my_die("Unable to write temporary memoized file in tokeyBySha.pl");
+  close $fh or my_die("Unable to write temporary memoized file in tokeyBySha.pl");
 
-  open(PROC, "$tokenizeCmd $langOp $file |") or die "unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]";
+  open(PROC, "$tokenizeCmd $langOp $file |") or my_die ("unable to execute $tokenizeCmd (verify variable BFG_TOKENIZE_CMD) [$tokenizeCmd]");
+  print STDERR "after executing command, before reading it\n";
 
   while (<PROC>) {
-      print $_;
-      print $fout $_;
+      print $_ ;
+      print $fout $_ or my_die ("Unable to write ouput temporary memoized file in tokeyBySha.pl");
   }
   close PROC;
   close $fout;
+  if ($? != 0) {
+      print STDERR "after executing command, error code [$?]\n";
+      my_die ("Failed to execute command error code [$?]");
+  }
+  if (-s $outfile == 0) {
+      print STDERR "output file is empty! $?it\n";
+      my_die ("$outfile is empty (zero size)");
+  } 
   if (not -d $dir) {
-      make_path($dir);
+      make_path($dir) or my_die "Unable to create memoized file in tokeyBySha.pl";;
   }
 
-  move( $outfile, $filename) or die "The move operation to memoized directory failed: $!";
+  move( $outfile, $filename) or my_die ("The move operation to memoized directory failed: $!");
 
-  unlink($file)
+  unlink($file) or my_die ("Unable to remove temporary input temporary memoized file in tokeyBySha.pl");
 
 }

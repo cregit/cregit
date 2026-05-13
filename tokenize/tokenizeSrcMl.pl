@@ -114,7 +114,7 @@ sub Tokenize
     my $PARSER = "tokenizeSrcML";
     my ($filename) = @_;
     #    open(parser, "srcml --src-encoding utf8 -l C --position '$filename' | srcml2token |") or die "Unable to execute ctags on file [$filename]";
-    open(parser, "$srcml -l $language --position '$filename' | $srcml2token |") or die "Unable to execute ctags on file [$filename]";
+    open(parser, "$srcml -l $language --position < '$filename' | $srcml2token |") or die "Unable to execute ctags on file [$filename]";
 
     my $lastLine = -1;
 
@@ -209,7 +209,7 @@ sub Read_Declarations
 {
     my ($filename, $language) = @_;
 
-    my $CTAGS = "$ctags --language-force=$language -x --sort=n --_xformat='%n %N @@@ %K @@@ %S'";
+    my $CTAGS = "$ctags --extras=-{anonymous} --language-force=$language -x --sort=n --_xformat='%n %N @@@ %K @@@ %S'";
 
     open(ctags, "$CTAGS '$filename'|") or die "Unable to execute ctags on file [$filename]";
 

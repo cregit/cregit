@@ -26,12 +26,16 @@ my $blameExtension = ".blame";
 my $help = 0;
 my $man = 0;
 my $verbose = 0;
+my $revision = "";
 
-GetOptions ("blameExtension=s" => \$blameExtension, 
-            "help"     => \$help,      # string
+GetOptions ("blameExtension=s" => \$blameExtension,
+            "revision=s"       => \$revision,
+            "help"     => \$help,
             "verbose"  => \$verbose,
-            "man"      => \$man)   # flag
+            "man"      => \$man)
         or die("Error in command line arguments\n");
+
+Usage("--revision is required") if $revision eq "";
 
 if ($man) {
     pod2usage(-verbose=>2);
@@ -49,8 +53,7 @@ my $dest = shift @ARGV;
 
 my ($fh, $temp) = mkstemp( "tmpfile-XXXXX" );
 
-Usage("Error [$file] should be a file in repository [$repo] [$repo/$file]\n\n usage $0 <repo> <filename> <destinationDir>") unless -f "$repo/$file";
-Usage( "Error [$repo] should be a git repo\n\nUsage $0 <repo> <filename> <destinationDir>") unless -d "$repo/.git";
+Usage( "Error [$repo] should be a git repo\n\nUsage $0 <repo> <filename> <destinationDir>") if system("git -C '$repo' rev-parse --git-dir > /dev/null 2>&1") != 0;
 Usage( "Error [$dest] should be a directory\n\nUsage $0 <repo> <filename> <destinationDir>") unless -d $dest and $dest ne "";
 
 if ($verbose) {
@@ -58,7 +61,7 @@ if ($verbose) {
 }
 
 #open(IN, "git -C '$repo' blame  -C100 --line-porcelain '$file'|" ) or "unable to execute git ";
-open(IN, "git -C '$repo' blame -M50 -C50 --line-porcelain '$file'|" ) or "unable to execute git ";
+open(IN, "git -C '$repo' blame -M50 -C50 --line-porcelain " . ($revision ? "'$revision' " : "") . "'$file'|" ) or "unable to execute git ";
 while (my $l = Read_Record()) {
     print $fh $l;
     print $fh "\n";
